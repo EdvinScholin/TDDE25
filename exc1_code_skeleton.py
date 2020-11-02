@@ -49,7 +49,7 @@ def tick():
         #
         selfX = ai.selfX()
         selfY = ai.selfY()
-        selfHeading = ai.selfHeadingRad() 
+        selfHeading = ai.selfHeadingRad()
         # 0-2pi, 0 in x direction, positive toward y
 
         targetCount = ai.targetCountServer()
@@ -143,9 +143,9 @@ def angleDiff(one, two):
 #
 parser = OptionParser()
 
-parser.add_option ("-p", "--port", action="store", type="int", 
-        dest="port", default=15345, 
-        help="The port to use. Used to avoid port collisions when" 
+parser.add_option ("-p", "--port", action="store", type="int",
+        dest="port", default=15348, 
+        help="The port to use. Used to avoid port collisions when"
         " connecting to the server.")
 
 (options, args) = parser.parse_args()
@@ -156,8 +156,8 @@ name = "Exc. 1 skeleton" #Feel free to change this
 # Start the main loop. Callback are done to tick.
 #
 
-ai.start(tick, ["-name", name, 
-    "-join", 
+ai.start(tick, ["-name", name,
+    "-join",
     "-turnSpeed", "64",
     "-turnResistance", "0",
     "-port", str(options.port)])
