@@ -1,0 +1,32 @@
+# John litborn summer 2013
+
+mapwidth : 7
+mapheight : 7
+mapname : TDDE25 exercise 1: targets
+mapauthor: johli603
+gravity : 0
+limitedlives : no
+worldlives : 0
+selfimmunity : yes
+friction : 1
+maxRobots : 0
+shotspeed : 20
+shotsWallBounce : no
+edgeBounce : no
+playerstartsshielded : no
+allowshields : no
+maxplayershots : 50
+firerepeatrate : 2
+edgewrap : no
+maxitemdensity : 0
+targetDeadTime : 30
+
+mapData: \multiline: EndOfMapdata
+ ! ! ! 
+!     !
+       
+!  _  !
+       
+!     !
+ ! ! ! 
+EndOfMapdata
