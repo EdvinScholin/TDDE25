@@ -81,6 +81,11 @@ def tick():
             # useful variables: targetCount, targetId
             # useful functions: ai.targetAlive
 
+            targetCount = ai.targetCountServer()
+            for targetId in range(targetCount):
+                if ai.targetAlive(targetId):
+                    return targetId
+
             """your code here"""
 
             # Calculate what direction the target is in, save in
@@ -88,11 +93,18 @@ def tick():
             # useful variables: selfX, selfY
             # useful functions: math.atan2, ai.targetX, ai.targetY
 
+            x = ai.targetX(targetId) - selfX
+            y = ai.targetY(targetId) - selfY
+
+            targetDirection = math.atan2(x, y)
             """your code here"""
 
             # Turn to the direction of the target
             # useful variables: targetDirection
             # useful functions: ai.turnRad, ai.turnToRad
+
+            ai.turnRad(targetDirection)
+
 
             """your code here"""
 
@@ -144,7 +156,7 @@ def angleDiff(one, two):
 parser = OptionParser()
 
 parser.add_option ("-p", "--port", action="store", type="int",
-        dest="port", default=15348, 
+        dest="port", default=15348,
         help="The port to use. Used to avoid port collisions when"
         " connecting to the server.")
 
