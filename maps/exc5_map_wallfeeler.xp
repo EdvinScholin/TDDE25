@@ -1,0 +1,72 @@
+# John litborn summer 2013
+
+mapwidth : 19
+mapheight : 19
+mapname : TDDE25 exercise 5: don't crash!
+mapauthor : johli603
+gameDuration : 100000
+reset : no
+gravity : 0
+limitedlives : no
+worldlives : 0
+selfimmunity : yes
+friction : 0
+maxRobots : 0
+playerstartsshielded : no
+allowshields : no
+maxplayershots : 0
+firerepeatrate : 3
+edgewrap : no
+maxitemdensity : 0.002
+shotlife : 20
+maxunshieldedplayerwallbounceangle : 0
+maxunshieldedWallBounceSpeed : 0
+itemenergypackprob : 0
+itemtankprob : 0
+itemecmprob : 0
+itemmineprob : 1
+itemmissileprob : 0
+itemcloakprob : 0
+itemsensorprob : 0
+itemwideangleprob : 0
+itemrearshotprob : 0
+itemafterburnerprob : 0
+itemtransporterprob : 0
+itemlaserprob : 0
+itememergencythrustprob : 0
+itemtractorbeamprob : 0
+itemautopilotprob : 0
+itememergencyshieldprob : 0
+itemdeflectorprob : 0
+itemhyperjumpprob : 0
+itemphasingprob : 0
+itemmirrorprob : 0
+itemarmorprob : 0
+maxmines : 99
+maxMinesPerPack : 1
+movingItemProb : 1
+roguemineprob : 0
+objectwallbouncelifefactor : 1
+
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxx
+xs               ax
+x                 x
+x                 x
+x                 x
+x                 x
+x                 x
+x                 x
+x                 x
+x        _        x
+x                 x
+x                 x
+x                 x
+x                 x
+x                 x
+x                 x
+x                 x
+xw               qx
+xxxxxxxxxxxxxxxxxxx
+EndOfMapdata
