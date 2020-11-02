@@ -1,0 +1,51 @@
+# John litborn summer 2013
+
+mapwidth : 22
+mapheight : 22
+mapname : TDDE25 exercise 2: race
+mapauthor : johli603
+timing : yes
+checkpointradius : 2.828427
+extraborder : yes
+gravity : 0
+limitedlives : yes
+worldlives : 0
+selfimmunity : yes
+friction : 0.01
+maxRobots : 0
+playerstartsshielded : no
+allowshields : no
+maxplayershots : 0
+edgewrap : no
+maxitemdensity : 0
+maxunshieldedplayerwallbounceangle : 0
+maxunshieldedwallbouncespeed : 0
+wallbouncefueldrainmult : 0
+allowPlayerCrashes : no
+initialFuel : 2600
+
+
+mapData: \multiline: EndOfMapdata
+                      
+  C   t  t  t  t    B 
+      g  g  g  g      
+                      
+    xxxxxxxxxxxxxx    
+    xxxs      axxx    
+ gh xxs        axx ty 
+    xs          ax    
+    x            x    
+ gh x  b  b b b  x ty 
+    x  b    b b  x    
+    x  b  b b b  x    
+ gh x  bb b bbb  x ty 
+    x            x    
+    xw          qx    
+ gh xxw        qxx ty 
+    xxxw      qxxx    
+    xxxxxxxxxxxxxx____
+                 b    
+  D   y  y  y  y b  A 
+      h  h  h  h b    
+                 b    
+EndOfMapdata
