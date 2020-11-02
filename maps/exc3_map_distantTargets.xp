@@ -1,0 +1,105 @@
+# John litborn summer 2013
+
+mapwidth : 82
+mapheight : 82
+mapname : TDDE25 Exercise 3: distant targets
+mapauthor : johli603
+gravity : 0
+limitedlives : no
+worldlives : 0
+selfimmunity : yes
+friction : 0
+maxRobots : 0
+playerstartsshielded : no
+allowshields : no
+maxplayershots : 10
+firerepeatrate : 3
+edgewrap : yes
+maxitemdensity : 0
+shotlife : 20
+shipmass : 40
+
+mapData: \multiline: EndOfMapdata
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                    !                                        !                    
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+           bbbbbbbbbb  bbbbbby   bbbbbby   bbbbbby    tbbbbb   bbbbbby            
+           bbbbbbbbbb  bbbbbbby  bbbbbbby  bbbbbbby  tbbbbbb   bbbbbbby           
+               bb      bb   gbb  bb   gbb  bb   gbb  bb              bb           
+               bb      bb    bb  bb    bb  bb    bb  bb              bb           
+               bb      bb    bb  bb    bb  bb    bb  bbbbbby     bbbbbb           
+               bb      bb    bb  bb    bb  bb    bb  bbbbbbby    bbbbbb           
+               bb      bb    bb  bb    bb  bb    bb  bb    bb        bb           
+               bb      bb   tbb  bb   tbb  bb   tbb  bb    bb        bb           
+               bb      bbbbbbbh  bbbbbbbh  bbbbbbbh  gbbbbbbh  bbbbbbbh           
+               bb      bbbbbbh   bbbbbbh   bbbbbbh    gbbbbh   bbbbbbh            
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                    !                                        !                    
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                                                                  
+                                        _                                         
+EndOfMapdata
