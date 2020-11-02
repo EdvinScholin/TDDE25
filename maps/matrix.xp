@@ -1,0 +1,67 @@
+# Created by xp-mapedit on Wed Aug 21 19:03:32 2013
+
+# John litborn summer 2013
+
+mapwidth : 42
+mapheight : 42
+mapname : TDDE25 exercise 6: matrix
+mapauthor : johli603
+gameDuration : 9999
+limitedlives : no
+gravity : 0
+friction : 0
+shotspeed : 20
+shotlife : 600
+maxplayershots : 0
+maxRobots : 0
+edgebounce : no
+edgewrap : yes
+allowShields : no
+playersStartsShielded : no
+cannonsmartness : 2
+cannonDeadTime : 0
+
+mapData: \multiline: EndOfMapdata
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+          r                    r          
+         dxf                  dxf         
+          c                    c          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                    $$                    
+                    __                    
+                    __                    
+                    $$                    
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+          r                    r          
+         dxf                  dxf         
+          c                    c          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+EndOfMapdata
