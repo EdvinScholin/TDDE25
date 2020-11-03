@@ -82,9 +82,9 @@ def tick():
             # useful functions: ai.targetAlive
 
             targetCount = ai.targetCountServer()
-            for targetId in range(targetCount):
-                if ai.targetAlive(targetId):
-                    return targetId
+            for target in range(targetCount):
+                if ai.targetAlive(target):
+                    targetId = target
 
             """your code here"""
 
@@ -103,14 +103,14 @@ def tick():
             # useful variables: targetDirection
             # useful functions: ai.turnRad, ai.turnToRad
 
-            ai.turnRad(targetDirection)
-
-
+            return ai.turnToRad(targetDirection)
             """your code here"""
 
             # If the ship keeps oscillating between a few angles
             # it may be due to latency. Only turning every second
             # or third tick is a simple solution (use tickCount and %)
+
+            
 
 
             # Check if you are aiming in the direction of the target,
@@ -120,6 +120,9 @@ def tick():
             # useful variables: selfHeading, targetDirection, mode
             # There is a function defined below called angleDiff that
             # is very useful as well.
+            if targetDirection == ai.selfHeadingRad():
+                mode = "shoot"
+                return
 
             """your code here"""
 
