@@ -105,19 +105,6 @@ def tick():
             # If the ship keeps oscillating between a few angles
             # it may be due to latency. Only turning every second
             # or third tick is a simple solution (use tickCount and %)
-
-            print(ai.targetAlive(0))
-            print(ai.targetAlive(1))
-            print(ai.targetAlive(2))
-            print(ai.targetAlive(3))
-            print(ai.targetAlive(4))
-            print(ai.targetAlive(5))
-            print(ai.targetAlive(6))
-            print(ai.targetAlive(7))
-            print(ai.targetAlive(8))
-            print(ai.targetAlive(9))
-            print(ai.targetAlive(10))
-            print(ai.targetAlive(11))
             
 
 
