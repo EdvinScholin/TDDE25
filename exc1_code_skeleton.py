@@ -82,10 +82,9 @@ def tick():
             # useful functions: ai.targetAlive
             
             for target in range(12):
-                if ai.targetAlive(target):
+                if ai.targetAlive(target) == 1:
                     targetId = target
-                    break
-
+                    
 
             # Calculate what direction the target is in, save in
             # the variable targetDirection
@@ -95,7 +94,7 @@ def tick():
             x = ai.targetX(targetId) - selfX
             y = ai.targetY(targetId) - selfY
 
-            targetDirection = math.atan2(x, y)
+            targetDirection = math.atan2(y, x)
 
             # Turn to the direction of the target
             # useful variables: targetDirection
@@ -107,7 +106,20 @@ def tick():
             # it may be due to latency. Only turning every second
             # or third tick is a simple solution (use tickCount and %)
 
+            print(ai.targetAlive(0))
+            print(ai.targetAlive(1))
+            print(ai.targetAlive(2))
+            print(ai.targetAlive(3))
+            print(ai.targetAlive(4))
+            print(ai.targetAlive(5))
+            print(ai.targetAlive(6))
+            print(ai.targetAlive(7))
+            print(ai.targetAlive(8))
+            print(ai.targetAlive(9))
+            print(ai.targetAlive(10))
+            print(ai.targetAlive(11))
             
+
 
 
             # Check if you are aiming in the direction of the target,
@@ -117,8 +129,9 @@ def tick():
             # useful variables: selfHeading, targetDirection, mode
             # There is a function defined below called angleDiff that
             # is very useful as well.
-            print(round(targetDirection, 2)) 
-            print(round(ai.selfHeadingRad(), 2))
+            if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.01:
+                if ai.targetAlive(targetId):
+                    mode = "shoot"
                 
             
         
@@ -134,7 +147,8 @@ def tick():
             # if the target is destroyed, change state to aim
             # useful variables: targetId, mode
             # useful functions: ai.targetAlive
-            if ai.targetAlive(targetId):
+            print(targetId)
+            if ai.targetAlive(targetId) == 0:
                 mode = "aim"
 
 
