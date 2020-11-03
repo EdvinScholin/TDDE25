@@ -81,8 +81,9 @@ def tick():
             # useful variables: targetCount, targetId
             # useful functions: ai.targetAlive
             
-            for target in range(12):
-                if ai.targetAlive(target) == 1:
+            targetCount = ai.targetCountServer()
+            for target in range(targetCount):
+                if ai.targetAlive(target):
                     targetId = target
                     
 
@@ -135,7 +136,7 @@ def tick():
             # useful variables: targetId, mode
             # useful functions: ai.targetAlive
             print(targetId)
-            if ai.targetAlive(targetId) == 0:
+            if not ai.targetAlive(targetId):
                 mode = "aim"
 
 
