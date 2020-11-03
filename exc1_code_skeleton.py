@@ -80,13 +80,12 @@ def tick():
             # save that index in targetId.
             # useful variables: targetCount, targetId
             # useful functions: ai.targetAlive
-
-            targetCount = ai.targetCountServer()
-            for target in range(targetCount):
+            
+            for target in range(12):
                 if ai.targetAlive(target):
                     targetId = target
+                    break
 
-            """your code here"""
 
             # Calculate what direction the target is in, save in
             # the variable targetDirection
@@ -97,14 +96,12 @@ def tick():
             y = ai.targetY(targetId) - selfY
 
             targetDirection = math.atan2(x, y)
-            """your code here"""
 
             # Turn to the direction of the target
             # useful variables: targetDirection
             # useful functions: ai.turnRad, ai.turnToRad
 
-            return ai.turnToRad(targetDirection)
-            """your code here"""
+            ai.turnToRad(targetDirection)
 
             # If the ship keeps oscillating between a few angles
             # it may be due to latency. Only turning every second
@@ -120,24 +117,26 @@ def tick():
             # useful variables: selfHeading, targetDirection, mode
             # There is a function defined below called angleDiff that
             # is very useful as well.
-            if targetDirection == ai.selfHeadingRad():
-                mode = "shoot"
-                return
-
-            """your code here"""
+            print(round(targetDirection, 2)) 
+            print(round(ai.selfHeadingRad(), 2))
+                
+            
+        
+            
 
         elif mode == "shoot":
 
             # Shoot the target
             # useful functions: ai.fireShot
-
-            """your code here"""
+            
+            ai.fireShot()
 
             # if the target is destroyed, change state to aim
             # useful variables: targetId, mode
             # useful functions: ai.targetAlive
+            if ai.targetAlive(targetId):
+                mode = "aim"
 
-            """your code here"""
 
     except:
         #
