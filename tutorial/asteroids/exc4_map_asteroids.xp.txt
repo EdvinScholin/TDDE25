@@ -1,0 +1,83 @@
+# John litborn summer 2013
+
+mapwidth : 50
+mapheight : 50
+mapname : TDDE25 exercise 4: asteroids
+mapauthor: johli603
+gravity : 0
+limitedlives : no
+worldlives : 0
+selfimmunity : yes
+friction : 0
+maxRobots : 0
+shotLife : 30
+shotSpeed : 30
+shotsWallBounce : no
+edgeBounce : no
+playerstartsshielded : no
+allowshields : no
+maxplayershots : 50
+firerepeatrate : 3
+edgewrap : yes
+maxitemdensity : 0
+targetDeadTime : 30
+asteroidCollisionMayKill : no
+asteroidsOnRadar : yes
+asteroidProb : 1
+maxAsteroidDensity : 0.007
+asteroidMaxScore : 999
+explosionKillScoreMult : 9.5
+initialfuel : 250
+
+mapData: \multiline: EndOfMapdata
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                _ _ _                             
+                                                  
+                                                  
+                                                  
+                                                  
+EndOfMapdata
