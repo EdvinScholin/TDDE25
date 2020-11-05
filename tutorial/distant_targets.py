@@ -78,13 +78,14 @@ def tick():
                     targetId = target
 
 
+
             x = ai.targetX(targetId) - selfX
             y = ai.targetY(targetId) - selfY
 
             targetDirection = math.atan2(y, x)
 
 
-
+()
             ai.turnToRad(targetDirection)
 
 
