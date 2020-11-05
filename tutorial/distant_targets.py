@@ -28,6 +28,7 @@ def tick():
         global mode
         global targetId
 
+
         #
         # Reset the state machine if we die.
         #
@@ -42,11 +43,9 @@ def tick():
         # Read some "sensors" into local variables, to avoid excessive calls to the API
         # and improve readability.
         #
-
+        ai.setMaxTurnRad(2*math.pi)
         selfX = ai.selfX()
         selfY = ai.selfY()
-        selfVelX = ai.selfVelX()
-        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
 
         selfHeading = ai.selfHeadingRad() 
@@ -67,23 +66,21 @@ def tick():
             if targetCountAlive > 0:
                 mode = "aim"
 
+
         elif mode == "aim":
             if targetCountAlive == 0:
                 mode = "wait"
                 return
 
-            # Loop through the indexes of targets and find one that is alive,
-            # save that index in targetId.
-        
+            # Loop through the indexes of targets and find one that is alive
+            # save that index in targetId         
             for target in range(targetCount):
                 if ai.targetAlive(target):
                     targetId = target
 
 
-
-            # Calculate what direction the target is in, save in
-            # the variable targetDirection
-                                  
+            # Calculates the direction and disctance of the target
+            # save in the variables targetDirection and targetDistance                                  
             x = ai.targetX(targetId) - selfX
             y = ai.targetY(targetId) - selfY
             
@@ -94,26 +91,25 @@ def tick():
             # Turn to the direction of the target
             ai.turnToRad(targetDirection)
 
-            # Check if you are aiming in the direction of the target,
-            # if so, change mode to travel.
+
+            # Check if you are aiming in the direction of the target
+            # if so, change mode to travel or if you are close change to shoot
             if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.03:
                 if targetDistance < 500:
                     mode = "shoot"
                 else:
                     mode = "travel"
 
+
         elif mode == "travel":
             
-            # Sets the thrustpower to 5 and starts heading towards the target
-            ai.setPower(5)
-            if selfSpeed < 10:
-                ai.thrust()
+            # Sets the thrustpower to 10 and starts heading towards the target
+            ai.setPower(10)
+            ai.thrust()
 
-        
 
-            # Calculate what direction and the distance of the target
-            # save in the variable targetDirection and targetDistance
-
+            # Calculates the direction and disctance of the target
+            # save in the variables targetDirection and targetDistance
             x = ai.targetX(targetId) - selfX
             y = ai.targetY(targetId) - selfY
 
@@ -121,82 +117,70 @@ def tick():
             targetDirection = math.atan2(y, x)
             
 
-            # Calculates the angleDiff
-            # save in the variable diff
-            diff = angleDiff(targetDirection, ai.selfHeadingRad())
-
-            # Check if you are aiming close enough to the target,
-            # if not change mode to aim
-
-            if diff > 0.03:
-                mode = "aim"
-
-            print(angleDiff(targetDirection, ai.selfTrackingRad()))
-            if angleDiff(targetDirection, ai.selfTrackingRad()) > 2:
+            # If the angle differnce between the targetDirection and
+            # the direction of the ship is to big change mode to stop
+            if angleDiff(targetDirection, ai.selfTrackingRad()) > 1:
                 mode = "stop"
-            if targetDistance < 550 and diff < 0.03:
+
+
+            # If you are close to the target change mode to stop
+            if targetDistance < 500:
                 mode = "stop"
             
-            
-
 
         elif mode == "stop":
 
-            # Sets the thrustpower to 5 and the MaxTurnRad to 2*pi
-            ai.setPower(10)
-            ai.setMaxTurnRad(2*math.pi)
+            # Sets the thrustpower to 45
+            ai.setPower(45)
+            
 
-
-            # Calculate what direction and the distance of the target
+            # Calculate the direction and distance of the target
             # save in the variable targetDirection and targetDistance
-
             x = ai.targetX(targetId) - selfX
             y = ai.targetY(targetId) - selfY
             
             targetDirection = math.atan2(y, x)          
             targetDistance = math.hypot(x, y)
 
-            
-            # Calculates the angleDiff
-            # save in the variable diff
-            diff = angleDiff(targetDirection, ai.selfHeadingRad())
-
-
+        
+            # Turns around and starts heading in the oposite direction
+            ai.turnToRad(ai.selfTrackingRad() + math.pi)
+            ai.thrust()
             
 
-
-
-            if diff < 0.03:
-                ai.turnToRad(ai.selfTrackingRad() + math.pi)
-
-            if diff > 0.03:
-                ai.thrust()
-            
+            # If the speed of the ship is low enough change mode to shoot
+            # and if you are fare away from the target change mode to aim
             if selfSpeed < 1:
                 ai.turnToRad(selfHeading + math.pi)
-                mode = "shoot"
+                if targetDistance > 500:
+                    mode = "aim"
+                else:
+                    mode = "shoot"
             
-
-            
-
-
-
 
         elif mode == "shoot":
 
+            # Calculate the direction of the target
+            # save in the variable targetDirection
             x = ai.targetX(targetId) - selfX
             y = ai.targetY(targetId) - selfY
             
             targetDirection = math.atan2(y, x)           
-            diff = (angleDiff(targetDirection, ai.selfHeadingRad()))
-            print(diff)
-            if diff > 0.03:
-                mode = "aim"
-            if ai.targetAlive(targetId):
-                ai.fireShot()
-            if not ai.targetAlive(targetId):
+        
+            
+            # Change mode to aim if you are not looking at the target
+            if (angleDiff(targetDirection, ai.selfHeadingRad())) > 0.05:
                 mode = "aim"
 
+            
+            # Shoots the target
+            if ai.targetAlive(targetId):
+                ai.fireShot()
+                
+
+            # If the target is dead change mode to aim    
+            if not ai.targetAlive(targetId):
+                mode = "aim"
 
            
 
