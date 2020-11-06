@@ -62,6 +62,7 @@ def tick():
         print ("tick count:", tickCount, "mode:", mode, "targets alive:", targetCountAlive)
 
 
+
         if mode == "wait":
             if targetCountAlive > 0:
                 mode = "aim"
@@ -77,7 +78,7 @@ def tick():
             for target in range(targetCount):
                 if ai.targetAlive(target):
                     targetId = target
-
+                    
 
             # Calculates the direction and disctance of the target
             # save in the variables targetDirection and targetDistance                                  
@@ -129,9 +130,9 @@ def tick():
 
         elif mode == "stop":
 
-            # Sets the thrustpower to 55
+            # Sets the thrustpower to 55 and starts thrusting
             ai.setPower(55)
-            
+            ai.thrust()
 
             # Calculate the direction and distance of the target
             # save in the variable targetDirection and targetDistance
@@ -141,10 +142,6 @@ def tick():
             targetDirection = math.atan2(y, x)          
             targetDistance = math.hypot(x, y)
 
-        
-            # Turns around and starts heading in the oposite direction
-            ai.thrust()
-            
 
             # If the speed of the ship is low enough change mode to shoot
             if selfSpeed < 1:
@@ -163,18 +160,23 @@ def tick():
             y = ai.targetY(targetId) - selfY
             
             targetDirection = math.atan2(y, x)           
-        
+            targetDistance = math.hypot(x, y)
             
             # Change mode to aim if you are not looking at the target
-            if (angleDiff(targetDirection, ai.selfHeadingRad())) > 0.03:
+            if (angleDiff(targetDirection, ai.selfHeadingRad())) > 0.02:
                 ai.turnToRad(targetDirection)
 
             
-            # Shoots the target
-            if ai.targetAlive(targetId):
+            # Shoots the target if its close enough
+            if targetDistance < 300:
                 ai.fireShot()
                 
-            
+
+            # If the target is far away, go closer
+            if targetDistance > 300:
+                ai.setPower(10)
+                ai.thrust()
+
             # If the target is dead change mode to aim    
             if not ai.targetAlive(targetId):
                 mode = "aim"
