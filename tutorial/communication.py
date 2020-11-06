@@ -12,7 +12,7 @@ from optparse import OptionParser
 # Global variables that persist between ticks
 #
 tickCount = 0
-mode = "ready"
+mode = "wait"
 # add more if needed
 
 def tick():
@@ -32,7 +32,7 @@ def tick():
         #
         if not ai.selfAlive():
             tickCount = 0
-            mode = "ready"
+            mode = "wait"
             return
 
         tickCount += 1
@@ -41,7 +41,6 @@ def tick():
         # Read some "sensors" into local variables, to avoid excessive calls to the API
         # and improve readability.
         #
-
         selfX = ai.selfX()
         selfY = ai.selfY()
         selfVelX = ai.selfVelX()
@@ -52,12 +51,25 @@ def tick():
         # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
+        playerCount = ai.playerCountServer()
 
-        print ("tick count:", tickCount, "mode", mode)
+        print ("tick count:", tickCount, "mode:", mode, "players:", playerCount)
 
 
-        if mode == "ready":
-            pass
+        if mode == "wait":
+            if playerCount > 1:
+                mode = "ready"
+
+        
+        elif mode == "ready":
+            if playerCount == 1:
+                mode = "wait"
+                return
+
+        elif mode == "ask":
+
+        elif mode == "send":
+            
 
 
     except:
@@ -70,13 +82,13 @@ def tick():
 parser = OptionParser()
 
 parser.add_option ("-p", "--port", action="store", type="int", 
-                   dest="port", default=15345, 
+                   dest="port", default=15348, 
                    help="The port number. Used to avoid port collisions when" 
                    " connecting to the server.")
 
 (options, args) = parser.parse_args()
 
-name = "Stub"
+name = "Recieve"
 
 #
 # Start the AI
