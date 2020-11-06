@@ -12,7 +12,7 @@ from optparse import OptionParser
 # Global variables that persist between ticks
 #
 tickCount = 0
-mode = "ready"
+mode = "wait"
 # add more if needed
 
 def tick():
@@ -32,7 +32,7 @@ def tick():
         #
         if not ai.selfAlive():
             tickCount = 0
-            mode = "ready"
+            mode = "wait"
             return
 
         tickCount += 1
@@ -51,17 +51,68 @@ def tick():
         selfHeading = ai.selfHeadingRad() 
         # 0-2pi, 0 in x direction, positive toward y
 
+        # Determine the closest asteroid to self
+        targetDistance = 1000 
+
+        for target in range(ai.radarCount()):
+            radarDistance = ai.radarDist(target)
+            
+            if radarDistance < targetDistance:
+                targetDistance = radarDistance
+                asteroidId = target
+
+        #print(targetDistance)
+
+        #print(asteroidId)
+
         # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode", mode)
 
 
-        if mode == "ready":
-            pass
+        if mode == "wait":
+            if targetDistance <= 50:
+                mode = "aim"
 
+        elif mode == "aim":
+            if targetDistance > 50:
+                mode = "wait"
+                return
+        
+
+            # Determine target direction
+            x = ai.radarX(asteroidId) - ai.selfRadarX()
+            y = ai.radarY(asteroidId) - ai.selfRadarY()
+            targetDirection = math.atan2(y, x)
+            
+
+            # Turn to target direction
+            ai.turnToRad(targetDirection)
+
+
+            # When aiming at target, change mode to shoot
+            if angleDiff(targetDirection, ai.selfHeadingRad()) < 1:
+                mode = "shoot"
+                
+
+        elif mode == "shoot":
+
+            # Shoot the target
+            ai.fireShot()
+
+            # if the target is destroyed, change mode to aim
+            mode = "aim"
 
     except:
         print(traceback.print_exc())
+
+
+def angleDiff(one, two):
+    """Calculates the smallest angle between two angles"""
+
+    a1 = (one - two) % (2*math.pi)
+    a2 = (two - one) % (2*math.pi)
+    return min(a1, a2)
 
 
 #
@@ -70,7 +121,7 @@ def tick():
 parser = OptionParser()
 
 parser.add_option ("-p", "--port", action="store", type="int", 
-                   dest="port", default=15345, 
+                   dest="port", default=15348, 
                    help="The port number. Used to avoid port collisions when" 
                    " connecting to the server.")
 
