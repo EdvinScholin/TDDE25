@@ -73,7 +73,7 @@ def tick():
                 return
 
             # Loop through the indexes of targets and find one that is alive
-            # save that index in targetId         
+            # save that index in targetId
             for target in range(targetCount):
                 if ai.targetAlive(target):
                     targetId = target
@@ -95,18 +95,15 @@ def tick():
             # Check if you are aiming in the direction of the target
             # if so, change mode to travel or if you are close change to shoot
             if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.03:
-                if targetDistance < 500:
-                    mode = "shoot"
-                else:
-                    mode = "travel"
+                mode = "travel"
 
 
         elif mode == "travel":
             
-            # Sets the thrustpower to 10 and starts heading towards the target
-            ai.setPower(10)
-            ai.thrust()
-
+            # Sets the thrustpower to 20 and starts heading towards the target
+            ai.setPower(20)
+            if selfSpeed < 28:
+                ai.thrust()
 
             # Calculates the direction and disctance of the target
             # save in the variables targetDirection and targetDistance
@@ -119,19 +116,21 @@ def tick():
 
             # If the angle differnce between the targetDirection and
             # the direction of the ship is to big change mode to stop
-            if angleDiff(targetDirection, ai.selfTrackingRad()) > 1:
+            if angleDiff(targetDirection, ai.selfTrackingRad()) > 1 and selfSpeed > 5:
+                ai.turnToRad(ai.selfTrackingRad() + math.pi)
                 mode = "stop"
-
+            
 
             # If you are close to the target change mode to stop
             if targetDistance < 500:
+                ai.turnToRad(ai.selfTrackingRad() + math.pi)
                 mode = "stop"
             
 
         elif mode == "stop":
 
-            # Sets the thrustpower to 45
-            ai.setPower(45)
+            # Sets the thrustpower to 55
+            ai.setPower(55)
             
 
             # Calculate the direction and distance of the target
@@ -144,12 +143,10 @@ def tick():
 
         
             # Turns around and starts heading in the oposite direction
-            ai.turnToRad(ai.selfTrackingRad() + math.pi)
             ai.thrust()
             
 
             # If the speed of the ship is low enough change mode to shoot
-            # and if you are fare away from the target change mode to aim
             if selfSpeed < 1:
                 ai.turnToRad(selfHeading + math.pi)
                 if targetDistance > 500:
@@ -169,15 +166,15 @@ def tick():
         
             
             # Change mode to aim if you are not looking at the target
-            if (angleDiff(targetDirection, ai.selfHeadingRad())) > 0.05:
-                mode = "aim"
+            if (angleDiff(targetDirection, ai.selfHeadingRad())) > 0.03:
+                ai.turnToRad(targetDirection)
 
             
             # Shoots the target
             if ai.targetAlive(targetId):
                 ai.fireShot()
                 
-
+            
             # If the target is dead change mode to aim    
             if not ai.targetAlive(targetId):
                 mode = "aim"
