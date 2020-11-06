@@ -49,6 +49,7 @@ def tick():
         selfSpeed = ai.selfSpeed()
 
         selfHeading = ai.selfHeadingRad() 
+
         # 0-2pi, 0 in x direction, positive toward y
 
         # Determine the closest asteroid to self
@@ -80,10 +81,27 @@ def tick():
                 return
         
 
-            # Determine target direction
+            
+            # Convert shotSpeed to the radar cordinate system
+            shotSpeed = 60
+            radarShotVel = ai.selfRadarX()/selfX * shotSpeed
+            #print(radarShotVel)
+            
+            # Determine asteroids velocity
+            radarAsteroidVel = (ai.radarVelX(asteroidId)**2 + ai.radarVelY(asteroidId)**2)
+            #print(radarAsteroidVel)
+
+            # Konstant that depends on the time for the shot to reach its target 
+            k = math.asin(radarAsteroidVel/radarShotVel)
+            if ai.radarVelX(asteroidId) > 0:
+                k = -k
+            
+            # Determine the asteroids position
             x = ai.radarX(asteroidId) - ai.selfRadarX()
             y = ai.radarY(asteroidId) - ai.selfRadarY()
-            targetDirection = math.atan2(y, x)
+
+            # Determine asteroids direction when shot are supposed to hit target
+            targetDirection = k + math.atan2(y, x)
             
 
             # Turn to target direction
@@ -99,6 +117,7 @@ def tick():
 
             # Shoot the target
             ai.fireShot()
+
 
             # if the target is destroyed, change mode to aim
             mode = "aim"
