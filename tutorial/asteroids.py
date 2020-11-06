@@ -99,7 +99,7 @@ def tick():
             radarAsteroidDist = radarAsteroidVel * timeOfImpact
             
             v = math.acos((targetDistance**2 + radarShotDist**2 - radarAsteroidDist**2)
-                    / (2 * targetDistance * radarShotDist * radarAsteroidDist))
+                    / (2 * targetDistance * radarShotDist * radarAsteroidDist)) #får DivisionByZeroError
 
 
             # Determine asteroids direction when shot are supposed to hit target
@@ -157,7 +157,7 @@ def time_of_impact(px, py, vx, vy, s):
     t = 0
 
     if d >= 0:
-        t = b + sqrt(d) / a
+        t = b + math.sqrt(d) / a
         if t < 0:
             t = 0
 
