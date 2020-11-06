@@ -62,9 +62,6 @@ def tick():
                 targetDistance = radarDistance
                 asteroidId = target
 
-        #print(targetDistance)
-
-        #print(asteroidId)
 
         # Add more sensors readings here
 
@@ -85,23 +82,28 @@ def tick():
             # Convert shotSpeed to the radar cordinate system
             shotSpeed = 60
             radarShotVel = ai.selfRadarX()/selfX * shotSpeed
-            #print(radarShotVel)
-            
+           
+
             # Determine asteroids velocity
             radarAsteroidVel = (ai.radarVelX(asteroidId)**2 + ai.radarVelY(asteroidId)**2)
-            #print(radarAsteroidVel)
 
-            # Konstant that depends on the time for the shot to reach its target 
-            k = math.asin(radarAsteroidVel/radarShotVel)
-            if ai.radarVelX(asteroidId) > 0:
-                k = -k
-            
-            # Determine the asteroids position
+            # Determine the asteroids position relative to self
             x = ai.radarX(asteroidId) - ai.selfRadarX()
             y = ai.radarY(asteroidId) - ai.selfRadarY()
+            
+            # Time of impact, when bullet hits asteroid
+            timeOfImpact = time_of_impact(x, y, ai.radarVelX(asteroidId), ai.radarVelY(asteroidId), radarShotVel)
+
+            #Vinkel
+            radarShotDist = radarShotVel * timeOfImpact
+            radarAsteroidDist = radarAsteroidVel * timeOfImpact
+            
+            v = math.acos((targetDistance**2 + radarShotDist**2 - radarAsteroidDist**2)
+                    / (2 * targetDistance * radarShotDist * radarAsteroidDist))
+
 
             # Determine asteroids direction when shot are supposed to hit target
-            targetDirection = k + math.atan2(y, x)
+            targetDirection = v + math.atan2(y, x)
             
 
             # Turn to target direction
@@ -133,6 +135,33 @@ def angleDiff(one, two):
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
 
+
+def time_of_impact(px, py, vx, vy, s):
+
+    """
+    Determine the time of impact, when bullet hits moving target
+    Parameters:
+        px, py = initial target position in x,y relative to shooter
+        vx, vy = initial target velocity in x,y relative to shooter
+        s = initial bullet speed
+        t = time to impact, in our case ticks
+    """
+
+
+    a = s * s - (vx * vx + vy * vy)
+    b = px * vx + py * vy
+    c = px * px + py * py
+
+    d = b*b + a*c
+
+    t = 0
+
+    if d >= 0:
+        t = b + sqrt(d) / a
+        if t < 0:
+            t = 0
+
+    return t
 
 #
 # Parse the command line arguments
