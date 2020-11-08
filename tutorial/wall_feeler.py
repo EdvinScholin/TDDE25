@@ -126,18 +126,14 @@ def tick():
                 mode = "stop" 
                     
         if mode == "stop":   
-            #ai.turnToRad(ai.selfTrackingRad() - math.pi)
             stopCount += 1
             ai.setPower(45)
             ai.thrust()
 
-            if stopCount == 6:
-                stopCount = 0
-                mode = "travel"
-
-            """elif selfSpeed < 3:
-                stopCount = 0
-                mode = "travel" """
+            if stopCount > 6:
+                if ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 70: # is 1000 a good value?
+                    stopCount = 0
+                    mode = "travel"
 
         if mode == "ready":
             pass
