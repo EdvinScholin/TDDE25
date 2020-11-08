@@ -13,7 +13,14 @@ from optparse import OptionParser
 #
 tickCount = 0
 mode = "ready"
+itemId = -1
 # add more if needed
+
+def distance(xDis, yDis):
+    return math.hypot(xDis, yDis)
+        
+def direction(xDis, yDis):
+    return math.atan2(xDis, yDis)
 
 def tick():
     #
@@ -26,6 +33,7 @@ def tick():
         #
         global tickCount
         global mode
+        global itemId
 
         #
         # Reset the state machine if we die.
@@ -40,8 +48,13 @@ def tick():
         # Sets the first item in itemCount as itemId which the ship will
         # focus to aquire.
         itemCount = ai.itemCountScreen()
-        for item in range(itemCount):
+        if itemCount > 0:
+            for item in range(itemCount):
                 itemId = item
+        else: 
+            return
+        print(itemCount)
+        print(itemId)
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
@@ -61,14 +74,15 @@ def tick():
         itemX = ai.itemX(itemId)
         itemY = ai.itemY(itemId)
        
-        xDir = itemX - selfX                  
-        yDir = itemY - selfY
+        xDis = itemX - selfX                  
+        yDis = itemY - selfY
 
-        itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
-        itemDir = math.atan2(yDir, xDir) # Calculates direction in radians to item
+        #itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
+        itemDir = math.atan2(yDis, xDis) # Calculates direction in radians to item
 
         itemVelX = ai.itemVelX(itemId)
         itemVelY = ai.itemVelY(itemId)
+        itemSpeed = ai.itemSpeed(itemId)
 
         selfHeading = ai.selfHeadingRad() 
         # 0-2pi, 0 in x direction, positive toward y
@@ -81,89 +95,46 @@ def tick():
             mode = "travel"
         
         if mode == "travel":
-            """ai.setPower(5)
-            ai.thrust()
-            print(time_of_impact)
-            # Determine item velocity
-            itemVel = math.hypot(itemVelX, itemVelX)
-            
-            # Time of impact, when ship hits item
-            timeOfImpact = time_of_impact(itemX, itemY, itemVelX, itemVelY, selfSpeed)
+            """ai.turnToRad(itemDir)
+            dist = distance(xDis, yDis)
+            dire = direction(xDis, yDis)
+            alpha = math.pi + dire - ai.itemTrackingRad(itemId)
 
-            #Vinkel
-            itemTravelDistance = itemVel * time_of_impact # Distance traveled to impact point
-            itemDistance = selfSpeed * time_of_impact # Distance to the impact point
+            a = selfSpeed**2 - itemSpeed**2
+            b =  2 * dist * itemSpeed * math.cos(alpha)
+            c = -dist**2
+            disc = (b**2 - 4) * a * c
+            if disc < 0: return None
+            time = (math.sqrt(disc) - b) / (2 * a)
+            print(time)
+            x = itemX + itemSpeed * time * math.cos(ai.itemTrackingRad(itemId))
+            y = itemY + itemSpeed * time * math.sin(ai.itemTrackingRad(itemId))
 
-            v = math.atan2(itemTravelDistance, itemDistance)
-            
-            """"""radarShotDist = radarShotVel * timeOfImpact
-            radarAsteroidDist = radarAsteroidVel * timeOfImpact
-            
-            v = math.acos((targetDistance**2 + radarShotDist**2 - radarAsteroidDist**2)
-                    / (2 * targetDistance * radarShotDist * radarAsteroidDist)) #får DivisionByZeroError
-            """"""
+            selfDir = direction(x, y)"""
 
-            # Determine asteroids direction when shot are supposed to hit target
-            itemDir = v + math.atan2(itemY, itemX)"""
             
             #if ai.wallFeelerRad(100, ai.selfTrackRad()) == -1: 
             ai.turnToRad(itemDir) # Turns ship in direction of item
-            ai.setPower(5)
+            ai.setPower(10)
             ai.thrust()
 
             if 0 < ai.wallFeelerRad(70, ai.selfTrackingRad()) < 70: #or itemDist < 90:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi) # Rotates the ship 180 degrees
                 mode = "stop" 
-            if not ai.selfTrackingRad() == selfHeading:
-                ai.turnToRad(itemDir)
-                ai.thrust()
-                
-            
-        
+                    
         if mode == "stop":   
             #ai.turnToRad(ai.selfTrackingRad() - math.pi)
             ai.setPower(55)
             ai.thrust()
 
-            print(selfSpeed)
-            if selfSpeed < 1:
+            if selfSpeed < 3:
                 mode = "travel"
 
         if mode == "ready":
             pass
 
-
     except:
         print(traceback.print_exc())
-
-"""def time_of_impact(px, py, vx, vy, s):
-    """"""
-    Determine the time of impact, when ship hits moving item
-    Parameters:
-        px, py = initial item position in x,y relative to ship
-        vx, vy = initial item velocity in x,y relative to ship
-        s = initial ship speed
-        t = time to impact, in our case ticks
-    """"""
-    a = s * s - (vx * vx + vy * vy)
-    b = px * vx + py * vy
-    c = px * px + py * py
-
-    d = b*b + a*c
-
-    t = 0
-
-    #if d >= 0:
-    t = b + math.sqrt(d) / a
-    if t < 0:
-        t = 0
-    print(a)
-    print(b)
-    print(c)
-    print(d)
-    print(t)
-    return t"""
-
 
 #
 # Parse the command line arguments
