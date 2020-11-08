@@ -12,6 +12,7 @@ from optparse import OptionParser
 # Global variables that persist between ticks
 #
 tickCount = 0
+stopCount = 0
 mode = "ready"
 itemId = -1
 # add more if needed
@@ -32,6 +33,7 @@ def tick():
         # Declare global variables so we have access to them in the function
         #
         global tickCount
+        global stopCount
         global mode
         global itemId
 
@@ -52,9 +54,7 @@ def tick():
             for item in range(itemCount):
                 itemId = item
         else: 
-            return
-        print(itemCount)
-        print(itemId)
+            return # This evades IndexError: No item with that id
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
@@ -77,7 +77,7 @@ def tick():
         xDis = itemX - selfX                  
         yDis = itemY - selfY
 
-        #itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
+        itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
         itemDir = math.atan2(yDis, xDis) # Calculates direction in radians to item
 
         itemVelX = ai.itemVelX(itemId)
@@ -114,24 +114,35 @@ def tick():
 
             
             #if ai.wallFeelerRad(100, ai.selfTrackRad()) == -1: 
-            ai.turnToRad(itemDir) # Turns ship in direction of item
-            ai.setPower(10)
+            if itemDist > 40:
+                ai.turnToRad(itemDir) # Turns ship in direction of item
+            else:
+                ai.turnToRad(itemDir + ai.itemTrackingRad(itemId) - math.pi)
+            ai.setPower(5)
             ai.thrust()
-
+ 
             if 0 < ai.wallFeelerRad(70, ai.selfTrackingRad()) < 70: #or itemDist < 90:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi) # Rotates the ship 180 degrees
                 mode = "stop" 
                     
         if mode == "stop":   
             #ai.turnToRad(ai.selfTrackingRad() - math.pi)
-            ai.setPower(55)
+            stopCount += 1
+            ai.setPower(45)
             ai.thrust()
 
-            if selfSpeed < 3:
+            if stopCount == 6:
+                stopCount = 0
                 mode = "travel"
+
+            """elif selfSpeed < 3:
+                stopCount = 0
+                mode = "travel" """
 
         if mode == "ready":
             pass
+        print(stopCount)
+        print(itemDir) 
 
     except:
         print(traceback.print_exc())
