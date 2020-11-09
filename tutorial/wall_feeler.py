@@ -84,21 +84,28 @@ def tick():
                 mode = "stop"
                 return
             
-            # Items X and Y coordinate.
-            itemX = ai.itemX(itemId)
-            itemY = ai.itemY(itemId)
-        
-            xDis = itemX - selfX                  
-            yDis = itemY - selfY
-
-            itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
-            itemDir = math.atan2(yDis, xDis) # Calculates direction in radians to item
-
-            itemVelX = ai.itemVelX(itemId)
-            itemVelY = ai.itemVelY(itemId)
-            itemSpeed = ai.itemSpeed(itemId)
+            if itemCount > 0:
+                # Items X and Y coordinate.
+                itemX = ai.itemX(itemId)
+                itemY = ai.itemY(itemId)
             
-            ai.turnToRad(1.3) # Turns ship in direction of item
+                xDis = itemX - selfX                  
+                yDis = itemY - selfY
+
+                itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
+                itemDir = math.atan2(yDis, xDis) # Calculates direction in radians to item
+
+                itemVelX = ai.itemVelX(itemId)
+                itemVelY = ai.itemVelY(itemId)
+                itemSpeed = ai.itemSpeed(itemId)
+                
+                middleDisX = ai.mapWidthPixels() - selfX                  
+                middleDisY = ai.mapHeightPixels() - selfY                  
+                checkpointDistance = math.hypot(middleDisX, middleDisY) # Calcualtes the distance to checkpoint
+                checkpointDir = math.atan2(middleDisY, middleDisX)
+                ai.turnToRad(1.3) # Turns ship in direction of item
+            else:
+                ai.turnToRad(checkpointDir)
 
             ai.setPower(5)
             
@@ -113,10 +120,11 @@ def tick():
             stopCount += 1
             print(ai.itemCountScreen())
             if ai.itemCountScreen() == 0:
-                if 
+                
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
                 ai.setPower(20)
                 ai.thrust()
+                stopCount = 0
                 mode = "travel"
                 return
             
