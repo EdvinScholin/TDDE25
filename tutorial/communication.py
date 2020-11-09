@@ -13,6 +13,7 @@ from optparse import OptionParser
 #
 tickCount = 0
 mode = "wait"
+allMessages = []
 # add more if needed
 
 def tick():
@@ -26,6 +27,7 @@ def tick():
         #
         global tickCount
         global mode
+        global allMessages
 
         #
         # Reset the state machine if we die.
@@ -43,11 +45,15 @@ def tick():
         #
         selfX = ai.selfX()
         selfY = ai.selfY()
-        selfVelX = ai.selfVelX()
-        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
+        selfHeading = ai.selfHeadingRad()
+        selfTracking = ai.selfTrackingRad()
 
-        selfHeading = ai.selfHeadingRad() 
+        itemScreen = ai.itemCountScreen()
+        shipScreen = ai.shipCountScreen() - 1
+
+        maxMsgs = ai.getMaxMsgs()
+
         # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
@@ -58,17 +64,93 @@ def tick():
 
         if mode == "wait":
             if playerCount > 1:
-                mode = "ready"
+                mode = "scan"
 
         
-        elif mode == "ready":
+        elif mode == "scan":
             if playerCount == 1:
                 mode = "wait"
                 return
 
-        elif mode == "ask":
+            # Clear the list of messages
+            allMessages.clear()
+            
 
+            # Scan all messages and add them to a list allMessages
+            for message in range(maxMsgs):
+                if ai.scanTalkMsg(message):
+                    allMessages.append(ai.scanTalkMsg(message))
+                    ai.removeTalkMsg(message)
+            
+
+            # If there is a message in allMessages change mode to send
+            if allMessages:
+                mode = "send"
+          
+            
         elif mode == "send":
+
+            playerName = ""
+            
+            # Looks through all the messages recieved and sends back information
+            for message in range(len(allMessages)):
+
+                # Sends the coordinates to the player who asked for it
+                if "coordinates" in allMessages[message] and name in allMessages[message]:
+                    for player in range(playerCount):
+                        if ai.playerName(player) in allMessages[message] and ai.playerName != name:
+                            playerName = ai.playerName(player)
+
+                    coordinates = playerName + ":" + "X:" + str(selfX) + " Y:" + str(selfY)
+                    ai.talk(coordinates)
+
+                # Sends the heading of the ship in radians to the player who asked for it
+                if "heading" in allMessages[message] and name in allMessages[message]:
+                    for player in range(playerCount):
+                        if ai.playerName(player) in allMessages[message] and ai.playerName != name:
+                            playerName = ai.playerName(player)
+
+                    heading = playerName + ":" + str(selfHeading)
+                    ai.talk(heading)
+
+                # Sends the tracking of the ship in radians to the player who asked for it
+                if "tracking" in allMessages[message] and name in allMessages[message]:
+                    for player in range(playerCount):
+                        if ai.playerName(player) in allMessages[message] and ai.playerName != name:
+                            playerName = ai.playerName(player)
+
+                    tracking = playerName + ":" + str(selfTracking)
+                    ai.talk(tracking)
+
+                # Sends the speed of the ship to the player who asked for it
+                if "speed" in allMessages[message] and name in allMessages[message]:
+                    for player in range(playerCount):
+                        if ai.playerName(player) in allMessages[message] and ai.playerName != name:
+                            playerName = ai.playerName(player)
+
+                    speed = playerName + ":" + str(selfSpeed)
+                    ai.talk(speed)
+
+                # Sends the number of items seen on the screen to the player who asked for it
+                if "items" in allMessages[message] and name in allMessages[message]:
+                    for player in range(playerCount):
+                        if ai.playerName(player) in allMessages[message] and ai.playerName != name:
+                            playerName = ai.playerName(player)
+
+                    items = playerName + ":" + str(itemScreen)
+                    ai.talk(items)
+
+                # Sends the number of ships seen on the screen to the player who asked for it
+                if "ships" in allMessages[message] and name in allMessages[message]:
+                    for player in range(playerCount):
+                        if ai.playerName(player) in allMessages[message] and ai.playerName != name:
+                            playerName = ai.playerName(player)
+
+                    ships = playerName + ":" + str(shipScreen)
+                    ai.talk(ships)
+                
+            mode = "scan"
+            
             
 
 
@@ -88,7 +170,7 @@ parser.add_option ("-p", "--port", action="store", type="int",
 
 (options, args) = parser.parse_args()
 
-name = "Recieve"
+name = "Stub"
 
 #
 # Start the AI
