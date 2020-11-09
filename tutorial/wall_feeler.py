@@ -61,6 +61,8 @@ def tick():
         selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
 
+        itemCount = ai.itemCountScreen()
+
         # Allows the ship to turn 360 degrees.
         ai.setMaxTurnRad(2*math.pi)                 
 
@@ -70,81 +72,85 @@ def tick():
         # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode", mode)
+
+        if mode == "ready":
+            mode = "aim"
         
-        if mode != "stop":
-            mode = "travel"
-        
-        if mode == "travel":
-            itemCount = ai.itemCountScreen()
+        print(mode)
+
+        if mode == "aim":
+
             if itemCount > 0:
                 for item in range(itemCount):
                     itemId = item
-            else: 
-                print("else")
-                mode = "stop"
-                return
             
-            if itemCount > 0:
                 # Items X and Y coordinate.
                 itemX = ai.itemX(itemId)
                 itemY = ai.itemY(itemId)
             
-                xDis = itemX - selfX                  
-                yDis = itemY - selfY
-
+                xDist = itemX - selfX                  
+                yDist = itemY - selfY
+ 
                 itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
-                itemDir = math.atan2(yDis, xDis) # Calculates direction in radians to item
-
+                itemDir = math.atan2(yDist, xDist) # Calculates direction in radians to item
+ 
                 itemVelX = ai.itemVelX(itemId)
                 itemVelY = ai.itemVelY(itemId)
                 itemSpeed = ai.itemSpeed(itemId)
                 
-                middleDisX = ai.mapWidthPixels() - selfX                  
-                middleDisY = ai.mapHeightPixels() - selfY                  
-                checkpointDistance = math.hypot(middleDisX, middleDisY) # Calcualtes the distance to checkpoint
-                checkpointDir = math.atan2(middleDisY, middleDisX)
-                ai.turnToRad(1.3) # Turns ship in direction of item
-            else:
-                ai.turnToRad(checkpointDir)
-
-            ai.setPower(5)
-            
-            if selfSpeed < 8:
-                ai.thrust()
- 
-            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 70: 
-                ai.turnToRad(ai.selfTrackingRad() - math.pi) # Rotates the ship 180 degrees
-                mode = "stop" 
-                    
-        if mode == "stop":   
-            stopCount += 1
-            print(ai.itemCountScreen())
-            if ai.itemCountScreen() == 0:
+                ai.turnToRad(itemDir) # Turns ship in direction of item
                 
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
-                ai.setPower(20)
-                ai.thrust()
-                stopCount = 0
-                mode = "travel"
-                return
-            
-            if selfSpeed < 13:
-                ai.setPower(45)
+                if angleDiff(selfHeading, itemDir) < 0.1:
+                    ai.setPower(15)
+                    mode = "thrust"
+                elif angleDiff(selfHeading, itemDir) < 0.5:
+                    mode = "stop"
+
             else:
-                ai.setPower(55)
+                middleDisX = ai.getOption("mapWidth")/2 - selfX                  
+                middleDisY = ai.getOption("mapHeight")/2 - selfY                  
+                middleDistance = math.hypot(middleDisX, middleDisY) # Calcualtes the distance to checkpoint
+                middleDir = math.atan2(middleDisY, middleDisX)
+                ai.turnToRad(middleDir)
+
+            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100: 
+                mode = "stop" 
+
+            
+
+                    
+        elif mode == "stop":   
+            stopCount += 1
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            ai.setPower(55)
+            mode = "thrust"
+
+            if selfSpeed == 0:
+                if ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 70: # is 1000 a good value?
+                    stopCount = 0
+                    ai.setPower(5)
+                    mode = "thrust"
+            
+                else:
+                    mode = "aim"
+
+        elif mode == "thrust":
+            if 0 < stopCount < 8:
+                mode = "stop"
+            else:
+                mode = "aim"
             
             ai.thrust()
 
-            if stopCount > 6:
-                if ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 70: # is 1000 a good value?
-                    stopCount = 0
-                    mode = "travel"
-
-        if mode == "ready":
-            pass
-
     except:
         print(traceback.print_exc())
+    
+def angleDiff(one, two):
+    """Calculates the smallest angle between two angles"""
+
+    a1 = (one - two) % (2*math.pi)
+    a2 = (two - one) % (2*math.pi)
+    return min(a1, a2)
 
 #
 # Parse the command line arguments
