@@ -69,41 +69,63 @@ def tick():
 
 
         if mode == "wait":
-            if targetDistance <= 50:
+            if targetDistance <= 60:
                 mode = "aim"
 
         elif mode == "aim":
-            if targetDistance > 50:
+            if targetDistance > 60:
                 mode = "wait"
                 return
         
 
             
             # Convert shotSpeed to the radar cordinate system
-            shotSpeed = 60
-            radarShotVel = ai.selfRadarX()/selfX * shotSpeed
-           
+            shotSpeed = ai.getOption("shotSpeed")
+            #print(ai.radarWidth()/ai.getOption("mapwidth")) #Verkar vara någon slags fördröjning
+            #print(shotSpeed)
+            radarShotVel = ai.radarWidth()/ai.getOption("mapwidth") * shotSpeed
+            
 
             # Determine asteroids velocity
-            radarAsteroidVel = (ai.radarVelX(asteroidId)**2 + ai.radarVelY(asteroidId)**2)
-
-            # Determine the asteroids position relative to self
-            x = ai.radarX(asteroidId) - ai.selfRadarX()
-            y = ai.radarY(asteroidId) - ai.selfRadarY()
+            #radarAsteroidVel = (ai.radarVelX(asteroidId)**2 + ai.radarVelY(asteroidId)**2)
+            
+            # Determine the initial asteroid position relative to self
+            initialX = ai.radarX(asteroidId) - ai.selfRadarX()
+            initialY = ai.radarY(asteroidId) - ai.selfRadarY()
+            
             
             # Time of impact, when bullet hits asteroid
-            timeOfImpact = time_of_impact(x, y, ai.radarVelX(asteroidId), ai.radarVelY(asteroidId), radarShotVel)
+            timeOfImpact = time_of_impact(initialX, initialY, ai.radarVelX(asteroidId), ai.radarVelY(asteroidId), radarShotVel)
 
             #Vinkel
-            radarShotDist = radarShotVel * timeOfImpact
-            radarAsteroidDist = radarAsteroidVel * timeOfImpact
-            
-            v = math.acos((targetDistance**2 + radarShotDist**2 - radarAsteroidDist**2)
-                    / (2 * targetDistance * radarShotDist * radarAsteroidDist)) #får DivisionByZeroError
+            #radarShotDist = radarShotVel * timeOfImpact
+            #radarAsteroidDist = radarAsteroidVel * timeOfImpact
+            '''
+            print("time of impact: ", timeOfImpact)
+            print("radarShotDist: ", radarShotDist)
+            print("radarAsteroidDist: ", radarAsteroidDist)
+            print("targetDistance: ", radarDistance)
+            '''
+            '''
+            try:
+                kvot = ((targetDistance**2 + radarShotDist**2 - radarAsteroidDist**2) / 
+                        (2 * targetDistance * radarShotDist * radarAsteroidDist))
+                v = math.acos(kvot)
+            except (ZeroDivisionError, ValueError):
+                v = 0
+            '''
+            pointToAimAtX = ai.radarX(asteroidId) + ai.radarVelX(asteroidId)*timeOfImpact
+            pointToAimAtY = ai.radarY(asteroidId) + ai.radarVelY(asteroidId)*timeOfImpact
+
+            print(ai.radarVelY(asteroidId), ai.radarVelX(asteroidId), timeOfImpact)
+
+            # Determine the aimingpoints position relative to self
+            x = pointToAimAtX - ai.selfRadarX()
+            y = pointToAimAtY - ai.selfRadarY()
 
 
             # Determine asteroids direction when shot are supposed to hit target
-            targetDirection = v + math.atan2(y, x)
+            targetDirection = math.atan2(y, x)
             
 
             # Turn to target direction
