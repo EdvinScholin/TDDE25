@@ -49,12 +49,6 @@ def tick():
 
         # Sets the first item in itemCount as itemId which the ship will
         # focus to aquire.
-        itemCount = ai.itemCountScreen()
-        if itemCount > 0:
-            for item in range(itemCount):
-                itemId = item
-        else: 
-            return # This evades IndexError: No item with that id
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
@@ -70,20 +64,6 @@ def tick():
         # Allows the ship to turn 360 degrees.
         ai.setMaxTurnRad(2*math.pi)                 
 
-        # Items X and Y coordinate.
-        itemX = ai.itemX(itemId)
-        itemY = ai.itemY(itemId)
-       
-        xDis = itemX - selfX                  
-        yDis = itemY - selfY
-
-        itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
-        itemDir = math.atan2(yDis, xDis) # Calculates direction in radians to item
-
-        itemVelX = ai.itemVelX(itemId)
-        itemVelY = ai.itemVelY(itemId)
-        itemSpeed = ai.itemSpeed(itemId)
-
         selfHeading = ai.selfHeadingRad() 
         # 0-2pi, 0 in x direction, positive toward y
 
@@ -95,39 +75,56 @@ def tick():
             mode = "travel"
         
         if mode == "travel":
-            """ai.turnToRad(itemDir)
-            dist = distance(xDis, yDis)
-            dire = direction(xDis, yDis)
-            alpha = math.pi + dire - ai.itemTrackingRad(itemId)
-
-            a = selfSpeed**2 - itemSpeed**2
-            b =  2 * dist * itemSpeed * math.cos(alpha)
-            c = -dist**2
-            disc = (b**2 - 4) * a * c
-            if disc < 0: return None
-            time = (math.sqrt(disc) - b) / (2 * a)
-            print(time)
-            x = itemX + itemSpeed * time * math.cos(ai.itemTrackingRad(itemId))
-            y = itemY + itemSpeed * time * math.sin(ai.itemTrackingRad(itemId))
-
-            selfDir = direction(x, y)"""
-
+            itemCount = ai.itemCountScreen()
+            if itemCount > 0:
+                for item in range(itemCount):
+                    itemId = item
+            else: 
+                print("else")
+                mode = "stop"
+                return
             
-            #if ai.wallFeelerRad(100, ai.selfTrackRad()) == -1: 
-            if itemDist > 40:
-                ai.turnToRad(itemDir) # Turns ship in direction of item
-            else:
-                ai.turnToRad(itemDir + ai.itemTrackingRad(itemId) - math.pi)
+            # Items X and Y coordinate.
+            itemX = ai.itemX(itemId)
+            itemY = ai.itemY(itemId)
+        
+            xDis = itemX - selfX                  
+            yDis = itemY - selfY
+
+            itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
+            itemDir = math.atan2(yDis, xDis) # Calculates direction in radians to item
+
+            itemVelX = ai.itemVelX(itemId)
+            itemVelY = ai.itemVelY(itemId)
+            itemSpeed = ai.itemSpeed(itemId)
+            
+            ai.turnToRad(1.3) # Turns ship in direction of item
+
             ai.setPower(5)
-            ai.thrust()
+            
+            if selfSpeed < 8:
+                ai.thrust()
  
-            if 0 < ai.wallFeelerRad(70, ai.selfTrackingRad()) < 70: #or itemDist < 90:
+            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 70: 
                 ai.turnToRad(ai.selfTrackingRad() - math.pi) # Rotates the ship 180 degrees
                 mode = "stop" 
                     
         if mode == "stop":   
             stopCount += 1
-            ai.setPower(45)
+            print(ai.itemCountScreen())
+            if ai.itemCountScreen() == 0:
+                if 
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
+                ai.setPower(20)
+                ai.thrust()
+                mode = "travel"
+                return
+            
+            if selfSpeed < 13:
+                ai.setPower(45)
+            else:
+                ai.setPower(55)
+            
             ai.thrust()
 
             if stopCount > 6:
@@ -137,8 +134,6 @@ def tick():
 
         if mode == "ready":
             pass
-        print(stopCount)
-        print(itemDir) 
 
     except:
         print(traceback.print_exc())
