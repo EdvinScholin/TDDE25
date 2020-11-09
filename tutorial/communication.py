@@ -68,29 +68,34 @@ def tick():
 
         
         elif mode == "scan":
-            allMessages.clear()
             if playerCount == 1:
                 mode = "wait"
                 return
+
+            # Clear the list of messages
+            allMessages.clear()
             
+
+            # Scan all messages and add them to a list allMessages
             for message in range(maxMsgs):
                 if ai.scanTalkMsg(message):
                     allMessages.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message)
             
+
+            # If there is a message in allMessages change mode to send
             if allMessages:
                 mode = "send"
-
-           
+          
             
-
-            
-
         elif mode == "send":
 
             playerName = ""
             
+            # Looks through all the messages recieved and sends back information
             for message in range(len(allMessages)):
+
+                # Sends the coordinates to the player who asked for it
                 if "coordinates" in allMessages[message] and name in allMessages[message]:
                     for player in range(playerCount):
                         if ai.playerName(player) in allMessages[message] and ai.playerName != name:
@@ -99,7 +104,7 @@ def tick():
                     coordinates = playerName + ":" + "X:" + str(selfX) + " Y:" + str(selfY)
                     ai.talk(coordinates)
 
-
+                # Sends the heading of the ship in radians to the player who asked for it
                 if "heading" in allMessages[message] and name in allMessages[message]:
                     for player in range(playerCount):
                         if ai.playerName(player) in allMessages[message] and ai.playerName != name:
@@ -108,7 +113,7 @@ def tick():
                     heading = playerName + ":" + str(selfHeading)
                     ai.talk(heading)
 
-
+                # Sends the tracking of the ship in radians to the player who asked for it
                 if "tracking" in allMessages[message] and name in allMessages[message]:
                     for player in range(playerCount):
                         if ai.playerName(player) in allMessages[message] and ai.playerName != name:
@@ -117,6 +122,7 @@ def tick():
                     tracking = playerName + ":" + str(selfTracking)
                     ai.talk(tracking)
 
+                # Sends the speed of the ship to the player who asked for it
                 if "speed" in allMessages[message] and name in allMessages[message]:
                     for player in range(playerCount):
                         if ai.playerName(player) in allMessages[message] and ai.playerName != name:
@@ -125,6 +131,7 @@ def tick():
                     speed = playerName + ":" + str(selfSpeed)
                     ai.talk(speed)
 
+                # Sends the number of items seen on the screen to the player who asked for it
                 if "items" in allMessages[message] and name in allMessages[message]:
                     for player in range(playerCount):
                         if ai.playerName(player) in allMessages[message] and ai.playerName != name:
@@ -133,6 +140,7 @@ def tick():
                     items = playerName + ":" + str(itemScreen)
                     ai.talk(items)
 
+                # Sends the number of ships seen on the screen to the player who asked for it
                 if "ships" in allMessages[message] and name in allMessages[message]:
                     for player in range(playerCount):
                         if ai.playerName(player) in allMessages[message] and ai.playerName != name:
