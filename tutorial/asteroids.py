@@ -14,6 +14,7 @@ from optparse import OptionParser
 tickCount = 0
 mode = "wait"
 
+
 def tick():
     #
     # The API won't print out exceptions, so we have to catch and print them ourselves.
@@ -25,7 +26,6 @@ def tick():
         #
         global tickCount
         global mode
-        ai.setMaxMsgs(15)
 
         #
         # Reset the state machine if we die.
@@ -46,8 +46,8 @@ def tick():
         selfVelX = ai.selfVelX()
         selfVelY = ai.selfVelY()
         shotSpeed = ai.getOption("shotSpeed")
-        
-        selfHeading = ai.selfHeadingRad() 
+
+        selfHeading = ai.selfHeadingRad()
 
         # Determine the closest asteroid on screen to self
         targetDistance = 1000
@@ -59,13 +59,8 @@ def tick():
             if asteroidDistance < targetDistance:
                 targetDistance = asteroidDistance
                 asteroidId = target
-            
-        asteroidX = ai.asteroidX(asteroidId)
-        asteroidY = ai.asteroidY(asteroidId)
-        asteroidVelX = ai.asteroidVelX(asteroidId)
-        asteroidVelY = ai.asteroidVelY(asteroidId)
 
-        print ("tick count:", tickCount, "mode", mode)
+        print("tick count:", tickCount, "mode", mode)
 
         if mode == "wait":
             if countScreen > 0:
@@ -76,6 +71,12 @@ def tick():
                 mode = "wait"
                 return
 
+            # asteroid position and velocity
+            asteroidX = ai.asteroidX(asteroidId)
+            asteroidY = ai.asteroidY(asteroidId)
+            asteroidVelX = ai.asteroidVelX(asteroidId)
+            asteroidVelY = ai.asteroidVelY(asteroidId)
+
             # Asteroids initial position relative to self
             relX = asteroidX - selfX
             relY = asteroidY - selfY
@@ -83,7 +84,7 @@ def tick():
             # Asteroids initial velocity relative to self
             relVelX = asteroidVelX - selfVelX
             relVelY = asteroidVelY - selfVelY
-            
+
             # Time of impact, when shot is supposed to hit target
             t = time_of_impact(relX, relY, relVelX, relVelY, shotSpeed)
 
@@ -93,13 +94,13 @@ def tick():
 
             # Direction of aimpoint
             targetDirection = math.atan2(aimAtY, aimAtX)
-            
+
             # Turns to target direction
             ai.turnToRad(targetDirection)
 
             # When aiming at target, changes mode to shoot
             if angleDiff(targetDirection, selfHeading) < 1:
-                mode = "shoot" 
+                mode = "shoot"
 
         elif mode == "shoot":
 
@@ -132,7 +133,7 @@ def time_of_impact(px, py, vx, vy, s):
         s = initial bullet speed
         t = time to impact, in our case ticks
     """
-    
+
     a = s * s - (vx * vx + vy * vy)
     b = px * vx + py * vy
     c = px * px + py * py
@@ -145,18 +146,19 @@ def time_of_impact(px, py, vx, vy, s):
         t = (b + math.sqrt(d)) / a
         if t < 0:
             t = 0
-    
+
     return t
+
 
 #
 # Parse the command line arguments
 #
 parser = OptionParser()
 
-parser.add_option ("-p", "--port", action="store", type="int", 
-                   dest="port", default=15348, 
-                   help="The port number. Used to avoid port collisions when" 
-                   " connecting to the server.")
+parser.add_option("-p", "--port", action="store", type="int",
+                  dest="port", default=15348,
+                  help="The port number. Used to avoid port collisions when"
+                  " connecting to the server.")
 
 (options, args) = parser.parse_args()
 
@@ -166,8 +168,8 @@ name = "Stub"
 # Start the AI
 #
 
-ai.start(tick,["-name", name, 
-               "-join",
-               "-turnSpeed", "64",
-               "-turnResistance", "0",
-               "-port", str(options.port)])
+ai.start(tick, ["-name", name,
+                "-join",
+                "-turnSpeed", "64",
+                "-turnResistance", "0",
+                "-port", str(options.port)])
