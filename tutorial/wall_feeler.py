@@ -59,9 +59,10 @@ def tick():
         selfY = ai.selfY()
         selfSpeed = ai.selfSpeed()
 
+        # Calcualtes which direction the middle is 
         middleDisX = ai.radarWidth()/2 - ai.selfRadarX()                  
-        middleDisY = ai.radarHeight()/2 - ai.selfRadarY()                  
-        middleDir = math.atan2(middleDisY, middleDisX)      # Calcualtes which direction the middle is
+        middleDisY = ai.radarHeight()/2 - ai.selfRadarY()                 
+        middleDir = math.atan2(middleDisY, middleDisX)
 
         itemCount = ai.itemCountScreen()
 
@@ -69,7 +70,6 @@ def tick():
         ai.setMaxTurnRad(2*math.pi)                 
 
         selfHeading = ai.selfHeadingRad() 
-        # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
 
@@ -77,11 +77,10 @@ def tick():
 
         if mode == "ready":
             mode = "aim"
-        
-        print(mode)
 
         if mode == "aim":
-
+            
+            # Excecute when an item is visible
             if itemCount > 0:
                 for item in range(itemCount):
                     itemId = item
@@ -90,25 +89,33 @@ def tick():
                 itemX = ai.itemX(itemId)
                 itemY = ai.itemY(itemId)
             
+                # X and Y coordinates relative to self
                 xDist = itemX - selfX                  
                 yDist = itemY - selfY
- 
-                itemDir = math.atan2(yDist, xDist) # Calculates direction in radians to item
+
+                # Calculates direction in radians to item
+                itemDir = math.atan2(yDist, xDist)
                 
-                ai.turnToRad(itemDir) # Turns ship in direction of item
+                # Turns ship in direction of item
+                ai.turnToRad(itemDir) 
                 
-                if angleDiff(selfHeading, itemDir) < 0.1: # Thrust if we are in a sufficient right direction
+                # Thrust if we are in a sufficient right direction
+                if angleDiff(selfHeading, itemDir) < 0.1:
+                    
+                    # Stops accelerating
                     if selfSpeed < 7:
                         ai.setPower(12)
                     else:
                         ai.setPower(5)
                     mode = "thrust"
                 
-                elif angleDiff(selfHeading, itemDir) < 0.5: # Stop if we are in a sufficient wrong direction
+                # Stop if we are in a sufficient wrong direction
+                elif angleDiff(selfHeading, itemDir) < 0.5:
                     mode = "stop"
-                
+
+            # Excecute when an item is not visible    
             else:
-                ai.turnToRad(middleDir) # If an item is not visible --> go to middle of map
+                ai.turnToRad(middleDir)
                 
                 if angleDiff(selfHeading, middleDir) < 0.1: 
                     if selfSpeed < 8:
@@ -119,18 +126,19 @@ def tick():
                 
                 elif angleDiff(selfHeading, middleDir) < 0.5:
                     mode = "stop"
-    
-            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100: # If close enough to a wall --> stop
+
+            # If close enough to a wall --> stop
+            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100:
                 mode = "stop"
                     
         elif mode == "stop":   
-            
             stopCount += 1
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
             ai.setPower(55)
             mode = "thrust"
 
-        elif mode == "thrust":      # We are stopping for 7 ticks
+        # We are stopping for 7 ticks
+        elif mode == "thrust":
             if 0 < stopCount < 8:
                 mode = "stop"
             else:
@@ -140,7 +148,8 @@ def tick():
 
     except:
         print(traceback.print_exc())
-    
+
+
 def angleDiff(one, two):
     """Calculates the smallest angle between two angles"""
 

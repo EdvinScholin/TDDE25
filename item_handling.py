@@ -36,57 +36,25 @@ def tick():
             return
 
         tickCount += 1
-        
-        print ("tick count:", tickCount, "mode", mode)
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
         # and improve readability.
         #
+
         selfX = ai.selfX()
         selfY = ai.selfY()
+        selfVelX = ai.selfVelX()
+        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
-        
-        # Checkpoints X and Y coordinates
-        nextCheckpoint = ai.nextCheckpoint()
-        checkPointY = ai.checkpointY(nextCheckpoint)
-        checkPointX = ai.checkpointX(nextCheckpoint)
-        
+
         selfHeading = ai.selfHeadingRad() 
-        
-        # Calcualtes the distance and direction to checkpoint
-        xDir = checkPointX - selfX                  
-        yDir = checkPointY - selfY                 
-        checkpointDistance = math.hypot(xDir, yDir) 
-        checkpointDir = math.atan2(yDir, xDir) 
-        
-        # Allows the ship to turn 360 degrees
-        ai.setMaxTurnRad(2*math.pi)
+        # 0-2pi, 0 in x direction, positive toward y
 
-        if mode != "stop":
-            mode = "travel"
+        # Add more sensors readings here
 
-        if mode == "travel":
-            ai.setPower(30)
-            ai.thrust()
-            
-            # Turns ship in direction of checkpoint
-            ai.turnToRad(checkpointDir)
-            
-            if checkpointDistance < 200:
-                
-                # Rotates the ship 180 degrees
-                ai.turnToRad(selfHeading - math.pi)
-                mode = "stop"
-        
-        if mode == "stop":
-            ai.setPower(45)
-            ai.thrust()
+        print ("tick count:", tickCount, "mode", mode)
 
-            # When ships speed is sufficiently low, 
-            # we can begin to travel
-            if selfSpeed < 2:
-               mode = "travel"
 
         if mode == "ready":
             pass

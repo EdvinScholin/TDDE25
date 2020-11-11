@@ -49,8 +49,8 @@ def tick():
         #
         selfX = ai.selfX()
         selfY = ai.selfY()
+        
         selfHeading = ai.selfHeadingRad()
-        # 0-2pi, 0 in x direction, positive toward y
 
         targetCount = ai.targetCountServer()
         targetCountAlive = 0
@@ -58,10 +58,6 @@ def tick():
         for i in range(targetCount):
             if ai.targetAlive(i):
                 targetCountAlive += 1
-
-        # Use print statements for debugging, either here or further down in the code.
-        # Useful functions: round(), math.degrees(), math.radians(), etc.
-        # os.system('clear') clears the terminal screen, which can be useful.
 
         print("tick count:", tickCount, "mode:", mode, "heading:",
                 round(math.degrees(selfHeading)), "targets alive:", targetCountAlive)
@@ -78,64 +74,35 @@ def tick():
 
             # Loop through the indexes of targets and find one that is alive,
             # save that index in targetId.
-            # useful variables: targetCount, targetId
-            # useful functions: ai.targetAlive
-            
             targetCount = ai.targetCountServer()
             for target in range(targetCount):
                 if ai.targetAlive(target):
                     targetId = target
                     
-
             # Calculate what direction the target is in, save in
             # the variable targetDirection
-            # useful variables: selfX, selfY
-            # useful functions: math.atan2, ai.targetX, ai.targetY
-
             x = ai.targetX(targetId) - selfX
             y = ai.targetY(targetId) - selfY
 
             targetDirection = math.atan2(y, x)
 
             # Turn to the direction of the target
-            # useful variables: targetDirection
-            # useful functions: ai.turnRad, ai.turnToRad
-
             ai.turnToRad(targetDirection)
-
-            # If the ship keeps oscillating between a few angles
-            # it may be due to latency. Only turning every second
-            # or third tick is a simple solution (use tickCount and %)
             
-
-
-
             # Check if you are aiming in the direction of the target,
             # if so, change mode to shoot.
             # Note that, due to how the game handles angles, the difference
             # cannot be 0 for many angles.
-            # useful variables: selfHeading, targetDirection, mode
-            # There is a function defined below called angleDiff that
-            # is very useful as well.
             if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.01:
                 if ai.targetAlive(targetId):
                     mode = "shoot"
                 
-            
-        
-            
-
         elif mode == "shoot":
 
             # Shoot the target
-            # useful functions: ai.fireShot
-            
             ai.fireShot()
 
             # if the target is destroyed, change state to aim
-            # useful variables: targetId, mode
-            # useful functions: ai.targetAlive
-            print(targetId)
             if not ai.targetAlive(targetId):
                 mode = "aim"
 
