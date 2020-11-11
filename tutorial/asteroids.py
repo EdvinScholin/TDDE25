@@ -55,16 +55,22 @@ def tick():
         # 0-2pi, 0 in x direction, positive toward y
 
         # Determine the closest asteroid on screen to self
-        targetDistance = 1000 
+        targetDistance = 1000
         countScreen = ai.asteroidCountScreen()
 
         for target in range(countScreen):
             asteroidDistance = ai.asteroidDist(target)
-            
+
             if asteroidDistance < targetDistance:
                 targetDistance = asteroidDistance
                 asteroidId = target
+            
 
+        asteroidX = ai.asteroidX(asteroidId)
+        asteroidY = ai.asteroidY(asteroidId)
+        asteroidVelX = ai.asteroidVelX(asteroidId)
+        asteroidVelY = ai.asteroidVelY(asteroidId)
+        
 
         # Add more sensors readings here
 
@@ -82,12 +88,12 @@ def tick():
         
 
             # Asteroids initial position relative to self
-            relX = ai.asteroidX(asteroidId) - selfX
-            relY = ai.asteroidY(asteroidId) - selfY
+            relX = asteroidX - selfX
+            relY = asteroidY - selfY
 
             # Asteroids initial velocity relative to self
-            relVelX = ai.asteroidVelX(asteroidId) - selfVelX
-            relVelY = ai.asteroidVelY(asteroidId) - selfVelY
+            relVelX = asteroidVelX - selfVelX
+            relVelY = asteroidVelY - selfVelY
             
             # Time of impact, when shot is supposed to hit target
             t = time_of_impact(relX, relY, relVelX, relVelY, shotSpeed)
@@ -102,8 +108,10 @@ def tick():
             # Turns to target direction
             ai.turnToRad(targetDirection)
 
+
+
             # When aiming at target, changes mode to shoot
-            if angleDiff(targetDirection, selfHeading) == 0.1:
+            if angleDiff(targetDirection, selfHeading) < 1:
                 mode = "shoot"
                 
 
@@ -116,6 +124,8 @@ def tick():
             # if the target is destroyed, change mode to aim
             mode = "aim"
 
+    except UnboundLocalError:
+        pass
     except:
         print(traceback.print_exc())
 
@@ -154,19 +164,7 @@ def time_of_impact(px, py, vx, vy, s):
             t = 0
     
     return t
-    '''
 
-    p = math.sqrt(px**2 + py**2)
-    v = math.sqrt(vx**2 + vy**2)
-
-    t1 = -p / (v - s)
-    t2 = -p / (v + s)
-
-    if t1 < 0:
-        return t2
-    else:
-        return t1
-    '''
     
 #
 # Parse the command line arguments
