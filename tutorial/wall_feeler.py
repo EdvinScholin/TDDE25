@@ -57,9 +57,11 @@ def tick():
 
         selfX = ai.selfX()
         selfY = ai.selfY()
-        selfVelX = ai.selfVelX()
-        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
+
+        middleDisX = ai.radarWidth()/2 - ai.selfRadarX()                  
+        middleDisY = ai.radarHeight()/2 - ai.selfRadarY()                  
+        middleDir = math.atan2(middleDisY, middleDisX)      # Calcualtes which direction the middle is
 
         itemCount = ai.itemCountScreen()
 
@@ -91,55 +93,49 @@ def tick():
                 xDist = itemX - selfX                  
                 yDist = itemY - selfY
  
-                itemDist = ai.itemDist(itemId) # Calcualtes the distance to item
                 itemDir = math.atan2(yDist, xDist) # Calculates direction in radians to item
- 
-                itemVelX = ai.itemVelX(itemId)
-                itemVelY = ai.itemVelY(itemId)
-                itemSpeed = ai.itemSpeed(itemId)
                 
                 ai.turnToRad(itemDir) # Turns ship in direction of item
                 
-                if angleDiff(selfHeading, itemDir) < 0.1:
-                    ai.setPower(15)
+                if angleDiff(selfHeading, itemDir) < 0.1: # Thrust if we are in a sufficient right direction
+                    if selfSpeed < 7:
+                        ai.setPower(12)
+                    else:
+                        ai.setPower(5)
                     mode = "thrust"
-                elif angleDiff(selfHeading, itemDir) < 0.5:
+                
+                elif angleDiff(selfHeading, itemDir) < 0.5: # Stop if we are in a sufficient wrong direction
                     mode = "stop"
-
+                
             else:
-                middleDisX = ai.getOption("mapWidth")/2 - selfX                  
-                middleDisY = ai.getOption("mapHeight")/2 - selfY                  
-                middleDistance = math.hypot(middleDisX, middleDisY) # Calcualtes the distance to checkpoint
-                middleDir = math.atan2(middleDisY, middleDisX)
-                ai.turnToRad(middleDir)
-
-            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100: 
-                mode = "stop" 
-
-            
-
+                ai.turnToRad(middleDir) # If an item is not visible --> go to middle of map
+                
+                if angleDiff(selfHeading, middleDir) < 0.1: 
+                    if selfSpeed < 8:
+                        ai.setPower(12)
+                    else:
+                        ai.setPower(5)
+                    mode = "thrust"
+                
+                elif angleDiff(selfHeading, middleDir) < 0.5:
+                    mode = "stop"
+    
+            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100: # If close enough to a wall --> stop
+                mode = "stop"
                     
         elif mode == "stop":   
+            
             stopCount += 1
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
             ai.setPower(55)
             mode = "thrust"
 
-            if selfSpeed == 0:
-                if ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 70: # is 1000 a good value?
-                    stopCount = 0
-                    ai.setPower(5)
-                    mode = "thrust"
-            
-                else:
-                    mode = "aim"
-
-        elif mode == "thrust":
+        elif mode == "thrust":      # We are stopping for 7 ticks
             if 0 < stopCount < 8:
                 mode = "stop"
             else:
                 mode = "aim"
-            
+
             ai.thrust()
 
     except:
