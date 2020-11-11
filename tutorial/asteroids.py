@@ -14,8 +14,6 @@ from optparse import OptionParser
 tickCount = 0
 mode = "wait"
 
-# add more if needed
-
 def tick():
     #
     # The API won't print out exceptions, so we have to catch and print them ourselves.
@@ -43,7 +41,6 @@ def tick():
         # Read some "sensors" into local variables, to avoid excessive calls to the API
         # and improve readability.
         #
-
         selfX = ai.selfX()
         selfY = ai.selfY()
         selfVelX = ai.selfVelX()
@@ -51,8 +48,6 @@ def tick():
         shotSpeed = ai.getOption("shotSpeed")
         
         selfHeading = ai.selfHeadingRad() 
-
-        # 0-2pi, 0 in x direction, positive toward y
 
         # Determine the closest asteroid on screen to self
         targetDistance = 1000
@@ -65,17 +60,12 @@ def tick():
                 targetDistance = asteroidDistance
                 asteroidId = target
             
-
         asteroidX = ai.asteroidX(asteroidId)
         asteroidY = ai.asteroidY(asteroidId)
         asteroidVelX = ai.asteroidVelX(asteroidId)
         asteroidVelY = ai.asteroidVelY(asteroidId)
-        
-
-        # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode", mode)
-
 
         if mode == "wait":
             if countScreen > 0:
@@ -85,7 +75,6 @@ def tick():
             if countScreen == 0:
                 mode = "wait"
                 return
-        
 
             # Asteroids initial position relative to self
             relX = asteroidX - selfX
@@ -108,18 +97,14 @@ def tick():
             # Turns to target direction
             ai.turnToRad(targetDirection)
 
-
-
             # When aiming at target, changes mode to shoot
             if angleDiff(targetDirection, selfHeading) < 1:
-                mode = "shoot"
-                
+                mode = "shoot" 
 
         elif mode == "shoot":
 
             # Shoot the target
             ai.fireShot()
-
 
             # if the target is destroyed, change mode to aim
             mode = "aim"
@@ -139,7 +124,6 @@ def angleDiff(one, two):
 
 
 def time_of_impact(px, py, vx, vy, s):
-
     """
     Determine the time of impact, when bullet hits moving target
     Parameters:
@@ -148,7 +132,6 @@ def time_of_impact(px, py, vx, vy, s):
         s = initial bullet speed
         t = time to impact, in our case ticks
     """
-
     
     a = s * s - (vx * vx + vy * vy)
     b = px * vx + py * vy
@@ -165,7 +148,6 @@ def time_of_impact(px, py, vx, vy, s):
     
     return t
 
-    
 #
 # Parse the command line arguments
 #

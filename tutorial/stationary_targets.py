@@ -9,7 +9,6 @@ import os
 import libpyAI as ai
 from optparse import OptionParser
 
-
 #
 # Create global variables that persist between ticks.
 #

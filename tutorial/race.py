@@ -13,7 +13,6 @@ from optparse import OptionParser
 #
 tickCount = 0
 mode = "ready"
-# add more if needed
 
 def tick():
     #

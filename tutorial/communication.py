@@ -14,7 +14,6 @@ from optparse import OptionParser
 tickCount = 0
 mode = "wait"
 allMessages = []
-# add more if needed
 
 def tick():
     #
@@ -54,18 +53,13 @@ def tick():
 
         maxMsgs = ai.getMaxMsgs()
 
-        # 0-2pi, 0 in x direction, positive toward y
-
-        # Add more sensors readings here
         playerCount = ai.playerCountServer()
 
         print ("tick count:", tickCount, "mode:", mode, "players:", playerCount)
 
-
         if mode == "wait":
             if playerCount > 1:
                 mode = "scan"
-
         
         elif mode == "scan":
             if playerCount == 1:
@@ -74,25 +68,22 @@ def tick():
 
             # Clear the list of messages
             allMessages.clear()
-            
 
             # Scan all messages and add them to a list allMessages
             for message in range(maxMsgs):
                 if ai.scanTalkMsg(message):
                     allMessages.append(ai.scanTalkMsg(message))
-                    ai.removeTalkMsg(message)
-            
+                    ai.removeTalkMsg(message) 
 
             # If there is a message in allMessages change mode to send
             if allMessages:
                 mode = "send"
-          
             
         elif mode == "send":
 
             playerName = ""
             
-            # Looks through all the messages recieved and sends back information
+            # Looks through all the messages received and sends back information
             for message in range(len(allMessages)):
 
                 # Sends the coordinates to the player who asked for it
@@ -150,13 +141,9 @@ def tick():
                     ai.talk(ships)
                 
             mode = "scan"
-            
-            
-
 
     except:
         print(traceback.print_exc())
-
 
 #
 # Parse the command line arguments

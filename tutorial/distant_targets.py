@@ -49,7 +49,6 @@ def tick():
         selfSpeed = ai.selfSpeed()
 
         selfHeading = ai.selfHeadingRad() 
-        # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
         targetCount = ai.targetCountServer()
@@ -61,12 +60,9 @@ def tick():
 
         print ("tick count:", tickCount, "mode:", mode, "targets alive:", targetCountAlive)
 
-
-
         if mode == "wait":
             if targetCountAlive > 0:
                 mode = "aim"
-
 
         elif mode == "aim":
             if targetCountAlive == 0:
@@ -77,8 +73,7 @@ def tick():
             # save that index in targetId
             for target in range(targetCount):
                 if ai.targetAlive(target):
-                    targetId = target
-                    
+                    targetId = target      
 
             # Calculates the direction and disctance of the target
             # save in the variables targetDirection and targetDistance                                  
@@ -88,16 +83,13 @@ def tick():
             targetDirection = math.atan2(y, x)
             targetDistance = math.hypot(x, y)
 
-
             # Turn to the direction of the target
             ai.turnToRad(targetDirection)
 
-
             # Check if you are aiming in the direction of the target
-            # if so, change mode to travel or if you are close change to shoot
+            # if so, change mode to travel
             if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.03:
                 mode = "travel"
-
 
         elif mode == "travel":
             
@@ -113,20 +105,17 @@ def tick():
 
             targetDistance = math.hypot(x, y)
             targetDirection = math.atan2(y, x)
-            
 
             # If the angle differnce between the targetDirection and
-            # the direction of the ship is to big change mode to stop
+            # the direction of the ship is too big, change mode to stop
             if angleDiff(targetDirection, ai.selfTrackingRad()) > 1 and selfSpeed > 5:
                 ai.turnToRad(ai.selfTrackingRad() + math.pi)
                 mode = "stop"
-            
 
             # If you are close to the target change mode to stop
             if targetDistance < 500:
                 ai.turnToRad(ai.selfTrackingRad() + math.pi)
                 mode = "stop"
-            
 
         elif mode == "stop":
 
@@ -141,7 +130,6 @@ def tick():
             
             targetDirection = math.atan2(y, x)          
             targetDistance = math.hypot(x, y)
-
 
             # If the speed of the ship is low enough change mode to shoot
             if selfSpeed < 1:
@@ -165,12 +153,10 @@ def tick():
             # Change mode to aim if you are not looking at the target
             if (angleDiff(targetDirection, ai.selfHeadingRad())) > 0.02:
                 ai.turnToRad(targetDirection)
-
             
             # Shoots the target if its close enough
             if targetDistance < 300:
-                ai.fireShot()
-                
+                ai.fireShot() 
 
             # If the target is far away, go closer
             if targetDistance > 300:
@@ -181,12 +167,9 @@ def tick():
             if not ai.targetAlive(targetId):
                 mode = "aim"
 
-           
-
-
-
     except:
         print(traceback.print_exc())
+
 
 def angleDiff(one, two):
     """Calculates the smallest angle between two angles"""
@@ -194,7 +177,6 @@ def angleDiff(one, two):
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
-
 
 #
 # Parse the command line arguments
