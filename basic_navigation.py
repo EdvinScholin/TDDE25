@@ -12,8 +12,10 @@ from optparse import OptionParser
 # Global variables that persist between ticks
 #
 tickCount = 0
-mode = "ready"
-coordinates = []
+stopCount = 0
+mode = "wait"
+xCord = 0
+yCord = 0
 # add more if needed
 
 def tick():
@@ -27,14 +29,16 @@ def tick():
         #
         global tickCount
         global mode
-        global coordinates
+        global xCord
+        global yCord
+        global stopCount
 
         #
         # Reset the state machine if we die.
         #
         if not ai.selfAlive():
             tickCount = 0
-            mode = "ready"
+            mode = "wait"
             return
 
         tickCount += 1
@@ -46,49 +50,74 @@ def tick():
 
         selfX = ai.selfX()
         selfY = ai.selfY()
-        selfVelX = ai.selfVelX()
-        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
 
         selfHeading = ai.selfHeadingRad() 
         selfTracking = ai.selfTrackingRad()
+        playerCount = ai.playerCountServer()
+        pi = math.pi
+
+        x = xCord - selfX
+        y = yCord - selfY
+
+        targetDirection = math.atan2(y, x)
+        targetDistance = math.hypot(x, y)
+
+
+        ai.setMaxTurnRad(2*pi)
         # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode", mode)
 
+        if mode == "wait" :
+            if playerCount > 1:
+                mode = "ready"
 
-        if mode == "ready":
 
-            ai.talk("teacherbot:start-mission 7")
-            mode = "scan"
+        elif mode == "ready":
+            stopCount += 1
+
+            if playerCount == 1:
+                mode = "wait"
+                return
+
+            if stopCount == 1:
+                ai.talk("teacherbot:start-mission 7")
+
+            if not ai.scanTalkMsg(0) and targetDistance < 200:
+                complete = "teacherbot:completed move-to-stop " + str(xCord) + " " + str(yCord)
+                ai.talk(complete)
+
+
+            if "move-to-pass" in ai.scanTalkMsg(0):
+                mode = "scan"
     
 
         elif mode == "scan":
 
-            message = ""
-            if "move-to-pass" in ai.scanTalkMsg(0):
-                message = ai.scanTalkMsg(0)
+            
+            message = ai.scanTalkMsg(0)
+            ai.removeTalkMsg(0)
 
+            coordinates = []
             for seq in message.split():
                 if seq.isdigit():
                     coordinates.append(int(seq))
+            xCord = coordinates[0]
+            yCord = coordinates[1]
 
-            if coordinates:
-                mode = "aim"
+            
+            mode = "aim"
 
         elif mode == "aim":
-            x = coordinates[0] - selfX
-            y = coordinates[1] - selfY
-
-            targetDirection = math.atan2(y, x)
 
             ai.turnToRad(targetDirection)
 
             print(angleDiff(targetDirection, ai.selfHeadingRad()))
             
-            if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.01:
+            if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.03:
                 mode = "travel"
             
 
@@ -98,30 +127,49 @@ def tick():
                 ai.thrust()
 
 
-            x = coordinates[0] - selfX
-            y = coordinates[1] - selfY
-
-            targetDirection = math.atan2(y, x)
-            targetDistance = math.hypot(x, y)
-
-            print("angleDiff:", angleDiff(targetDirection, selfTracking))
-            print("targetDistance:", targetDistance)
-            
-            if angleDiff(targetDirection, selfTracking) > 0.01:
-                ai.turnToRad(selfTracking - math.pi)
+            if targetDistance < 300:
+                ai.turnToRad(selfHeading + pi)
                 mode = "stop"
             
 
 
 
-            print("Target:", coordinates)
+            print("Target:", xCord, yCord)
             print("Ship:", selfX, selfY)
+            print("targetDistance", targetDistance)
 
 
         elif mode == "stop":
-            ai.setPower(30)
+            ai.setPower(20)
             ai.thrust()
-            print("speed:", selfSpeed)
+
+            if selfSpeed < 0.5:
+                ai.turnToRad(targetDirection)
+                mode = "close_target"
+
+        elif mode == "close_target":
+
+
+
+
+            ai.setPower(5)
+            if selfSpeed < 10:
+                ai.thrust()
+
+            if targetDistance < 20:
+                ai.turnToRad(selfHeading + pi)
+                mode = "close_stop"
+
+        elif mode == "close_stop":
+            ai.setPower(10)
+            ai.thrust()
+
+            if selfSpeed < 0.5:
+                mode = "ready"
+
+        
+            
+
 
             
             
