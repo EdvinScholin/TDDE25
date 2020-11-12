@@ -12,7 +12,7 @@ from optparse import OptionParser
 # Global variables that persist between ticks
 #
 tickCount = 0
-stopCount = 0
+prevTrackRad = 0
 mode = "ready"
 itemId = -1
 # add more if needed
@@ -33,7 +33,7 @@ def tick():
         # Declare global variables so we have access to them in the function
         #
         global tickCount
-        global stopCount
+        global prevTrackRad
         global mode
         global itemId
 
@@ -111,6 +111,9 @@ def tick():
                 
                 # Stop if we are in a sufficient wrong direction
                 elif angleDiff(selfHeading, itemDir) < 0.5:
+                    ai.turnToRad(ai.selfTrackingRad() - math.pi)
+                    prevTrackRad = ai.selfTrackingRad()
+                
                     mode = "stop"
 
             # Excecute when an item is not visible    
@@ -129,20 +132,26 @@ def tick():
 
             # If close enough to a wall --> stop
             if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100:
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
+                prevTrackRad = ai.selfTrackingRad()
+                
                 mode = "stop"
                     
-        elif mode == "stop":   
-            stopCount += 1
-            ai.turnToRad(ai.selfTrackingRad() - math.pi)
-            ai.setPower(55)
-            mode = "thrust"
-
-        # We are stopping for 7 ticks
-        elif mode == "thrust":
-            if 0 < stopCount < 8:
+        if mode == "stop":   
+            
+            if ai.selfTrackingRad() == prevTrackRad - math.pi:
                 mode = "stop"
             else:
-                mode = "aim"
+                mode = "ready"
+
+            ai.setPower(30)
+            ai.thrust()
+            print(ai.selfTrackingRad())
+
+        # We are stopping for 7 ticks
+        if mode == "thrust":
+            
+            mode = "aim"
 
             ai.thrust()
 
