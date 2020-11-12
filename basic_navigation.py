@@ -53,7 +53,6 @@ def tick():
         selfSpeed = ai.selfSpeed()
 
         selfHeading = ai.selfHeadingRad() 
-        selfTracking = ai.selfTrackingRad()
         playerCount = ai.playerCountServer()
         pi = math.pi
 
@@ -63,13 +62,14 @@ def tick():
         targetDirection = math.atan2(y, x)
         targetDistance = math.hypot(x, y)
 
+        ai.setMaxMsgs(15)
 
         ai.setMaxTurnRad(2*pi)
         # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
 
-        print ("tick count:", tickCount, "mode", mode)
+        print ("tick count:", tickCount, "mode:", mode, "targetDistance:", round(targetDistance))
 
         if mode == "wait" :
             if playerCount > 1:
@@ -79,28 +79,33 @@ def tick():
         elif mode == "ready":
             stopCount += 1
 
+            # If you are alone on the server change mode to wait
             if playerCount == 1:
                 mode = "wait"
                 return
 
+            # Starts mission 7
             if stopCount == 1:
                 ai.talk("teacherbot:start-mission 7")
 
-            if not ai.scanTalkMsg(0) and targetDistance < 200:
-                complete = "teacherbot:completed move-to-stop " + str(xCord) + " " + str(yCord)
-                ai.talk(complete)
+            # 
+            message = ai.scanTalkMsg(0)
+            coordinates = []
+            for seq in message.split():
+                if seq.isdigit():
+                    coordinates.append(int(seq))
 
-
-            if "move-to-pass" in ai.scanTalkMsg(0):
+            # If you have recieved a message from teacherbot
+            # and its a new message change mode to scan
+            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0) and coordinates[0] != xCord:
                 mode = "scan"
     
 
         elif mode == "scan":
 
-            
+            # Scans the latest message and saves the coordinates
+            # in the variables xCord and yCord
             message = ai.scanTalkMsg(0)
-            ai.removeTalkMsg(0)
-
             coordinates = []
             for seq in message.split():
                 if seq.isdigit():
@@ -108,64 +113,86 @@ def tick():
             xCord = coordinates[0]
             yCord = coordinates[1]
 
-            
+            # Change mode to aim
             mode = "aim"
 
         elif mode == "aim":
 
+            # Turns to the target
             ai.turnToRad(targetDirection)
-
-            print(angleDiff(targetDirection, ai.selfHeadingRad()))
             
+            # If you are looking at the target change mode to travel
             if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.03:
                 mode = "travel"
             
 
         elif mode == "travel":
+
+            # Sets the thrustpower to 10 and starts heading towards the target
             ai.setPower(10)
             if selfSpeed < 20:
                 ai.thrust()
 
-
+            # If you are close to the target turn around and change mode to stop
             if targetDistance < 300:
                 ai.turnToRad(selfHeading + pi)
                 mode = "stop"
-            
-
-
-
-            print("Target:", xCord, yCord)
-            print("Ship:", selfX, selfY)
-            print("targetDistance", targetDistance)
 
 
         elif mode == "stop":
+
+            # Sets the thrustpower to 20 and starts thrusting
             ai.setPower(20)
             ai.thrust()
 
+            # If the speed of the ship is low enough look
+            # at the ship and change mode to close_target          
             if selfSpeed < 0.5:
                 ai.turnToRad(targetDirection)
                 mode = "close_target"
 
         elif mode == "close_target":
 
-
-
-
+            # Sets the thrustpower to 10 and starts heading towards the target
             ai.setPower(5)
             if selfSpeed < 10:
                 ai.thrust()
 
+            # If you are close to the target turn around and change mode to close_stop
             if targetDistance < 20:
                 ai.turnToRad(selfHeading + pi)
                 mode = "close_stop"
 
         elif mode == "close_stop":
+            # Sets the thrustpower to 10 and starts thrusting
             ai.setPower(10)
             ai.thrust()
 
+            # If the speed of the ship is low enough change mode to done 
             if selfSpeed < 0.5:
+                mode = "done"
+
+        elif mode == "done":
+
+            # Copy the last message and add completed
+            message = ai.scanTalkMsg(0)
+            new_msg = ""
+            for seq in message.split():
+                if not "[" in seq:
+                    new_msg += seq + " "
+            completed = "Teacherbot:completed " + new_msg
+
+            # If the mission was move-to-stop change mode to completed
+            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0) and "move-to-stop" in ai.scanTalkMsg(0):
+                ai.talk(completed)
+                mode = "completed"
+
+            # If the mission was move-to-pass change mode to ready
+            elif "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+                ai.talk(completed)
                 mode = "ready"
+
+
 
         
             
