@@ -99,19 +99,32 @@ def tick():
                 mode == "ready"
                 return
             
-            # Items X and Y coordinate.
+            # item position and velocity
             itemX = ai.itemX(itemId)
             itemY = ai.itemY(itemId)
-        
-            # X and Y coordinates relative to self
-            xDist = itemX - selfX                  
-            yDist = itemY - selfY
+            itemVelX = ai.itemVelX(itemId)
+            itemVelY = ai.itemVelY(itemId)
 
-            # Calculates direction in radians to item
-            itemDir = math.atan2(yDist, xDist)
-            
-            # Turns ship in direction of item
-            ai.turnToRad(itemDir) 
+            # items initial position relative to self
+            relX = itemX - selfX
+            relY = itemY - selfY
+
+            # items initial velocity relative to self
+            relVelX = itemVelX - selfVelX
+            relVelY = itemVelY - selfVelY
+
+            # Time of impact, when shot is supposed to hit target
+            t = time_of_impact(relX, relY, relVelX, relVelY, selfSpeed)
+
+            # Point of impact, where shot is supposed to hit target
+            aimAtX = relX + relVelX*t
+            aimAtY = relY + relVelY*t
+
+            # Direction of aimpoint
+            targetDirection = math.atan2(aimAtY, aimAtX)
+
+            # Turns to target direction
+            ai.turnToRad(targetDirection)
             
             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.1:
@@ -137,7 +150,7 @@ def tick():
             else:
                 mode = "ready"
 
-            ai.setPower(30)
+            ai.setPower(45)
             ai.thrust()
             print(ai.selfTrackingRad())
 
