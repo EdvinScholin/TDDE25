@@ -197,8 +197,8 @@ def tick():
             ai.turnToRad(adjustAngle)
             ai.setPower(10)
             ai.thrust()
-            print(angleDiff(selfHeading, itemDir))
-            if angleDiff(selfHeading, itemDir) < 0.05:
+            print(movItemDiff)
+            if movItemDiff < 0.05:
                 mode = "ready"
             else:
                 mode = "adjust"
