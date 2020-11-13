@@ -13,6 +13,7 @@ from optparse import OptionParser
 #
 tickCount = 0
 prevTrackRad = 0
+prevItemDir = 0
 mode = "ready"
 # add more if needed
 
@@ -28,6 +29,7 @@ def tick():
         global tickCount
         global mode
         global prevTrackRad
+        global prevItemDir
 
         #
         # Reset the state machine if we die.
@@ -94,7 +96,7 @@ def tick():
                 elif angleDiff(selfHeading, middleDir) < 0.5:
                     mode = "stop"
             '''
-        if mode == "aim":
+        elif mode == "aim":
             if itemCountScreen == 0:
                 mode == "ready"
                 return
@@ -119,31 +121,40 @@ def tick():
             # Point of impact, where shot is supposed to hit target
             aimAtX = relX + relVelX*t
             aimAtY = relY + relVelY*t
+            distance = math.sqrt((aimAtX**2 + aimAtY**2))
 
             # Direction of aimpoint
-            targetDirection = math.atan2(aimAtY, aimAtX)
+            itemDir = math.atan2(aimAtY, aimAtX)
 
             # Turns to target direction
-            ai.turnToRad(targetDirection)
-            
+            ai.turnToRad(itemDir)
+                        
             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.1:
                 
                 # Stops accelerating
+                '''
                 if selfSpeed < 7:
-                    ai.setPower(12)
+                    ai.setPower(30)
                 else:
-                    ai.setPower(5)
+                    ai.setPower(15)
+                '''
+                ai.setPower(30)
                 mode = "thrust"
             
+            '''
             # Stop if we are in a sufficient wrong direction
-            elif angleDiff(selfHeading, itemDir) < 0.5:
+            elif angleDiff(ai.selfTrackingRad(), itemDir) > 1:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
                 prevTrackRad = ai.selfTrackingRad()
-
                 mode = "stop"
+            '''
+
+            print(ai.selfTrackingRad(), selfHeading, ai.selfTrackingRad() - selfHeading)
+            #print(angleDiff(prevItemDir, itemDir))
+            prevItemDir = itemDir
         
-        if mode == "stop":
+        elif mode == "stop":
             
             if ai.selfTrackingRad() == prevTrackRad - math.pi:
                 mode = "stop"
@@ -152,9 +163,8 @@ def tick():
 
             ai.setPower(45)
             ai.thrust()
-            print(ai.selfTrackingRad())
 
-        if mode == "thrust": 
+        elif mode == "thrust": 
             mode = "ready"
             ai.thrust()
 
@@ -168,6 +178,32 @@ def angleDiff(one, two):
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
+
+
+def time_of_impact(px, py, vx, vy, s):
+    """
+    Determine the time of impact, when bullet hits moving target
+    Parameters:
+        px, py = initial target position in x,y relative to shooter
+        vx, vy = initial target velocity in x,y relative to shooter
+        s = initial bullet speed
+        t = time to impact, in our case ticks
+    """
+
+    a = s * s - (vx * vx + vy * vy)
+    b = px * vx + py * vy
+    c = px * px + py * py
+
+    d = b*b + a*c
+
+    t = 0
+
+    if d >= 0:
+        t = (b + math.sqrt(d)) / a
+        if t < 0:
+            t = 0
+
+    return t
 
 
 #
