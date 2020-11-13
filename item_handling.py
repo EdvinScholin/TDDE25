@@ -19,6 +19,7 @@ itemDir = 0
 mode = "ready"
 # add more if needed
 
+
 def tick():
     #
     # The API won't print out exceptions, so we have to catch and print them ourselves.
@@ -56,7 +57,7 @@ def tick():
         selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
 
-        selfHeading = ai.selfHeadingRad() 
+        selfHeading = ai.selfHeadingRad()
         # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
@@ -68,18 +69,18 @@ def tick():
             if itemDist < previousItemDist:
                 previousItemDist = itemDist
                 itemId = index
-        
-        # Calcualtes which direction the middle is 
-        middleDisX = ai.radarWidth()/2 - ai.selfRadarX()                  
-        middleDisY = ai.radarHeight()/2 - ai.selfRadarY()                 
+
+        # Calcualtes which direction the middle is
+        middleDisX = ai.radarWidth()/2 - ai.selfRadarX()
+        middleDisY = ai.radarHeight()/2 - ai.selfRadarY()
         middleDir = math.atan2(middleDisY, middleDisX)
 
         # Allows the ship to turn 360 degrees.
-        ai.setMaxTurnRad(2*math.pi)                 
+        ai.setMaxTurnRad(2*math.pi)
 
-        selfHeading = ai.selfHeadingRad() 
+        selfHeading = ai.selfHeadingRad()
 
-        print ("tick count:", tickCount, "mode", mode)
+        print("tick count:", tickCount, "mode", mode)
 
         if mode == "ready":
             if itemCountScreen > 0:
@@ -102,7 +103,7 @@ def tick():
             if itemCountScreen == 0:
                 mode == "ready"
                 return
-            
+
             # item position and velocity
             itemX = ai.itemX(itemId)
             itemY = ai.itemY(itemId)
@@ -116,7 +117,6 @@ def tick():
             # items initial velocity relative to self
             relVelX = itemVelX - selfVelX
             relVelY = itemVelY - selfVelY
-            
 
             # Time of impact, when ship is supposed to reach target
             t = time_of_impact(relX, relY, relVelX, relVelY, selfSpeed)
@@ -128,7 +128,7 @@ def tick():
 
             # Direction of aimpoint
             itemDir = math.atan2(aimAtY, aimAtX)
-            
+
             # Turns to target direction
             ai.turnToRad(itemDir)
             print(angleDiff(selfHeading, itemDir))
@@ -140,25 +140,24 @@ def tick():
 
             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.1:
-                
+
                 # Stops accelerating
-                
+
                 if selfSpeed < 7:
                     ai.setPower(30)
                 else:
                     ai.setPower(15)
-                
+
                 if selfSpeed < 10:
                     ai.setPower(45)
                     mode = "thrust"
-            
-            #if angleDiff(ai.selfTrackingRad(), itemDir) > 0.5:
+
+            # if angleDiff(ai.selfTrackingRad(), itemDir) > 0.5:
             else:
                 mode = "adjust"
-            
-        
+
             # Stop if we are in a sufficient wrong direction
-            #if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8:
+            # if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8:
             #    mode = "adjust"
             '''
             if (-1 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200 or
@@ -168,12 +167,11 @@ def tick():
                 
                 mode = "stop"
             '''
-            
-            
-            #print(selfSpeed)
+
+            # print(selfSpeed)
             #print(ai.selfTrackingRad(), itemDir, angleDiff(ai.selfTrackingRad(), itemDir))
             #print(angleDiff(prevItemDir, itemDir))
-        
+
         elif mode == "stop":
             print("stop")
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
@@ -181,10 +179,10 @@ def tick():
 
             if angle < 0.5:
                 mode = "ready"
-            
+
             ai.setPower(30)
             ai.thrust()
-            
+
         elif mode == "adjust":
             # kolla på rörelseriktningen och målets riktning.
             # Ta ut riktningen mitt mellan och thrusta.
@@ -200,19 +198,18 @@ def tick():
             ai.setPower(10)
             ai.thrust()
             print(angleDiff(selfHeading, itemDir))
-            if angleDiff(selfHeading, itemDir) < 0.1:
+            if angleDiff(selfHeading, itemDir) < 0.05:
                 mode = "ready"
             else:
                 mode = "adjust"
-            
 
-        elif mode == "thrust": 
+        elif mode == "thrust":
             mode = "ready"
             ai.thrust()
 
-
     except:
         print(traceback.print_exc())
+
 
 def angleDiff(one, two):
     """Calculates the smallest angle between two angles"""
@@ -256,10 +253,10 @@ def time_of_impact(px, py, vx, vy, s):
 #
 parser = OptionParser()
 
-parser.add_option ("-p", "--port", action="store", type="int", 
-                   dest="port", default=15348, 
-                   help="The port number. Used to avoid port collisions when" 
-                   " connecting to the server.")
+parser.add_option("-p", "--port", action="store", type="int",
+                  dest="port", default=15348,
+                  help="The port number. Used to avoid port collisions when"
+                  " connecting to the server.")
 
 (options, args) = parser.parse_args()
 
@@ -269,8 +266,8 @@ name = "Stub"
 # Start the AI
 #
 
-ai.start(tick,["-name", name, 
-               "-join",
-               "-turnSpeed", "64",
-               "-turnResistance", "0",
-               "-port", str(options.port)])
+ai.start(tick, ["-name", name,
+                "-join",
+                "-turnSpeed", "64",
+                "-turnResistance", "0",
+                "-port", str(options.port)])
