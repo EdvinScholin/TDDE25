@@ -83,12 +83,6 @@ def tick():
             
             stopCount += 1
 
-
-            
-        elif mode == "scan":
-                
-            mode = "send"
-
     except:
         print(traceback.print_exc())
 
