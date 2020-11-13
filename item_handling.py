@@ -15,6 +15,7 @@ tickCount = 0
 prevTrackRad = 0
 prevItemDir = 0
 direction = 0
+itemDir = 0
 mode = "ready"
 # add more if needed
 
@@ -32,6 +33,7 @@ def tick():
         global prevTrackRad
         global prevItemDir
         global direction
+        global itemDir
 
         #
         # Reset the state machine if we die.
@@ -71,8 +73,6 @@ def tick():
         middleDisX = ai.radarWidth()/2 - ai.selfRadarX()                  
         middleDisY = ai.radarHeight()/2 - ai.selfRadarY()                 
         middleDir = math.atan2(middleDisY, middleDisX)
-
-        itemCount = ai.itemCountScreen()
 
         # Allows the ship to turn 360 degrees.
         ai.setMaxTurnRad(2*math.pi)                 
@@ -116,8 +116,9 @@ def tick():
             # items initial velocity relative to self
             relVelX = itemVelX - selfVelX
             relVelY = itemVelY - selfVelY
+            
 
-            # Time of impact, when shot is supposed to hit target
+            # Time of impact, when ship is supposed to reach target
             t = time_of_impact(relX, relY, relVelX, relVelY, selfSpeed)
 
             # Point of impact, where shot is supposed to hit target
@@ -127,26 +128,38 @@ def tick():
 
             # Direction of aimpoint
             itemDir = math.atan2(aimAtY, aimAtX)
-
+            
             # Turns to target direction
             ai.turnToRad(itemDir)
-                        
+            print(angleDiff(selfHeading, itemDir))
+            # -------------------------------------------------------
+            # från mode adjust till aim så kommer alltid selfHeading
+            # ha den gamla riktningen vilket leder till att mode
+            # adjust kallas igen, alltså en ossilation.
+            # -------------------------------------------------------
+
             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.1:
                 
                 # Stops accelerating
-                '''
+                
                 if selfSpeed < 7:
                     ai.setPower(30)
                 else:
                     ai.setPower(15)
-                '''
-                ai.setPower(30)
-                mode = "thrust"
+                
+                if selfSpeed < 10:
+                    ai.setPower(45)
+                    mode = "thrust"
+            
+            #if angleDiff(ai.selfTrackingRad(), itemDir) > 0.5:
+            else:
+                mode = "adjust"
+            
         
             # Stop if we are in a sufficient wrong direction
-            if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8 and selfSpeed > 3:
-                mode = "stop"
+            #if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8:
+            #    mode = "adjust"
             '''
             if (-1 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200 or
                 -1 < ai.wallFeelerRad(-1000, ai.selfTrackingRad()) < 200):
@@ -157,22 +170,40 @@ def tick():
             '''
             
             
-            print(selfSpeed)
-            print(ai.selfTrackingRad(), itemDir, angleDiff(ai.selfTrackingRad(), itemDir))
+            #print(selfSpeed)
+            #print(ai.selfTrackingRad(), itemDir, angleDiff(ai.selfTrackingRad(), itemDir))
             #print(angleDiff(prevItemDir, itemDir))
-            prevItemDir = itemDir
         
         elif mode == "stop":
             print("stop")
-            prevTrackRad = ai.selfTrackingRad()
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
 
             if angle < 0.5:
                 mode = "ready"
             
-            ai.setPower(20)
+            ai.setPower(30)
             ai.thrust()
+            
+        elif mode == "adjust":
+            # kolla på rörelseriktningen och målets riktning.
+            # Ta ut riktningen mitt mellan och thrusta.
+            movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
+            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
+            absItemDir = itemDir % (2*math.pi)
+
+            if selfTrackRad > absItemDir:
+                adjustAngle = absItemDir + 3*movItemDiff/2
+            else:
+                adjustAngle = selfTrackRad + 3*movItemDiff/2
+            ai.turnToRad(adjustAngle)
+            ai.setPower(10)
+            ai.thrust()
+            print(angleDiff(selfHeading, itemDir))
+            if angleDiff(selfHeading, itemDir) < 0.1:
+                mode = "ready"
+            else:
+                mode = "adjust"
             
 
         elif mode == "thrust": 
