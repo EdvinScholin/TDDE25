@@ -14,6 +14,7 @@ from optparse import OptionParser
 tickCount = 0
 prevTrackRad = 0
 prevItemDir = 0
+direction = 0
 mode = "ready"
 # add more if needed
 
@@ -30,6 +31,7 @@ def tick():
         global mode
         global prevTrackRad
         global prevItemDir
+        global direction
 
         #
         # Reset the state machine if we die.
@@ -141,28 +143,37 @@ def tick():
                 '''
                 ai.setPower(30)
                 mode = "thrust"
-            
-            '''
+        
             # Stop if we are in a sufficient wrong direction
-            elif angleDiff(ai.selfTrackingRad(), itemDir) > 1:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
-                prevTrackRad = ai.selfTrackingRad()
+            if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8 and selfSpeed > 3:
                 mode = "stop"
             '''
-
-            print(ai.selfTrackingRad(), selfHeading, ai.selfTrackingRad() - selfHeading)
+            if (-1 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200 or
+                -1 < ai.wallFeelerRad(-1000, ai.selfTrackingRad()) < 200):
+                print("kallar på stop")
+                direction += math.pi
+                
+                mode = "stop"
+            '''
+            
+            
+            print(selfSpeed)
+            print(ai.selfTrackingRad(), itemDir, angleDiff(ai.selfTrackingRad(), itemDir))
             #print(angleDiff(prevItemDir, itemDir))
             prevItemDir = itemDir
         
         elif mode == "stop":
-            
-            if ai.selfTrackingRad() == prevTrackRad - math.pi:
-                mode = "stop"
-            else:
-                mode = "ready"
+            print("stop")
+            prevTrackRad = ai.selfTrackingRad()
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
 
-            ai.setPower(45)
+            if angle < 0.5:
+                mode = "ready"
+            
+            ai.setPower(20)
             ai.thrust()
+            
 
         elif mode == "thrust": 
             mode = "ready"
@@ -199,7 +210,10 @@ def time_of_impact(px, py, vx, vy, s):
     t = 0
 
     if d >= 0:
-        t = (b + math.sqrt(d)) / a
+        try:
+            t = (b + math.sqrt(d)) / a
+        except ZeroDivisionError:
+            t = (b + math.sqrt(d))
         if t < 0:
             t = 0
 
