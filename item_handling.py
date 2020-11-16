@@ -67,7 +67,7 @@ def tick():
         
         for index in range(itemCountScreen):
             itemDist = ai.itemDist(index)
-            if itemDist < previousItemDist and :
+            if itemDist < previousItemDist:
                 previousItemDist = itemDist
                 itemId = index
         
@@ -134,18 +134,9 @@ def tick():
 
             # Turns to target direction
             ai.turnToRad(itemDir)
-
-
-            #print(angleDiff(selfHeading, itemDir))
-            # -------------------------------------------------------
-            # från mode adjust till aim så kommer alltid selfHeading
-            # ha den gamla riktningen vilket leder till att mode
-            # adjust kallas igen, alltså en ossilation.
-            # -------------------------------------------------------
-
             
             # Thrust if we are in a sufficient right direction
-            if angleDiff(ai.selfTrackingRad(), itemDir) < 0.05:
+            if angleDiff(selfHeading, itemDir) < 0.05:
 
                 # Stops accelerating
 
@@ -156,15 +147,14 @@ def tick():
 
                 if selfSpeed < 10:
                     ai.setPower(45)
-                    mode = "thrust"
+                
+                ai.thrust()
+                mode = "ready"
 
-            # if angleDiff(ai.selfTrackingRad(), itemDir) > 0.5:
-            else:
+            elif angleDiff(ai.selfTrackingRad(), itemDir) > 0.1:
                 mode = "adjust"
             
             # Stop if we are in a sufficient wrong direction
-            # if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8:
-            #    mode = "adjust"
             '''
             if (-1 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200 or
                 -1 < ai.wallFeelerRad(-1000, ai.selfTrackingRad()) < 200):
@@ -174,13 +164,11 @@ def tick():
                 mode = "stop"
             '''
 
-            # print(selfSpeed)
-            #print(ai.selfTrackingRad(), itemDir, angleDiff(ai.selfTrackingRad(), itemDir))
-            #print(angleDiff(prevItemDir, itemDir))
-
         elif mode == "stop":
             print("stop")
-            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            if selfSpeed > 1:
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
+
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
 
             if angle < 0.5:
@@ -197,14 +185,26 @@ def tick():
             absItemDir = itemDir % (2*math.pi)
 
             relVelToItem = relativeVel(selfSpeed, ai.selfTrackingRad(), itemDir)
-
-            if selfTrackRad > absItemDir:
-                adjustAngle = absItemDir + 3*movItemDiff/2
-            else:
-                adjustAngle = selfTrackRad + 3*movItemDiff/2
-
-            ai.turnToRad(adjustAngle)
             
+            print("movItemDiff: ", movItemDiff)
+            if movItemDiff < math.pi/2:
+                # funkar endast för diff under pi/2
+                adjustAngle = 2*absItemDir - selfTrackRad
+            else:
+                #elif movItemDiff == math.pi:
+                mode = "stop"
+                return
+            '''    
+            else:
+                # denna borde funka!!!!!
+                adjustAngle = (3*absItemDir - selfTrackRad)/2
+            '''
+            
+            print("adjustAngle: ", adjustAngle)
+            
+            ai.turnToRad(adjustAngle)
+            selfHeading = ai.selfHeadingRad()
+            '''
             if relVelToItem < 5:
                 ai.setPower(10)
             elif relVelToItem < 10:
@@ -212,21 +212,19 @@ def tick():
             elif relVelToItem < 15:
                 ai.setPower(30)
             
-            if selfSpeed > 20:
+            if 5*math.pi/4 < movItemDiff < 7*math.pi/4:
                 mode = "stop"
                 return
+            '''
 
+            ai.setPower(30)
             ai.thrust()
-            print(adjustAngle)
-            print(movItemDiff)
-            if movItemDiff < 0.1:
+
+            if angleDiff(selfHeading, itemDir) < 0.05:
                 mode = "ready"
             else:
                 mode = "adjust"
 
-        elif mode == "thrust":
-            mode = "ready"
-            ai.thrust()
 
     except:
         print(traceback.print_exc())
