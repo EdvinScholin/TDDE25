@@ -18,9 +18,13 @@ mode = "wait"
 selectItemType = -1
 itemId = 0
 prevTrackRad = 0
+prevSelfItem = 0
 
-itemDict = {"mine": 8} 
-
+itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak": 4, 
+            "sensor": 5, "transporter": 6, "tank": 7, "mine": 8, "missile": 9, "ecm": 10,
+            "laser": 11, "emergencythrust": 12, "tractorbeam": 13, "autopilot": 14, 
+            "emergencyshield": 15, "itemdeflector": 16, "hyperjump": 17, "phasing": 18, 
+            "mirror": 19, "armor": 20} 
 def tick():
     #
     # The API won't print out exceptions, so we have to catch and print them ourselves.
@@ -37,6 +41,7 @@ def tick():
         global selectItemType
         global itemId
         global prevTrackRad
+        global prevSelfItem
 
         #
         # Reset the state machine if we die.
@@ -84,21 +89,10 @@ def tick():
             
             # To limit times mode we start the mission
             stopCount += 1
-            selfItem = 0
-            
-            print(selectItemType)
-            if selectItemType > -1:
-                selfItem = ai.selfItem(selectItemType)
-            #print(selfItem)
-
+        
             # Start mission
             if stopCount == 1:
                 ai.talk("teacherbot: start-mission 8")
-            
-            """# Completed mission if
-            if not ai.scanTalkMsg(0) and selfItem > 0:
-                complete = "teacherbot: completed collect-item " + str(selectItemType)
-                ai.talk(complete) """
 
             if "collect-item" in ai.scanTalkMsg(0):
                 mode = "scan"
@@ -115,6 +109,8 @@ def tick():
 
             if selectItemType in itemDict:
                 selectItemType = itemDict[selectItemType]
+            
+            prevSelfItem = ai.selfItem(selectItemType)
                     
             mode = "aim"
             
@@ -126,6 +122,11 @@ def tick():
             prevItemDist = 1000
             prevSelectItemDist = 1000
             selectedItemCount = 0
+            
+            if itemCount == 0:
+                ai.turnToRad(middleDir)
+                mode = "thrust"
+                return
 
             for index in range(itemCountScreen):
                 
@@ -170,7 +171,6 @@ def tick():
             # Point of impact, where ship is supposed to hit item
             aimAtX = relX + relVelX*t
             aimAtY = relY + relVelY*t
-            distance = math.sqrt((aimAtX**2 + aimAtY**2))
 
             # Direction of aimpoint
             itemDir = math.atan2(aimAtY, aimAtX)
@@ -178,41 +178,76 @@ def tick():
             # Turns to item direction
             ai.turnToRad(itemDir)
                         
-            # Thrust if we are in a sufficient right direction
+             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.1:
-                
-                # Stops accelerating
-                '''
-                if selfSpeed < 7:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
                     ai.setPower(30)
-                else:
-                    ai.setPower(15)
-                '''
-                ai.setPower(15)
-                mode = "thrust"
-
-            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
-                prevTrackRad = ai.selfTrackingRad()
-                
-                mode = "stop"
+                    mode = "thrust"
+        
+            # Stop if we are in a sufficient wrong direction
+            if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8 and selfSpeed > 3:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
+                    mode = "stop"
             
-            if selfHeading != ai.selfTrackingRad():
-                mode = "stop"
+            # Different distances to wall for different speeds
+            if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100):
+                mode = "closeToWall"
+            
+            if selfSpeed > 13:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200):
+                    mode = "closeToWall" 
+            
+            if selfSpeed > 18:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 400):
+                    mode = "closeToWall"
+            
+            print(selfSpeed)
+        
+        elif mode == "closeToWall":
+            
+            prevTrackRad = ai.selfTrackingRad()
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
+            
+            if selfSpeed < 3:
+                print("closeToWall")
+                mode = "aim"
+            
+            ai.setPower(40)
+            ai.thrust()
         
         elif mode == "stop":
             
-            if ai.selfTrackingRad() == prevTrackRad - math.pi:
-                mode = "stop"
-            else:
-                mode = "aim"
+            # Saves our previous self angle so that we do not oscillate
+            prevTrackRad = ai.selfTrackingRad()
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
 
-            ai.setPower(15)
+            if angle < 0.5:
+                mode = "aim"
+            
+            ai.setPower(40)
             ai.thrust()
+
+            if prevSelfItem < ai.selfItem(selectItemType):
+                if selfSpeed < 3:
+                    mode = "done"
+                else:
+                    mode = "stop"
 
         elif mode == "thrust": 
             mode = "aim"
             ai.thrust()
+        
+        elif mode == "done":
+            
+            # Gets the key from the value of our desired item in order to
+            # send a message to teacherbot
+            itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(selectItemType)]
+            completed = "Teacherbot: completed collect-item " + itemStrValue
+            ai.removeTalkMsg(0)
+            ai.talk(completed)
+            mode = "scan"
 
 
     except:

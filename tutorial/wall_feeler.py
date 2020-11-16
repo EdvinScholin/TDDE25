@@ -57,6 +57,8 @@ def tick():
 
         selfX = ai.selfX()
         selfY = ai.selfY()
+        selfVelX = ai.selfVelX()
+        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
 
         # Calcualtes which direction the middle is 
@@ -80,79 +82,121 @@ def tick():
 
         if mode == "aim":
             
-            # Excecute when an item is visible
-            if itemCount > 0:
-                for item in range(itemCount):
-                    itemId = item
-            
-                # Items X and Y coordinate.
-                itemX = ai.itemX(itemId)
-                itemY = ai.itemY(itemId)
-            
-                # X and Y coordinates relative to self
-                xDist = itemX - selfX                  
-                yDist = itemY - selfY
-
-                # Calculates direction in radians to item
-                itemDir = math.atan2(yDist, xDist)
+            if itemCount == 0:
                 
-                # Turns ship in direction of item
-                ai.turnToRad(itemDir) 
-                
-                # Thrust if we are in a sufficient right direction
-                if angleDiff(selfHeading, itemDir) < 0.1:
-                    
-                    # Stops accelerating
-                    if selfSpeed < 7:
-                        ai.setPower(12)
-                    else:
-                        ai.setPower(5)
-                    mode = "thrust"
-                
-                # Stop if we are in a sufficient wrong direction
-                elif angleDiff(selfHeading, itemDir) < 0.5:
-                    ai.turnToRad(ai.selfTrackingRad() - math.pi)
-                    prevTrackRad = ai.selfTrackingRad()
-                
-                    mode = "stop"
-
-            # Excecute when an item is not visible    
-            else:
                 ai.turnToRad(middleDir)
                 
-                if angleDiff(selfHeading, middleDir) < 0.1: 
-                    if selfSpeed < 8:
-                        ai.setPower(12)
-                    else:
-                        ai.setPower(5)
+                # Thrust if we are in a sufficient right direction
+                if angleDiff(selfHeading, middleDir) < 0.1:                    
+                    ai.setPower(30)
                     mode = "thrust"
-                
-                elif angleDiff(selfHeading, middleDir) < 0.5:
-                    mode = "stop"
-
-            # If close enough to a wall --> stop
-            if 0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
-                prevTrackRad = ai.selfTrackingRad()
-                
-                mode = "stop"
+            
+                # Stop if we are in a sufficient wrong direction
+                elif angleDiff(ai.selfTrackingRad(), middleDir) > 0.8 and selfSpeed > 3:
+                    if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
+                        mode = "stop"
                     
-        if mode == "stop":   
-            
-            if ai.selfTrackingRad() == prevTrackRad - math.pi:
-                mode = "stop"
             else:
-                mode = "ready"
-
-            ai.setPower(30)
-            ai.thrust()
-            print(ai.selfTrackingRad())
-
-        # We are stopping for 7 ticks
-        if mode == "thrust":
             
-            mode = "aim"
+                # Excecute when an item is visible
+                for item in range(itemCount):
+                    itemId = item
+                
+                    # item position and velocity
+                itemX = ai.itemX(itemId)
+                itemY = ai.itemY(itemId)
+                itemVelX = ai.itemVelX(itemId)
+                itemVelY = ai.itemVelY(itemId)
 
+                # items initial position relative to self
+                relX = itemX - selfX
+                relY = itemY - selfY
+
+                # items initial velocity relative to self
+                relVelX = itemVelX - selfVelX
+                relVelY = itemVelY - selfVelY
+
+                # Time of impact, when ship is supposed to hit item
+                try:
+                    t = time_of_impact(relX, relY, relVelX, relVelY, selfSpeed)
+                except ZeroDivisionError:
+                    pass
+                
+                if ai.itemSpeed(itemId) > 0:
+                    # Point of impact, where ship is supposed to hit item
+                    aimAtX = relX + relVelX*t
+                    aimAtY = relY + relVelY*t
+
+                    # Direction of aimpoint
+                    itemDir = math.atan2(aimAtY, aimAtX)
+
+                    # Turns to item direction
+                    ai.turnToRad(itemDir)
+                            
+                    # Thrust if we are in a sufficient right direction
+                    if angleDiff(selfHeading, itemDir) < 0.1:
+                        ai.setPower(30)
+                        mode = "thrust"
+                
+                    # Stop if we are in a sufficient wrong direction
+                    if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8 and selfSpeed > 3:
+                        if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
+                            mode = "stop"
+                
+                else:
+                    # If item has no velocity 
+                    itemStopped = math.atan2(relY, relX)
+                    ai.turnToRad(itemStopped)
+
+                    # Thrust if we are in a sufficient right direction
+                    if angleDiff(selfHeading, itemStopped) < 0.1:
+                        ai.setPower(30)
+                        mode = "thrust"
+            
+                    # Stop if we are in a sufficient wrong direction
+                    if angleDiff(ai.selfTrackingRad(), itemStopped) > 0.8 and selfSpeed > 3:
+                        if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
+                            mode = "stop"
+            
+            # Different distances to wall for different speeds
+            if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100):
+                mode = "closeToWall"
+            
+            if selfSpeed > 13:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200):
+                    mode = "closeToWall" 
+            
+            if selfSpeed > 18:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 400):
+                    mode = "closeToWall" 
+        
+        elif mode == "closeToWall":
+            
+            prevTrackRad = ai.selfTrackingRad()
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
+            
+            if selfSpeed < 3:
+                mode = "aim"
+            
+            ai.setPower(40)
+            ai.thrust()
+        
+        elif mode == "stop":
+            
+            # Saves our previous self angle so that we do not oscillate
+            prevTrackRad = ai.selfTrackingRad()
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
+
+            if angle < 0.5:
+                mode = "aim"
+            
+            ai.setPower(40)
+            ai.thrust()
+
+        elif mode == "thrust": 
+            mode = "aim"
             ai.thrust()
 
     except:
@@ -165,6 +209,31 @@ def angleDiff(one, two):
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
+
+def time_of_impact(px, py, vx, vy, s):
+    """
+    Determine the time of impact, when ship hits moving target
+    Parameters:
+        px, py = initial target position in x,y relative to ship
+        vx, vy = initial target velocity in x,y relative to ship
+        s = initial ship speed
+        t = time to impact, in our case ticks
+    """
+
+    a = s * s - (vx * vx + vy * vy)
+    b = px * vx + py * vy
+    c = px * px + py * py
+
+    d = b*b + a*c
+
+    t = 0
+
+    if d >= 0:
+        t = (b + math.sqrt(d)) / a
+        if t < 0:
+            t = 0
+
+    return t
 
 #
 # Parse the command line arguments
