@@ -171,7 +171,6 @@ def tick():
             # Point of impact, where ship is supposed to hit item
             aimAtX = relX + relVelX*t
             aimAtY = relY + relVelY*t
-            distance = math.sqrt((aimAtX**2 + aimAtY**2))
 
             # Direction of aimpoint
             itemDir = math.atan2(aimAtY, aimAtX)
@@ -181,22 +180,45 @@ def tick():
                         
              # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.1:
-                ai.setPower(30)
-                mode = "thrust"
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
+                    ai.setPower(30)
+                    mode = "thrust"
         
             # Stop if we are in a sufficient wrong direction
             if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8 and selfSpeed > 3:
-                mode = "stop"
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
+                    mode = "stop"
             
-            #if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 150):
-                
-                #print("kallar på stop")
-                
-                #mode = "closeToWall"
+            # Different distances to wall for different speeds
+            if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100):
+                mode = "closeToWall"
+            
+            if selfSpeed > 13:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200):
+                    mode = "closeToWall" 
+            
+            if selfSpeed > 18:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 400):
+                    mode = "closeToWall"
+            
+            print(selfSpeed)
+        
+        elif mode == "closeToWall":
+            
+            prevTrackRad = ai.selfTrackingRad()
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
+            
+            if selfSpeed < 3:
+                print("closeToWall")
+                mode = "aim"
+            
+            ai.setPower(40)
+            ai.thrust()
         
         elif mode == "stop":
-            print("stop")
             
+            # Saves our previous self angle so that we do not oscillate
             prevTrackRad = ai.selfTrackingRad()
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
@@ -212,11 +234,6 @@ def tick():
                     mode = "done"
                 else:
                     mode = "stop"
-
-        
-        #elif mode == "closeToWall": #Lösning?
-            #if selfSpeed < 3:
-
 
         elif mode == "thrust": 
             mode = "aim"
