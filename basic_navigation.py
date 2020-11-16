@@ -77,9 +77,8 @@ def tick():
 
         print ("tick count:", tickCount, "mode:", mode, "targetDistance:", round(targetDistance))
         print(tasks)
-        print("Self:", selfX, selfY)
-        print("Target:", xCord, yCord)
-        print(angleDiff(selfHeading, targetDirection))
+        print(send)
+
         if mode == "wait" :
             if playerCount > 1:
                 mode = "ready"
@@ -95,13 +94,15 @@ def tick():
 
             # Starts mission 7
             if stopCount == 1:
-                ai.talk("teacherbot:start-mission 7")
+                ai.talk("Teacherbot:start-mission 7")
 
             # When you recieve a message from teacherbot change mode to scan
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 mode = "scan"
-    
+
+
         elif mode == "scan":
+
             # Clears the tasks list
             tasks.clear()
 
@@ -112,19 +113,21 @@ def tick():
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message) 
 
+            # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
+            # Change mode to aim
             mode = "aim"
+
 
         elif mode == "aim":
 
-            # Saves the coordinates of the last message in tasks
-            # in the variables xCord and yCord
+            # Saves the coordinates of the last message in
+            # tasks in the variables xCord and yCord
             coordinates = []
-            for elem in tasks:
-                for seq in elem.split():
-                    if seq.isdigit():
-                        coordinates.append(int(seq))
+            for seq in tasks[-1].split():
+                if seq.isdigit():
+                    coordinates.append(int(seq))
             xCord = coordinates[0]
             yCord = coordinates[1]
 
@@ -132,9 +135,11 @@ def tick():
             ai.turnToRad(targetDirection)
             
             # If you are looking at the target change mode to travel
+            print(angleDiff(targetDirection, ai.selfHeadingRad()))
             if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.03:
                 mode = "travel"
-            
+
+
         elif mode == "travel":
 
             # If you are close to the target head towards it with 
@@ -146,7 +151,6 @@ def tick():
                 if targetDistance < 20:
                     ai.turnToRad(selfHeading + pi)
                     mode = "stop"
-
 
             # If you are far away from the target 
             # head towards it with a higher speed
@@ -160,27 +164,29 @@ def tick():
                 ai.turnToRad(selfHeading + pi)
                 mode = "stop"
 
+
         elif mode == "stop":
 
-            # If you are really close to the target
-            # with a low speed change mode to done
+            # If you are really close to the target with
+            # a low speed change mode to completed_task
             if targetDistance < 50:
                 ai.setPower(10)
                 ai.thrust()
-                if selfSpeed < 0.3:
-                    mode = "done"               
+                if selfSpeed < 0.4:
+                    mode = "completed_task"               
 
-            # If you are not really close to the target
-            # with a low speed change mode to travel
+            # If you're further away from the target and
+            # have a low speed change mode to travel
             else:
-                ai.setPower(20)
+                ai.setPower(18)
                 ai.thrust()
    
                 if selfSpeed < 0.5:
                     ai.turnToRad(targetDirection)
                     mode = "travel"
 
-        elif mode == "done":
+
+        elif mode == "completed_task":
 
             # Adds the completed task to a list send
             for elem in tasks:
@@ -189,31 +195,33 @@ def tick():
                     for seq in elem.split():
                         if not "[" in seq:
                             new_msg += seq + " "
-                completed = "Teacherbot:completed " + new_msg
-                send.append(completed)
+                    completed = "Teacherbot:completed " + new_msg
+                    send.append(completed)
             
-            # If you have completed all the tasks
-            # send the messages from the send list
+            # If you have completed all the tasks send the messages from the send list,
+            # clear the send and tasks list and change mode to completed_all_tasks
             if len(send) == lenTasks:
                 for elem in send:
                     ai.talk(elem)
                 send.clear()
                 tasks.clear()
+                mode = "completed_all_tasks"
+
+            # If you havent completed all the tasks remove the
+            # last task in the list and change mode to aim
+            else:
+                tasks.pop()
+                mode = "aim"
+                 
+
+        elif mode == "completed_all_tasks":
 
             # If you recieve a new message from 
             # teacherbot change mode to scan
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+                lenTasks = 0
                 mode = "scan"
 
-            # If you havent completed all the tasks remove 
-            # the last task and change mode to aim
-            elif len(send) == lenTasks:
-                tasks.pop()
-                print(tasks)
-                mode = "aim"        
-
-
-        
             
 
 
