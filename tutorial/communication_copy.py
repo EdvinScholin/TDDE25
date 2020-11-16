@@ -73,7 +73,7 @@ def tick():
                 mode = "wait"
                 return
             
-            randd = random.randrange(6)
+            randd = random.randrange(1, 3)
 
             if stopCount % 80 == 0:
                 for message in range(maxMsgs):
