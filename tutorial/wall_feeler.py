@@ -15,13 +15,7 @@ tickCount = 0
 prevTrackRad = 0
 mode = "ready"
 itemId = -1
-# add more if needed
-
-def distance(xDis, yDis):
-    return math.hypot(xDis, yDis)
-        
-def direction(xDis, yDis):
-    return math.atan2(xDis, yDis)
+itemDir = 0
 
 def tick():
     #
@@ -36,6 +30,7 @@ def tick():
         global prevTrackRad
         global mode
         global itemId
+        global itemDir
 
         #
         # Reset the state machine if we die.
@@ -89,7 +84,7 @@ def tick():
                 # Thrust if we are in a sufficient right direction
                 if angleDiff(selfHeading, middleDir) < 0.1:                    
                     ai.setPower(30)
-                    mode = "thrust"
+                    ai.thrust()
             
                 # Stop if we are in a sufficient wrong direction
                 elif angleDiff(ai.selfTrackingRad(), middleDir) > 0.8 and selfSpeed > 3:
@@ -123,6 +118,7 @@ def tick():
                     pass
                 
                 if ai.itemSpeed(itemId) > 0:
+                
                     # Point of impact, where ship is supposed to hit item
                     aimAtX = relX + relVelX*t
                     aimAtY = relY + relVelY*t
@@ -132,16 +128,18 @@ def tick():
 
                     # Turns to item direction
                     ai.turnToRad(itemDir)
-                            
+
                     # Thrust if we are in a sufficient right direction
-                    if angleDiff(selfHeading, itemDir) < 0.1:
-                        ai.setPower(30)
-                        mode = "thrust"
-                
-                    # Stop if we are in a sufficient wrong direction
-                    if angleDiff(ai.selfTrackingRad(), itemDir) > 0.8 and selfSpeed > 3:
+                    if angleDiff(selfHeading, itemDir) < 0.05:
+
                         if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
-                            mode = "stop"
+                   
+                            ai.setPower(35)
+                            ai.thrust()
+                            mode = "aim"
+
+                    elif angleDiff(ai.selfTrackingRad(), itemDir) > 0.1:
+                        mode = "adjust"
                 
                 else:
                     # If item has no velocity 
@@ -151,24 +149,28 @@ def tick():
                     # Thrust if we are in a sufficient right direction
                     if angleDiff(selfHeading, itemStopped) < 0.1:
                         ai.setPower(30)
-                        mode = "thrust"
+                        ai.thrust()
             
                     # Stop if we are in a sufficient wrong direction
                     if angleDiff(ai.selfTrackingRad(), itemStopped) > 0.8 and selfSpeed > 3:
                         if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
                             mode = "stop"
-            
+       
             # Different distances to wall for different speeds
             if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100):
                 mode = "closeToWall"
             
-            if selfSpeed > 13:
-                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200):
+            if selfSpeed > 12:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 250):
                     mode = "closeToWall" 
             
             if selfSpeed > 18:
-                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 400):
-                    mode = "closeToWall" 
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 350):
+                    mode = "closeToWall"
+            
+            if selfSpeed > 24:
+                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 450):
+                    mode = "closeToWall"
         
         elif mode == "closeToWall":
             
@@ -179,25 +181,58 @@ def tick():
             if selfSpeed < 3:
                 mode = "aim"
             
-            ai.setPower(40)
+            ai.setPower(55)
             ai.thrust()
         
         elif mode == "stop":
-            
-            # Saves our previous self angle so that we do not oscillate
-            prevTrackRad = ai.selfTrackingRad()
-            ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            if selfSpeed > 1:
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
+
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
 
             if angle < 0.5:
                 mode = "aim"
-            
-            ai.setPower(40)
+
+            ai.setPower(45)
             ai.thrust()
 
-        elif mode == "thrust": 
-            mode = "aim"
+            if prevSelfItem < ai.selfItem(selectItemType):
+                if selfSpeed < 3:
+                    mode = "done"
+                else:
+                    mode = "stop"
+        
+        elif mode == "adjust":
+            
+            # kolla på rörelseriktningen och målets riktning.
+            # Ta ut riktningen mitt mellan och thrusta.
+            movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
+            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
+            absItemDir = itemDir % (2*math.pi)
+            
+            if movItemDiff < math.pi/2:
+                adjustAngle = 2*absItemDir - selfTrackRad
+            
+            elif 3*math.pi/4 > movItemDiff >= math.pi/2:
+                adjustAngle = (3*absItemDir - selfTrackRad)/2
+            
+            elif movItemDiff == math.pi:
+                mode = "stop"
+                return
+            
+            else:    
+                adjustAngle = absItemDir
+            
+            ai.turnToRad(adjustAngle)
+            selfHeading = ai.selfHeadingRad()
+
+            ai.setPower(45)
             ai.thrust()
+
+            if angleDiff(selfHeading, itemDir) < 0.05:
+                mode = "aim"
+            else:
+                mode = "adjust"
 
     except:
         print(traceback.print_exc())

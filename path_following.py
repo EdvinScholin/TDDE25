@@ -66,44 +66,30 @@ def tick():
 
             for x in range(mapWidth):
                 for y in range(mapHeight):
-                    if ai.mapData(x, y) == 0:
-                        all_nodes.append((x, y))
-            mode = "path"
-
-  
+                    all_nodes.append((x, y))
             
 
-        elif mode == "path":
-       
-            
-            path = list(astar.find_path((1, 1), (11, 3), neighbors_fnct=neighbors,
-                        heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
-            
-                    
-
-            print(path)
-            
-            
+            if tickCount == 50:
+                for element in all_nodes:
+                    if ai.mapData(element[0], element[1]) == 1:
+                        print(chr(9608), end=(' ' if element[1]!=31 else '\n'))
+                        
+               
+           
 
     except:
         print(traceback.print_exc())
 
-def neighbors(node):
-    dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
-    result = []
-    for dir in dirs:
-        neighbor = (node[0] + dir[0], node[1] + dir[1])
-        if neighbor in all_nodes:
-            result.append(neighbor)
-    return result
+def make_maze(w=32, h=32):
+    """returns an ascii maze as a string"""
+    ver = [[chr(9608)] * w for _ in range(h)] + [[]]
+    hor = [[chr(9608)] * w for _ in range(h + 1)]
 
-def cost(n1, n2):
-    return 1
-
-def distance(n1, n2):
-    (x1, y1) = n1
-    (x2, y2) = n2
-    return math.hypot(x2 - x1, y2 - y1)
+    result = ''
+    for (a, b) in zip(hor, ver):
+        if ai.mapData() == 1:
+            result = result + (' '.join(a + ['\n'] + b)) + '\n'
+    return result.strip()
 
 #
 # Parse the command line arguments
