@@ -110,7 +110,12 @@ def tick():
 
         print("tick count:", tickCount, "mode", mode)
 
+        # Move away from wall
+        print(wall_incline(math.pi/100))
+
+
         if mode == "ready":
+            
             if itemCountScreen > 0:
                 mode = "aim"
             
@@ -126,6 +131,7 @@ def tick():
                 
                 elif angleDiff(selfHeading, middleDir) < 0.5:
                     mode = "stop"
+
             
         elif mode == "aim":
             if itemCountScreen == 0:
@@ -154,20 +160,9 @@ def tick():
 
             elif angleDiff(ai.selfTrackingRad(), itemDir) > 0.1:
                 mode = "adjust"
-            
-            # Stop if we are in a sufficient wrong direction
-            '''
-            if (-1 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 200 or
-                -1 < ai.wallFeelerRad(-1000, ai.selfTrackingRad()) < 200):
-                print("kallar på stop")
-                direction += math.pi
-                
-                mode = "stop"
-            '''
 
 
         elif mode == "stop":
-            print("stop")
             if selfSpeed > 1:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
@@ -179,6 +174,7 @@ def tick():
             ai.setPower(55)
             ai.thrust()
 
+
         elif mode == "adjust":
             # kolla på rörelseriktningen och målets riktning.
             # Ta ut riktningen mitt mellan och thrusta.
@@ -187,12 +183,9 @@ def tick():
             absItemDir = itemDir % (2*math.pi)
 
             relVelToItem = relativeVel(selfSpeed, ai.selfTrackingRad(), itemDir)
-            
-            print("movItemDiff: ", movItemDiff)
+
             if movItemDiff < math.pi/2:
-                # funkar endast för diff under pi/2
                 adjustAngle = 2*absItemDir - selfTrackRad
-                #elif movItemDiff == math.pi/2:
             
             elif 3*math.pi/4 > movItemDiff >= math.pi/2:
                 adjustAngle = (3*absItemDir - selfTrackRad)/2
@@ -200,7 +193,7 @@ def tick():
             elif movItemDiff == math.pi:
                 mode = "stop"
                 return
-                
+
             else:    
                 adjustAngle = absItemDir
 
@@ -226,6 +219,46 @@ def angleDiff(one, two):
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
+
+
+def wall_incline(eps):
+
+    """
+    a = selfTrackRad
+    eps = very small angel #Smaller --> more exact
+    d = distance to wall in the direction of self velocity/ self tracking radians
+    v = ---------------- || ---------------- v + eps
+    h = ---------------- || ---------------- v - eps
+    """
+
+    a = ai.selfTrackingRad()
+    d = ai.wallFeelerRad(100, a)
+    v = ai.wallFeelerRad(100, a + eps)
+    h = ai.wallFeelerRad(100, a - eps)
+
+    if v == h:
+        return a
+    elif v > h:
+        s = h
+    else:
+        s = v
+
+    x = d - s*math.cos(eps)
+    y = math.sqrt(s*s + d*d - 2*s*d*math.cos(eps))
+
+    z = math.acos(x/y)
+
+    new_a = a + z - math.pi/2
+
+    return new_a
+
+
+
+
+
+
+
+
 
 
 def relativeVel(selfVel, selfVelDir, itemPosDir):
