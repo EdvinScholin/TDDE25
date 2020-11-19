@@ -113,7 +113,7 @@ def tick():
         if mode == "ready":
             if itemCountScreen > 0:
                 mode = "aim"
-            '''
+            
             else:
                 ai.turnToRad(middleDir)
                 
@@ -122,11 +122,11 @@ def tick():
                         ai.setPower(12)
                     else:
                         ai.setPower(5)
-                    mode = "thrust"
+                    ai.thrust()
                 
                 elif angleDiff(selfHeading, middleDir) < 0.5:
                     mode = "stop"
-            '''
+            
         elif mode == "aim":
             if itemCountScreen == 0:
                 mode == "ready"
@@ -139,7 +139,7 @@ def tick():
             if angleDiff(selfHeading, itemDir) < 0.05:
 
                 # Stops accelerating
-
+                '''
                 if selfSpeed < 7:
                     ai.setPower(30)
                 else:
@@ -147,7 +147,8 @@ def tick():
 
                 if selfSpeed < 10:
                     ai.setPower(45)
-                
+                '''
+                ai.setPower(45)
                 ai.thrust()
                 mode = "ready"
 
@@ -164,6 +165,7 @@ def tick():
                 mode = "stop"
             '''
 
+
         elif mode == "stop":
             print("stop")
             if selfSpeed > 1:
@@ -174,7 +176,7 @@ def tick():
             if angle < 0.5:
                 mode = "ready"
 
-            ai.setPower(30)
+            ai.setPower(55)
             ai.thrust()
 
         elif mode == "adjust":
@@ -190,34 +192,18 @@ def tick():
             if movItemDiff < math.pi/2:
                 # funkar endast för diff under pi/2
                 adjustAngle = 2*absItemDir - selfTrackRad
-            else:
-                #elif movItemDiff == math.pi:
-                mode = "stop"
-                return
-            '''    
-            else:
-                # denna borde funka!!!!!
+                #elif movItemDiff == math.pi/2:
+            
+            elif 3*math.pi/4 > movItemDiff >= math.pi/2:
                 adjustAngle = (3*absItemDir - selfTrackRad)/2
-            '''
             
-            print("adjustAngle: ", adjustAngle)
-            
+            else:    
+                adjustAngle = absItemDir
+
             ai.turnToRad(adjustAngle)
             selfHeading = ai.selfHeadingRad()
-            '''
-            if relVelToItem < 5:
-                ai.setPower(10)
-            elif relVelToItem < 10:
-                ai.setPower(20)
-            elif relVelToItem < 15:
-                ai.setPower(30)
-            
-            if 5*math.pi/4 < movItemDiff < 7*math.pi/4:
-                mode = "stop"
-                return
-            '''
 
-            ai.setPower(30)
+            ai.setPower(45)
             ai.thrust()
 
             if angleDiff(selfHeading, itemDir) < 0.05:
@@ -282,6 +268,8 @@ def time_of_impact(px, py, vx, vy, s):
             t = 0
 
     return t
+
+#print("hfjakhflj: ", time_of_impact(3,4,0,0,4))
 
 
 #
