@@ -76,7 +76,7 @@ def tick():
         elif mode == "path":
        
             
-            path = list(astar.find_path((1, 1), (11, 3), neighbors_fnct=neighbors,
+            path = list(astar.find_path((1, 1), (15, 30), neighbors_fnct=neighbors,
                         heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
             
                     
