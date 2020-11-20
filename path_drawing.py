@@ -15,6 +15,8 @@ from optparse import OptionParser
 tickCount = 0
 mode = "ready"
 all_nodes = []
+mapp = []
+stopCount = 0
 # add more if needed
 
 def tick():
@@ -29,6 +31,8 @@ def tick():
         global tickCount
         global mode
         global all_nodes
+        global stopCount
+        global mapp
 
         #
         # Reset the state machine if we die.
@@ -45,45 +49,58 @@ def tick():
         # and improve readability.
         #
 
-        selfX = ai.selfX()
-        selfY = ai.selfY()
-        selfVelX = ai.selfVelX()
-        selfVelY = ai.selfVelY()
-        selfSpeed = ai.selfSpeed()
-
-        selfHeading = ai.selfHeadingRad() 
-
+        sq = chr(9610)
         mapWidth = ai.mapWidthBlocks()
         mapHeight = ai.mapHeightBlocks()
         # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
 
-        print ("tick count:", tickCount, "mode", mode)
+        print ("tick count:", tickCount, "mode:", mode)
 
 
         if mode == "ready":
 
             for x in range(mapWidth):
                 for y in range(mapHeight):
+                    mapp.append((y, x))
+            
+
+            for x in range(mapWidth):
+                for y in range(mapHeight):
                     if ai.mapData(x, y) == 0:
                         all_nodes.append((x, y))
-            mode = "path"
 
-  
-            
+            mode = "draw"
 
-        elif mode == "path":
-       
-            
-            path = list(astar.find_path((1, 1), (15, 30), neighbors_fnct=neighbors,
+
+        elif mode == "draw":
+
+            path = list(astar.find_path((1, 1), (15, 15), neighbors_fnct=neighbors,
                         heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
-            
-                    
 
-            print(path)
             
-            
+            for element in mapp:
+                if element in path:
+                    if element == path[0] or element == path[-1]:
+                        print("x", end="")
+                    else:
+                        print("o", end="")  
+                elif element[0] == 31:
+                        if ai.mapData(element[0], element[1]) == 1:
+                            print(sq, end="\n")
+                        else:
+                            print(" ", end="\n")
+                elif ai.mapData(element[0], element[1]) == 1:
+                    print(sq, end="")
+                else:
+                    print(" ", end="")
+                    
+            mode = "wait"
+               
+        elif mode == "wait":
+            return
+           
 
     except:
         print(traceback.print_exc())
