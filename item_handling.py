@@ -111,12 +111,33 @@ def tick():
         print("tick count:", tickCount, "mode", mode)
 
         # Move away from wall
-        print(wall_incline(math.pi/100))
-
 
         if mode == "ready":
             
-            if itemCountScreen > 0:
+            if ai.wallFeelerRad(300, ai.selfTrackingRad()) > 0:
+                print(ai.wallFeelerRad(300, ai.selfTrackingRad()))
+                print(wall_perpendicular())
+                wallPerp = wall_perpendicular()
+                perpendicularVel = selfSpeed * math.cos(angleDiff(ai.selfTrackingRad(), wallPerp))
+
+                ai.setPower(15)
+
+                if ai.wallFeelerRad(50, wallPerp) > 0:
+                    ai.setPower(5)
+                    mode = "aim"
+                
+                elif ai.wallFeelerRad(150, wallPerp) > 0:
+                    ai.setPower(10)
+                    mode = "aim"
+
+                # Behöver mer statements
+                if perpendicularVel > 10:
+                    ai.turnToRad(wall_perpendicular() - math.pi)
+                    mode = "stop"
+                
+
+            elif itemCountScreen > 0:
+                ai.setPower(45)
                 mode = "aim"
             
             else:
@@ -154,7 +175,6 @@ def tick():
                 if selfSpeed < 10:
                     ai.setPower(45)
                 '''
-                ai.setPower(45)
                 ai.thrust()
                 mode = "ready"
 
@@ -200,7 +220,6 @@ def tick():
             ai.turnToRad(adjustAngle)
             selfHeading = ai.selfHeadingRad()
 
-            ai.setPower(45)
             ai.thrust()
 
             if angleDiff(selfHeading, itemDir) < 0.05:
@@ -221,7 +240,7 @@ def angleDiff(one, two):
     return min(a1, a2)
 
 
-def wall_incline(eps):
+def wall_perpendicular():
 
     """
     a = selfTrackRad
@@ -231,34 +250,31 @@ def wall_incline(eps):
     h = ---------------- || ---------------- v - eps
     """
 
+    eps = math.pi/100
     a = ai.selfTrackingRad()
     d = ai.wallFeelerRad(100, a)
     v = ai.wallFeelerRad(100, a + eps)
     h = ai.wallFeelerRad(100, a - eps)
 
-    if v == h:
-        return a
-    elif v > h:
+    if v >= h:
         s = h
     else:
         s = v
 
-    x = d - s*math.cos(eps)
-    y = math.sqrt(s*s + d*d - 2*s*d*math.cos(eps))
+    x = s * math.cos(eps)
+    y = s * math.sin(eps)
+    z = d - x
 
-    z = math.acos(x/y)
+    alpha = math.atan(y/z)
 
-    new_a = a + z - math.pi/2
+    gamma = math.pi/2 - alpha
+
+    if v > h:
+        new_a = a - gamma 
+    else:
+        new_a = a + gamma
 
     return new_a
-
-
-
-
-
-
-
-
 
 
 def relativeVel(selfVel, selfVelDir, itemPosDir):
