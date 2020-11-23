@@ -61,7 +61,7 @@ def tick():
 
         if mode == "ready":
 
-            for x in range(mapWidth):
+            for x in range(mapWidth-1, -1, -1):
                 for y in range(mapHeight):
                     mapp.append((y, x))
             
@@ -76,7 +76,7 @@ def tick():
 
         elif mode == "draw":
 
-            path = list(astar.find_path((1, 1), (15, 15), neighbors_fnct=neighbors,
+            path = list(astar.find_path((2, 2), (29, 29), neighbors_fnct=neighbors,
                         heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
 
             
@@ -95,7 +95,8 @@ def tick():
                     print(sq, end="")
                 else:
                     print(" ", end="")
-                    
+            
+            
             mode = "wait"
                
         elif mode == "wait":

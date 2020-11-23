@@ -76,8 +76,6 @@ def tick():
         # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode:", mode, "targetDistance:", round(targetDistance))
-        print(tasks)
-        print(send)
 
         if mode == "wait" :
             if playerCount > 1:
