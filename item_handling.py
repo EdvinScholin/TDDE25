@@ -16,6 +16,7 @@ prevTrackRad = 0
 prevItemDir = 0
 direction = 0
 itemDir = 0
+power = 5
 mode = "ready"
 # add more if needed
 
@@ -35,6 +36,7 @@ def tick():
         global prevItemDir
         global direction
         global itemDir
+        global power
 
         #
         # Reset the state machine if we die.
@@ -82,6 +84,8 @@ def tick():
 
         selfHeading = ai.selfHeadingRad()
 
+        wallDistance = ai.wallFeelerRad(10000, ai.selfTrackingRad())
+
         if itemCountScreen > 0:
             # item position and velocity
             itemX = ai.itemX(itemId)
@@ -114,11 +118,38 @@ def tick():
 
         if mode == "ready":
             
-            if ai.wallFeelerRad(300, ai.selfTrackingRad()) > 0:
+            #ai.setPower(55)
+            #ai.thrust()
+
+            # -----------------------------------------------------
+            # Det är adjust som är fel.
+            # -----------------------------------------------------
+
+
+
+
+            try:
+                power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
+            except ZeroDivisionError:
+                power = 55
+
+            if 30 <= power <= 55:
+                if wallDistance < 50:
+                    power = 55
+
+                mode = "stop"
+               
+                """
+                if ai.wallFeelerRad(300, ai.selfTrackingRad()) > 0:
+                
+                mode = "stop"
+
+                
                 print(ai.wallFeelerRad(300, ai.selfTrackingRad()))
                 print(wall_perpendicular())
                 wallPerp = wall_perpendicular()
                 perpendicularVel = selfSpeed * math.cos(angleDiff(ai.selfTrackingRad(), wallPerp))
+                
 
                 ai.setPower(15)
 
@@ -133,8 +164,10 @@ def tick():
                 # Behöver mer statements
                 if perpendicularVel > 10:
                     ai.turnToRad(wall_perpendicular() - math.pi)
+                    power = 55
                     mode = "stop"
-                
+                """
+
 
             elif itemCountScreen > 0:
                 ai.setPower(45)
@@ -151,8 +184,9 @@ def tick():
                     ai.thrust()
                 
                 elif angleDiff(selfHeading, middleDir) < 0.5:
+                    power = 55
                     mode = "stop"
-
+            
             
         elif mode == "aim":
             if itemCountScreen == 0:
@@ -183,16 +217,40 @@ def tick():
 
 
         elif mode == "stop":
-            if selfSpeed > 1:
+
+            if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
+            selfHeading = ai.selfHeadingRad()
+
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
+            prevTrackRad = ai.selfTrackingRad()
 
-            if angle < 0.5:
+            
+            if angle < 0.1:
                 mode = "ready"
+            
 
-            ai.setPower(55)
+            #power = selfSpeed**2 * (ai.selfMass()+5) / ((ai.wallFeelerRad(300, ai.selfTrackingRad())))
+            
+            #print(selfSpeed)
+
+            if wallDistance > 50:
+                ai.setPower(power)
+            else:
+                ai.setPower(55)
+
+            #print("angle: ", angle)
+            #print("distance: ", ai.wallFeelerRad(300, ai.selfTrackingRad()))
+
+            #else:
+            #    print("djkajdl")
+            #    mode = "ready"
+            #    return
+            
             ai.thrust()
+
+            
 
 
         elif mode == "adjust":
@@ -211,6 +269,7 @@ def tick():
                 adjustAngle = (3*absItemDir - selfTrackRad)/2
             
             elif movItemDiff == math.pi:
+                power = 55
                 mode = "stop"
                 return
 
@@ -331,7 +390,7 @@ def time_of_impact(px, py, vx, vy, s):
 parser = OptionParser()
 
 parser.add_option("-p", "--port", action="store", type="int",
-                  dest="port", default=15348,
+                  dest="port", default=15347,
                   help="The port number. Used to avoid port collisions when"
                   " connecting to the server.")
 
