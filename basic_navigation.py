@@ -114,12 +114,6 @@ def tick():
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
-            # Change mode to aim
-            mode = "aim"
-
-
-        elif mode == "aim":
-
             # Saves the coordinates of the last message in
             # tasks in the variables xCord and yCord
             coordinates = []
@@ -128,6 +122,12 @@ def tick():
                     coordinates.append(int(seq))
             xCord = coordinates[0]
             yCord = coordinates[1]
+
+            # Change mode to aim
+            mode = "aim"
+
+
+        elif mode == "aim":
 
             # Turns to the target
             ai.turnToRad(targetDirection)
@@ -140,6 +140,8 @@ def tick():
 
         elif mode == "travel":
 
+
+            
             # If you are close to the target head towards it with 
             # a low speed and when really close change mode to stop
             if targetDistance < 300:
@@ -154,14 +156,14 @@ def tick():
             # head towards it with a higher speed
             if targetDistance > 300:
                 ai.setPower(10)
-                if selfSpeed < 20:
+                if selfSpeed < 30:
                     ai.thrust()
 
             # If you are close to the target change mode to stop
             if targetDistance < 350 and targetDistance > 300:
                 ai.turnToRad(selfHeading + pi)
                 mode = "stop"
-
+            
 
         elif mode == "stop":
 
@@ -176,7 +178,7 @@ def tick():
             # If you're further away from the target and
             # have a low speed change mode to travel
             else:
-                ai.setPower(18)
+                ai.setPower(25)
                 ai.thrust()
    
                 if selfSpeed < 0.5:
