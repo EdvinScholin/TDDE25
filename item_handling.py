@@ -115,8 +115,8 @@ def tick():
             power = 55
 
         if 30 <= power <= 55:
-            if wallDistance < 80:
-                power = 55
+            # if wallDistance < 80:
+            power = 55
             mode = "stop"
             return
 
