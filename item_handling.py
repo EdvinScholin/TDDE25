@@ -208,7 +208,7 @@ def tick():
 
             ai.thrust()
 
-            if angleDiff(selfHeading, itemDir) < 0.05:
+            if angleDiff(selfHeading, itemDir) < 0.1:
                 mode = "ready"
             else:
                 mode = "adjust"
