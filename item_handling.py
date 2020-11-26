@@ -66,13 +66,11 @@ def tick():
         itemCountScreen = ai.itemCountScreen()
         previousItemDist = 1000
 
-        
         for index in range(itemCountScreen):
             itemDist = ai.itemDist(index)
             if itemDist < previousItemDist:
                 previousItemDist = itemDist
                 itemId = index
-        
 
         # Calcualtes which direction the middle is
         middleDisX = ai.radarWidth()/2 - ai.selfRadarX()
@@ -117,16 +115,16 @@ def tick():
         # Move away from wall
 
         if mode == "ready":
-            
-            #ai.setPower(55)
-            #ai.thrust()
+
+            # ai.setPower(55)
+            # ai.thrust()
 
             # -----------------------------------------------------
             # Det är adjust som är fel.
             # -----------------------------------------------------
 
-
-
+            # -----------------------------------------------------
+            # Om man flyttar koden nedan utanför if satsen kanske det funkar
 
             try:
                 power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
@@ -138,7 +136,9 @@ def tick():
                     power = 55
 
                 mode = "stop"
-               
+
+            # -----------------------------------------------------
+
                 """
                 if ai.wallFeelerRad(300, ai.selfTrackingRad()) > 0:
                 
@@ -168,26 +168,24 @@ def tick():
                     mode = "stop"
                 """
 
-
             elif itemCountScreen > 0:
                 ai.setPower(45)
                 mode = "aim"
-            
+
             else:
                 ai.turnToRad(middleDir)
-                
-                if angleDiff(selfHeading, middleDir) < 0.1: 
+
+                if angleDiff(selfHeading, middleDir) < 0.1:
                     if selfSpeed < 8:
                         ai.setPower(12)
                     else:
                         ai.setPower(5)
                     ai.thrust()
-                
+
                 elif angleDiff(selfHeading, middleDir) < 0.5:
                     power = 55
                     mode = "stop"
-            
-            
+
         elif mode == "aim":
             if itemCountScreen == 0:
                 mode == "ready"
@@ -195,7 +193,7 @@ def tick():
 
             # Turns to target direction
             ai.turnToRad(itemDir)
-            
+
             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.05:
 
@@ -215,7 +213,6 @@ def tick():
             elif angleDiff(ai.selfTrackingRad(), itemDir) > 0.1:
                 mode = "adjust"
 
-
         elif mode == "stop":
 
             if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
@@ -226,14 +223,12 @@ def tick():
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
             prevTrackRad = ai.selfTrackingRad()
 
-            
             if angle < 0.1:
                 mode = "ready"
-            
 
             #power = selfSpeed**2 * (ai.selfMass()+5) / ((ai.wallFeelerRad(300, ai.selfTrackingRad())))
-            
-            #print(selfSpeed)
+
+            # print(selfSpeed)
 
             if wallDistance > 50:
                 ai.setPower(power)
@@ -243,15 +238,12 @@ def tick():
             #print("angle: ", angle)
             #print("distance: ", ai.wallFeelerRad(300, ai.selfTrackingRad()))
 
-            #else:
+            # else:
             #    print("djkajdl")
             #    mode = "ready"
             #    return
-            
+
             ai.thrust()
-
-            
-
 
         elif mode == "adjust":
             # kolla på rörelseriktningen och målets riktning.
@@ -260,20 +252,21 @@ def tick():
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
 
-            relVelToItem = relativeVel(selfSpeed, ai.selfTrackingRad(), itemDir)
+            relVelToItem = relativeVel(
+                selfSpeed, ai.selfTrackingRad(), itemDir)
 
             if movItemDiff < math.pi/2:
                 adjustAngle = 2*absItemDir - selfTrackRad
-            
+
             elif 3*math.pi/4 > movItemDiff >= math.pi/2:
                 adjustAngle = (3*absItemDir - selfTrackRad)/2
-            
+
             elif movItemDiff == math.pi:
                 power = 55
                 mode = "stop"
                 return
 
-            else:    
+            else:
                 adjustAngle = absItemDir
 
             ai.turnToRad(adjustAngle)
@@ -285,7 +278,6 @@ def tick():
                 mode = "ready"
             else:
                 mode = "adjust"
-
 
     except:
         print(traceback.print_exc())
@@ -300,7 +292,6 @@ def angleDiff(one, two):
 
 
 def wall_perpendicular():
-
     """
     a = selfTrackRad
     eps = very small angel #Smaller --> more exact
@@ -329,7 +320,7 @@ def wall_perpendicular():
     gamma = math.pi/2 - alpha
 
     if v > h:
-        new_a = a - gamma 
+        new_a = a - gamma
     else:
         new_a = a + gamma
 
@@ -338,7 +329,7 @@ def wall_perpendicular():
 
 def relativeVel(selfVel, selfVelDir, itemPosDir):
     """self relativa hastighet till items framtida position"""
-    
+
     a = selfVelDir % (2*math.pi)
     b = itemPosDir % (2*math.pi)
 
