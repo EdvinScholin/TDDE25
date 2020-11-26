@@ -166,21 +166,20 @@ def tick():
             except ZeroDivisionError:
                 power = 55
 
+            if selfSpeed < 5:
+                angle = itemDir
+
             if power <= 30 or movItemDiff >= 3*math.pi/4:
                 power = 55
                 mode = "stop"
                 return
 
-            elif movItemDiff < math.pi/2 and selfSpeed > 5:
+            elif movItemDiff < math.pi/2:
                 angle = 2*absItemDir - selfTrackRad
 
-            elif movItemDiff >= math.pi/2:
+            elif movItemDiff:
                 angle = (math.pi + movItemDiff)/2
                 # angle = (3*absItemDir - selfTrackRad)/2
-
-            else:
-                # elif selfSpeed == 0:
-                angle = itemDir
 
             mode = "ready"
             '''
