@@ -153,7 +153,8 @@ def tick():
             absItemDir = itemDir % (2*math.pi)
 
             if movItemDiff < math.pi/2:
-                angle = 2*absItemDir - selfTrackRad
+                #angle = 2*absItemDir - selfTrackRad
+                angle = (3*absItemDir - selfTrackRad)/2
 
             else:
                 # elif selfSpeed == 0:
