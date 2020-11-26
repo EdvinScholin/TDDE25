@@ -139,8 +139,8 @@ def tick():
             else:
                 print("middle")
                 ai.turnToRad(middleDir)
-                ai.setPower(15)
-                ai.thrust()
+                # ai.setPower(15)
+                # ai.thrust()
 
                 '''
                 if angleDiff(selfHeading, middleDir) < 0.1:
