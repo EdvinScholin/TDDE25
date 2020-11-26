@@ -159,7 +159,6 @@ def tick():
 
             elif selfSpeed == 0:
                 angle = itemDir
-                ai.thrust()
 
             else:
                 mode = "stop"
@@ -167,6 +166,7 @@ def tick():
 
             # Turns to target direction
             ai.turnToRad(angle)
+            ai.thrust()
 
             '''
             # Thrust if we are in a sufficient right direction
