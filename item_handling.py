@@ -200,7 +200,7 @@ def tick():
             angle2 = angleDiff(prevTrackRad, ai.selfTrackingRad())
             print(angle)
 
-            if angle == 0:
+            if round(angle, 2) == 0:
                 mode = "ready"
 
             if 5 < power < 55:
