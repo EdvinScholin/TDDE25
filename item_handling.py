@@ -157,7 +157,7 @@ def tick():
             if movItemDiff < math.pi/2:
                 angle = 2*absItemDir - selfTrackRad
 
-            elif selfSpeed = 0:
+            elif selfSpeed == 0:
                 angle = itemDir
                 ai.thrust()
 
