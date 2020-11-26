@@ -195,9 +195,16 @@ def tick():
                 print("1")
                 adjustAngle = 2*absItemDir - selfTrackRad
 
+            elif movItemDiff == math.pi:
+                print("3")
+                power = 55
+                mode = "stop"
+                return
+
+            '''
             elif 3*math.pi/4 > movItemDiff >= math.pi/2:
                 print("2")
-                adjustAngle = (3*absItemDir - selfTrackRad)/2
+                #adjustAngle = (3*absItemDir - selfTrackRad)/2
 
             elif movItemDiff == math.pi:
                 print("3")
@@ -208,6 +215,8 @@ def tick():
             else:
                 print("4")
                 adjustAngle = absItemDir
+
+            '''
 
             ai.turnToRad(adjustAngle)
             selfHeading = ai.selfHeadingRad()
