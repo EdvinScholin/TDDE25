@@ -136,13 +136,6 @@ def tick():
                 ai.setPower(45)
                 mode = "aim"
 
-            else:
-                print("middle")
-                ai.turnToRad(middleDir)
-                print(middleDir)
-                print(middleDisX)
-                print(middleDisY)
-
                 # ai.setPower(15)
                 # ai.thrust()
 
@@ -162,7 +155,12 @@ def tick():
 
         elif mode == "aim":
             if itemCountScreen == 0:
-                mode == "ready"
+                else:
+                print("middle")
+                ai.turnToRad(middleDir)
+                print(middleDir)
+                print(middleDisX)
+                print(middleDisY)
                 return
 
             movItemDiff = angleDiff(
