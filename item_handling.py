@@ -7,7 +7,6 @@ import traceback
 import math
 import libpyAI as ai
 from optparse import OptionParser
-import time
 
 #
 # Global variables that persist between ticks
@@ -25,7 +24,6 @@ def tick():
     #
     # The API won't print out exceptions, so we have to catch and print them ourselves.
     #
-    time.sleep(1)
     try:
 
         #
@@ -105,7 +103,6 @@ def tick():
             # Point of impact, where shot is supposed to hit target
             aimAtX = relX + relVelX*t
             aimAtY = relY + relVelY*t
-            distance = math.sqrt((aimAtX**2 + aimAtY**2))
 
             # Direction of aimpoint
             itemDir = math.atan2(aimAtY, aimAtX)
@@ -125,48 +122,6 @@ def tick():
             mode = "stop"
 
         if mode == "ready":
-
-            # ai.setPower(55)
-            # ai.thrust()
-
-            # -----------------------------------------------------
-            # Det är adjust som är fel.
-            # -----------------------------------------------------
-
-            # -----------------------------------------------------
-            # Om man flyttar koden nedan utanför if satsen kanske det funkar
-
-            # -----------------------------------------------------
-
-            """
-            if ai.wallFeelerRad(300, ai.selfTrackingRad()) > 0:
-
-            mode = "stop"
-
-
-            print(ai.wallFeelerRad(300, ai.selfTrackingRad()))
-            print(wall_perpendicular())
-            wallPerp = wall_perpendicular()
-            perpendicularVel = selfSpeed * \
-                math.cos(angleDiff(ai.selfTrackingRad(), wallPerp))
-
-
-            ai.setPower(15)
-
-            if ai.wallFeelerRad(50, wallPerp) > 0:
-                ai.setPower(5)
-                mode = "aim"
-
-            elif ai.wallFeelerRad(150, wallPerp) > 0:
-                ai.setPower(10)
-                mode = "aim"
-
-            # Behöver mer statements
-            if perpendicularVel > 10:
-                ai.turnToRad(wall_perpendicular() - math.pi)
-                power = 55
-                mode = "stop"
-            """
 
             if itemCountScreen > 0:
                 ai.setPower(45)
@@ -208,37 +163,16 @@ def tick():
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             selfHeading = ai.selfHeadingRad()
-
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
             prevTrackRad = ai.selfTrackingRad()
 
             if angle < 0.1:
                 mode = "ready"
 
-            # power = selfSpeed**2 * (ai.selfMass()+5) / ((ai.wallFeelerRad(300, ai.selfTrackingRad())))
-
-            # print(selfSpeed)
-
-            print(power)
-
             if 5 < power < 55:
                 ai.setPower(power)
             else:
                 ai.setPower(55)
-
-            '''
-            if wallDistance > 70  and 5 < power < 55:
-                ai.setPower(power)
-            else:
-                ai.setPower(55)
-            '''
-            # print("angle: ", angle)
-            # print("distance: ", ai.wallFeelerRad(300, ai.selfTrackingRad()))
-
-            # else:
-            #    print("djkajdl")
-            #    mode = "ready"
-            #    return
 
             ai.thrust()
 
@@ -248,9 +182,6 @@ def tick():
             movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
-
-            relVelToItem = relativeVel(
-                selfSpeed, ai.selfTrackingRad(), itemDir)
 
             if movItemDiff < math.pi/2:
                 adjustAngle = 2*absItemDir - selfTrackRad
@@ -286,59 +217,6 @@ def angleDiff(one, two):
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
-
-
-def wall_perpendicular():
-    """
-    a = selfTrackRad
-    eps = very small angel #Smaller --> more exact
-    d = distance to wall in the direction of self velocity/ self tracking radians
-    v = ---------------- || ---------------- v + eps
-    h = ---------------- || ---------------- v - eps
-    """
-
-    eps = math.pi/100
-    a = ai.selfTrackingRad()
-    d = ai.wallFeelerRad(100, a)
-    v = ai.wallFeelerRad(100, a + eps)
-    h = ai.wallFeelerRad(100, a - eps)
-
-    if v >= h:
-        s = h
-    else:
-        s = v
-
-    x = s * math.cos(eps)
-    y = s * math.sin(eps)
-    z = d - x
-
-    alpha = math.atan(y/z)
-
-    gamma = math.pi/2 - alpha
-
-    if v > h:
-        new_a = a - gamma
-    else:
-        new_a = a + gamma
-
-    return new_a
-
-
-def relativeVel(selfVel, selfVelDir, itemPosDir):
-    """self relativa hastighet till items framtida position"""
-
-    a = selfVelDir % (2*math.pi)
-    b = itemPosDir % (2*math.pi)
-
-    if a > b:
-        v = a - b + math.pi/2
-    elif b > a:
-        v = b - a + math.pi/2
-    else:
-        v = 0
-
-    relVel = selfVel * math.cos(v)
-    return relVel
 
 
 def time_of_impact(px, py, vx, vy, s):
