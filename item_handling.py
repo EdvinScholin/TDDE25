@@ -168,7 +168,7 @@ def tick():
                 mode = "stop"
             """
 
-            elif itemCountScreen > 0:
+            if itemCountScreen > 0:
                 ai.setPower(45)
                 mode = "aim"
 
