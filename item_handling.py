@@ -118,7 +118,7 @@ def tick():
             except ZeroDivisionError:
                 power = 55
 
-            if 20 <= power <= 55:
+            if 20 <= power:
                 # if wallDistance < 80:
                 power = 55
                 mode = "stop"
