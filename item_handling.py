@@ -124,12 +124,14 @@ def tick():
                 mode = "stop"
 
             elif itemCountScreen > 0:
+                print("aim")
                 if wallDistance < 50:
                     ai.setPower(55 - power)
                 ai.setPower(45)
                 mode = "aim"
 
             else:
+                print("middle")
                 ai.turnToRad(middleDir)
                 ai.setPower(15)
                 ai.thrust()
