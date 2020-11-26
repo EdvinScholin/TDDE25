@@ -194,12 +194,10 @@ def tick():
             elif 3*math.pi/4 > movItemDiff >= math.pi/2:
                 adjustAngle = (3*absItemDir - selfTrackRad)/2
 
-                '''
-                elif movItemDiff == math.pi:
+            elif movItemDiff == math.pi:
                 power = 55
                 mode = "stop"
                 return
-                '''
 
             else:
                 adjustAngle = absItemDir
