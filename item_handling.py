@@ -126,23 +126,25 @@ def tick():
             elif itemCountScreen > 0:
                 ai.setPower(45)
                 mode = "aim"
-            '''
+
             else:
                 ai.turnToRad(middleDir)
+                ai.setPower(15)
+                ai.thrust()
 
+                '''
                 if angleDiff(selfHeading, middleDir) < 0.1:
                     if selfSpeed < 8:
                         ai.setPower(12)
                     else:
                         ai.setPower(5)
                     ai.thrust()
-
+                '''
                 """
                 elif angleDiff(selfHeading, middleDir) < 0.5:
                     power = 55
                     mode = "stop"
                 """
-            '''
 
         elif mode == "aim":
             if itemCountScreen == 0:
