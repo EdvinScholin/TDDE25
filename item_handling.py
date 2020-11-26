@@ -78,8 +78,6 @@ def tick():
         # Allows the ship to turn 360 degrees.
         ai.setMaxTurnRad(2*math.pi)
 
-        selfHeading = ai.selfHeadingRad()
-
         wallDistance = ai.wallFeelerRad(10000, ai.selfTrackingRad())
 
         if itemCountScreen > 0:
@@ -184,22 +182,25 @@ def tick():
 
         elif mode == "stop":
 
-            if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
+            angle = angleDiff(ai.selfTrackingRad(), selfHeading) != math.pi:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
-            selfHeading = ai.selfHeadingRad()
-            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
-            prevTrackRad = ai.selfTrackingRad()
+            '''
+            if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            '''
 
             print(angle)
 
-            if round(angle) == 0:
+            if angleDiff(prevTrackRad, ai.selfTrackingRad()) > 1:
                 mode = "ready"
 
             if 5 < power < 55:
                 ai.setPower(power)
             else:
                 ai.setPower(55)
+
+            prevTrackRad = ai.selfTrackingRad()
 
             ai.thrust()
 
