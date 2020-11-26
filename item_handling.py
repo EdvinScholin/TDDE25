@@ -159,7 +159,7 @@ def tick():
                     ai.thrust()
                 mode = "ready"
 
-            elif angleDiff(ai.selfTrackingRad(), itemDir) > 0.2:
+            elif angleDiff(ai.selfTrackingRad(), itemDir) > 0.5:
                 mode = "adjust"
 
         elif mode == "stop":
