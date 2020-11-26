@@ -174,7 +174,7 @@ def tick():
 
             print(angle)
 
-            if angle < 0.1 and selfSpeed < 5:
+            if angle < 0.1:
                 mode = "jo"
 
             if 5 < power < 55:
