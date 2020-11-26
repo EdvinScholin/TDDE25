@@ -189,8 +189,8 @@ def tick():
 
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
 
-            if angle != math.pi:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
+            # if angle != math.pi:
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             '''
             if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
