@@ -169,7 +169,7 @@ def tick():
             if selfSpeed < 5:
                 angle = itemDir
 
-            elif power <= 30 or movItemDiff >= 3*math.pi/4:
+            elif power >= 30 or movItemDiff >= 3*math.pi/4:
                 power = 55
                 mode = "stop"
                 return
