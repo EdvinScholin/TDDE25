@@ -16,7 +16,6 @@ prevTrackRad = 0
 prevItemDir = 0
 direction = 0
 itemDir = 0
-power = 5
 mode = "ready"
 # add more if needed
 
@@ -36,7 +35,6 @@ def tick():
         global prevItemDir
         global direction
         global itemDir
-        global power
 
         #
         # Reset the state machine if we die.
@@ -114,16 +112,15 @@ def tick():
 
         # Move away from wall
 
-        if mode != "stop":
-            try:
-                power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
-            except ZeroDivisionError:
-                power = 55
+        try:
+            power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
+        except ZeroDivisionError:
+            power = 55
 
-            if 30 <= power <= 55:
-                if wallDistance < 50:
-                    power = 55
-                mode = "stop"
+        if 30 <= power <= 55:
+            if wallDistance < 50:
+                power = 55
+            mode = "stop"
 
         if mode == "ready":
 
