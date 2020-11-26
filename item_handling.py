@@ -155,7 +155,7 @@ def tick():
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
 
-            if movItemDiff < math.pi/2 and selfSpeed > 5:
+            if movItemDiff < math.pi and selfSpeed > 5:
                 #angle = 2*absItemDir - selfTrackRad
 
                 # elif 3*math.pi/4 > movItemDiff >= math.pi/2:
