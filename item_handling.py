@@ -192,9 +192,11 @@ def tick():
             if movItemDiff < math.pi/2:
                 adjustAngle = 2*absItemDir - selfTrackRad
 
-            elif 3*math.pi/4 > movItemDiff >= math.pi/2:
+                '''
+                elif 3*math.pi/4 > movItemDiff >= math.pi/2:
                 adjustAngle = (3*absItemDir - selfTrackRad)/2
-
+                
+                '''
             elif movItemDiff == math.pi:
                 power = 55
                 mode = "stop"
@@ -208,10 +210,8 @@ def tick():
 
             ai.thrust()
 
-            if angleDiff(selfHeading, itemDir) < 0.5:
+            if angleDiff(selfHeading, itemDir) < 0.05:
                 mode = "ready"
-            else:
-                mode = "adjust"
 
     except:
         print(traceback.print_exc())
