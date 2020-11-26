@@ -123,18 +123,6 @@ def tick():
                 power = 55
             mode = "stop"
 
-        '''
-        if wallToRight > 0:
-            ai.setPower(55)
-            ai.turnToRad(ai.selfTrackingRad() + math.pi)
-            ai.thrust()
-
-        if wallToLeft > 0:
-            ai.setPower(55)
-            ai.turnToRad(ai.selfTrackingRad() - math.pi)
-            ai.thrust()
-        '''
-
         if mode == "ready":
 
             if itemCountScreen > 0:
