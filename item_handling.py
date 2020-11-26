@@ -155,7 +155,6 @@ def tick():
 
         elif mode == "aim":
             if itemCountScreen == 0:
-                else:
                 print("middle")
                 ai.turnToRad(middleDir)
                 print(middleDir)
