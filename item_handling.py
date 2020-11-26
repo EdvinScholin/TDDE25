@@ -155,12 +155,15 @@ def tick():
             if movItemDiff < math.pi/2:
                 angle = 2*absItemDir - selfTrackRad
 
-            elif selfSpeed == 0:
+            else:
+                # elif selfSpeed == 0:
                 angle = itemDir
 
+            '''
             else:
                 mode = "s"
                 return
+            '''
 
             # Turns to target direction
             ai.turnToRad(angle)
