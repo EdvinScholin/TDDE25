@@ -230,7 +230,10 @@ def tick():
 
             print(power)
 
-            ai.setPower(power)
+            if 5 < power < 55:
+                ai.setPower(power)
+            else:
+                ai.setPower(55)
 
             '''
             if wallDistance > 70  and 5 < power < 55:
