@@ -109,18 +109,18 @@ def tick():
 
         # Move away from wall
 
-        try:
-            power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
-        except ZeroDivisionError:
-            power = 55
-
-        if 30 <= power <= 55:
-            # if wallDistance < 80:
-            power = 55
-            mode = "stop"
-            return
-
         if mode == "ready":
+
+            try:
+                power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
+            except ZeroDivisionError:
+                power = 55
+
+            if 30 <= power <= 55:
+                # if wallDistance < 80:
+                power = 55
+                mode = "stop"
+                return
 
             if itemCountScreen > 0:
                 ai.setPower(45)
