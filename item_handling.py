@@ -150,9 +150,25 @@ def tick():
                 mode == "ready"
                 return
 
-            # Turns to target direction
-            ai.turnToRad(itemDir)
+            movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
+            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
+            absItemDir = itemDir % (2*math.pi)
 
+            if movItemDiff < math.pi/2:
+                angle = 2*absItemDir - selfTrackRad
+
+            elif selfSpeed = 0:
+                angle = itemDir
+                ai.thrust()
+
+            else:
+                mode = "stop"
+                return
+
+            # Turns to target direction
+            ai.turnToRad(angle)
+
+            '''
             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.05:
                 if selfSpeed < 50:
@@ -164,6 +180,7 @@ def tick():
 
             else:
                 mode = "ready"
+            '''
 
         elif mode == "stop":
 
@@ -186,6 +203,7 @@ def tick():
 
             ai.thrust()
 
+        '''
         elif mode == "adjust":
             # kolla på rörelseriktningen och målets riktning.
             # Ta ut riktningen mitt mellan och thrusta.
@@ -200,7 +218,7 @@ def tick():
             else:
                 adjustAngle = ai.selfTrackingRad() - math.pi
 
-            '''
+            
             elif 3*math.pi/4 > movItemDiff >= math.pi/2:
                 print("4")
                 adjustAngle = a
@@ -225,7 +243,7 @@ def tick():
                 print("4")
                 adjustAngle = absItemDir
 
-            '''
+            
 
             ai.turnToRad(adjustAngle)
             selfHeading = ai.selfHeadingRad()
@@ -234,6 +252,7 @@ def tick():
 
             if angleDiff(selfHeading, itemDir) < 0.05 or selfSpeed < 1:
                 mode = "ready"
+            '''
 
     except:
         print(traceback.print_exc())
