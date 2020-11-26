@@ -162,6 +162,9 @@ def tick():
             elif angleDiff(ai.selfTrackingRad(), itemDir) > 0.5:
                 mode = "adjust"
 
+            else:
+                mode = "ready"
+
         elif mode == "stop":
 
             if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
