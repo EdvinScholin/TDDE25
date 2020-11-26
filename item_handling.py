@@ -139,33 +139,33 @@ def tick():
             # -----------------------------------------------------
 
             """
-                if ai.wallFeelerRad(300, ai.selfTrackingRad()) > 0:
+            if ai.wallFeelerRad(300, ai.selfTrackingRad()) > 0:
 
+            mode = "stop"
+
+
+            print(ai.wallFeelerRad(300, ai.selfTrackingRad()))
+            print(wall_perpendicular())
+            wallPerp = wall_perpendicular()
+            perpendicularVel = selfSpeed * \
+                math.cos(angleDiff(ai.selfTrackingRad(), wallPerp))
+
+
+            ai.setPower(15)
+
+            if ai.wallFeelerRad(50, wallPerp) > 0:
+                ai.setPower(5)
+                mode = "aim"
+
+            elif ai.wallFeelerRad(150, wallPerp) > 0:
+                ai.setPower(10)
+                mode = "aim"
+
+            # Behöver mer statements
+            if perpendicularVel > 10:
+                ai.turnToRad(wall_perpendicular() - math.pi)
+                power = 55
                 mode = "stop"
-
-
-                print(ai.wallFeelerRad(300, ai.selfTrackingRad()))
-                print(wall_perpendicular())
-                wallPerp = wall_perpendicular()
-                perpendicularVel = selfSpeed * \
-                    math.cos(angleDiff(ai.selfTrackingRad(), wallPerp))
-
-
-                ai.setPower(15)
-
-                if ai.wallFeelerRad(50, wallPerp) > 0:
-                    ai.setPower(5)
-                    mode = "aim"
-
-                elif ai.wallFeelerRad(150, wallPerp) > 0:
-                    ai.setPower(10)
-                    mode = "aim"
-
-                # Behöver mer statements
-                if perpendicularVel > 10:
-                    ai.turnToRad(wall_perpendicular() - math.pi)
-                    power = 55
-                    mode = "stop"
             """
 
             elif itemCountScreen > 0:
