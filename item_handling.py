@@ -165,6 +165,7 @@ def tick():
         elif mode == "stop":
 
             if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
+                print("snurra")
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             selfHeading = ai.selfHeadingRad()
