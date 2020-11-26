@@ -114,6 +114,16 @@ def tick():
 
         # Move away from wall
 
+        try:
+            power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
+        except ZeroDivisionError:
+            power = 55
+
+        if 30 <= power <= 55:
+            if wallDistance < 50:
+                power = 55
+            mode = "stop"
+
         if mode == "ready":
 
             # ai.setPower(55)
@@ -126,37 +136,27 @@ def tick():
             # -----------------------------------------------------
             # Om man flyttar koden nedan utanför if satsen kanske det funkar
 
-            try:
-                power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
-            except ZeroDivisionError:
-                power = 55
-
-            if 30 <= power <= 55:
-                if wallDistance < 50:
-                    power = 55
-
-                mode = "stop"
-
             # -----------------------------------------------------
 
-                """
+            """
                 if ai.wallFeelerRad(300, ai.selfTrackingRad()) > 0:
-                
+
                 mode = "stop"
 
-                
+
                 print(ai.wallFeelerRad(300, ai.selfTrackingRad()))
                 print(wall_perpendicular())
                 wallPerp = wall_perpendicular()
-                perpendicularVel = selfSpeed * math.cos(angleDiff(ai.selfTrackingRad(), wallPerp))
-                
+                perpendicularVel = selfSpeed * \
+                    math.cos(angleDiff(ai.selfTrackingRad(), wallPerp))
+
 
                 ai.setPower(15)
 
                 if ai.wallFeelerRad(50, wallPerp) > 0:
                     ai.setPower(5)
                     mode = "aim"
-                
+
                 elif ai.wallFeelerRad(150, wallPerp) > 0:
                     ai.setPower(10)
                     mode = "aim"
@@ -166,7 +166,7 @@ def tick():
                     ai.turnToRad(wall_perpendicular() - math.pi)
                     power = 55
                     mode = "stop"
-                """
+            """
 
             elif itemCountScreen > 0:
                 ai.setPower(45)
@@ -226,7 +226,7 @@ def tick():
             if angle < 0.1:
                 mode = "ready"
 
-            #power = selfSpeed**2 * (ai.selfMass()+5) / ((ai.wallFeelerRad(300, ai.selfTrackingRad())))
+            # power = selfSpeed**2 * (ai.selfMass()+5) / ((ai.wallFeelerRad(300, ai.selfTrackingRad())))
 
             # print(selfSpeed)
 
@@ -235,8 +235,8 @@ def tick():
             else:
                 ai.setPower(55)
 
-            #print("angle: ", angle)
-            #print("distance: ", ai.wallFeelerRad(300, ai.selfTrackingRad()))
+            # print("angle: ", angle)
+            # print("distance: ", ai.wallFeelerRad(300, ai.selfTrackingRad()))
 
             # else:
             #    print("djkajdl")
@@ -372,7 +372,7 @@ def time_of_impact(px, py, vx, vy, s):
 
     return t
 
-#print("hfjakhflj: ", time_of_impact(3,4,0,0,4))
+# print("hfjakhflj: ", time_of_impact(3,4,0,0,4))
 
 
 #
