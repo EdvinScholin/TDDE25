@@ -195,7 +195,7 @@ def tick():
                 print("1")
                 adjustAngle = 2*absItemDir - selfTrackRad
 
-            elif movItemDiff == math.pi:
+            else:
                 print("3")
                 power = 55
                 mode = "stop"
