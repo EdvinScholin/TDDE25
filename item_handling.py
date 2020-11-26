@@ -81,8 +81,6 @@ def tick():
         selfHeading = ai.selfHeadingRad()
 
         wallDistance = ai.wallFeelerRad(10000, ai.selfTrackingRad())
-        wallToRight = ai.wallFeelerRad(20, ai.selfTrackingRad() - math.pi)
-        wallToLeft = ai.wallFeelerRad(20, ai.selfTrackingRad() + math.pi)
 
         if itemCountScreen > 0:
             # item position and velocity
