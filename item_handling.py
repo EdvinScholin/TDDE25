@@ -114,7 +114,7 @@ def tick():
         # Move away from wall
 
         try:
-            power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-50)
+            power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-60)
         except ZeroDivisionError:
             power = 55
 
