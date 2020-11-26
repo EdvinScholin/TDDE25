@@ -182,7 +182,9 @@ def tick():
 
         elif mode == "stop":
 
-            angle = angleDiff(ai.selfTrackingRad(), selfHeading) != math.pi:
+            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
+
+            if angle != math.pi:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             '''
