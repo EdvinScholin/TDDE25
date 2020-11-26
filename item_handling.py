@@ -105,6 +105,7 @@ def tick():
             aimAtY = relY + relVelY*t
 
             # Direction of aimpoint
+            itemDist = math.sqrt(aimAtX**2 + aimAtY**2)
             itemDir = math.atan2(aimAtY, aimAtX)
 
         print("tick count:", tickCount, "mode", mode)
@@ -156,25 +157,30 @@ def tick():
                 return
 
             movItemDiff = angleDiff(
-                ai.selfTrackingRad(), ai.selfTrackingRad() + math.pi)
+                ai.selfTrackingRad(), ai.selfTrackingRad() + itemId)
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
 
-            if movItemDiff < math.pi/2 and selfSpeed > 5:
-                angle = 2*absItemDir - selfTrackRad
+            try:
+                power = selfSpeed**2 * (ai.selfMass()+5) / (2*itemDist)
+            except ZeroDivisionError:
+                power = 55
 
-            elif 3*math.pi/4 > movItemDiff >= math.pi/2:
-                angle = (math.pi + movItemDiff)/2
-                # angle = (3*absItemDir - selfTrackRad)/2
-
-            elif selfSpeed <= 5:
-                # elif selfSpeed == 0:
-                angle = itemDir
-
-            else:
+            if power <= 30 or movItemDiff >= 3*math.pi/4:
                 power = 55
                 mode = "stop"
                 return
+
+            elif movItemDiff < math.pi/2 and selfSpeed > 5:
+                angle = 2*absItemDir - selfTrackRad
+
+            elif movItemDiff >= math.pi/2:
+                angle = (math.pi + movItemDiff)/2
+                # angle = (3*absItemDir - selfTrackRad)/2
+
+            else:
+                # elif selfSpeed == 0:
+                angle = itemDir
 
             mode = "ready"
             '''
