@@ -125,6 +125,8 @@ def tick():
 
             if itemCountScreen > 0:
                 ai.setPower(45)
+                if wallDistance < 50:
+                    ai.setPower(15)
                 mode = "aim"
 
             else:
