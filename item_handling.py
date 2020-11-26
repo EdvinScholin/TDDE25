@@ -174,7 +174,7 @@ def tick():
             print(angle)
 
             if angle < 0.1:
-                mode = "jo"
+                mode = "ready"
 
             if 5 < power < 55:
                 ai.setPower(power)
