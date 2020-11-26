@@ -62,7 +62,7 @@ def tick():
 
         # Add more sensors readings here
         itemCountScreen = ai.itemCountScreen()
-        previousItemDist = 1000
+        previousItemDist = 1000000
 
         for index in range(itemCountScreen):
             itemDist = ai.itemDist(index)
@@ -117,7 +117,7 @@ def tick():
             power = 55
 
         if 30 <= power <= 55:
-            if wallDistance < 100:
+            if wallDistance < 80:
                 power = 55
             mode = "stop"
 
