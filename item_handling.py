@@ -139,6 +139,7 @@ def tick():
             else:
                 print("middle")
                 ai.turnToRad(middleDir)
+                print(middleDir)
                 print(middleDisX)
                 print(middleDisY)
 
