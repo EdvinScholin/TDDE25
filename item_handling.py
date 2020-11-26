@@ -152,12 +152,14 @@ def tick():
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
 
+            '''
             if movItemDiff < math.pi/2:
                 angle = 2*absItemDir - selfTrackRad
 
             else:
                 # elif selfSpeed == 0:
-                angle = itemDir
+            '''
+            angle = itemDir
 
             mode = "ready"
             '''
