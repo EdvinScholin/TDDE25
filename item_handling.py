@@ -182,6 +182,7 @@ def tick():
             ai.thrust()
 
         elif mode == "adjust":
+            print("adjust")
             # kolla på rörelseriktningen och målets riktning.
             # Ta ut riktningen mitt mellan och thrusta.
             movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
