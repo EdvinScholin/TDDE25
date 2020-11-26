@@ -171,6 +171,8 @@ def tick():
             angle = angleDiff(ai.selfTrackingRad(), selfHeading)
             prevTrackRad = ai.selfTrackingRad()
 
+            print(angle)
+
             if angle < 0.1:
                 mode = "ready"
 
