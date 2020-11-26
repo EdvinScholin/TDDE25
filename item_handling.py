@@ -193,7 +193,7 @@ def tick():
 
             print(angle)
 
-            if angle < 1:
+            if round(angle) == 0:
                 mode = "ready"
 
             if 5 < power < 55:
