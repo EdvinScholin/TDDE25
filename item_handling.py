@@ -159,6 +159,7 @@ def tick():
                 # elif selfSpeed == 0:
                 angle = itemDir
 
+            mode = "ready"
             '''
             else:
                 mode = "s"
