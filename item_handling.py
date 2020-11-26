@@ -165,7 +165,6 @@ def tick():
         elif mode == "stop":
 
             if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
-                print("snurra")
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             selfHeading = ai.selfHeadingRad()
@@ -185,7 +184,6 @@ def tick():
             ai.thrust()
 
         elif mode == "adjust":
-            print("adjust")
             # kolla på rörelseriktningen och målets riktning.
             # Ta ut riktningen mitt mellan och thrusta.
             movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
