@@ -16,6 +16,7 @@ prevTrackRad = 0
 prevItemDir = 0
 direction = 0
 itemDir = 0
+power = 5
 mode = "ready"
 # add more if needed
 
@@ -35,6 +36,7 @@ def tick():
         global prevItemDir
         global direction
         global itemDir
+        global power
 
         #
         # Reset the state machine if we die.
