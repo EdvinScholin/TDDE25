@@ -161,9 +161,11 @@ def tick():
                 # elif 3*math.pi/4 > movItemDiff >= math.pi/2:
                 # angle = (3*absItemDir - selfTrackRad)/2
 
-            else:
+            elif selfSpeed <= 5:
                 # elif selfSpeed == 0:
-                # angle = itemDir
+                angle = itemDir
+
+            else:
                 power = 55
                 mode = "stop"
                 return
