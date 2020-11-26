@@ -7,6 +7,7 @@ import traceback
 import math
 import libpyAI as ai
 from optparse import OptionParser
+import time
 
 #
 # Global variables that persist between ticks
@@ -24,6 +25,7 @@ def tick():
     #
     # The API won't print out exceptions, so we have to catch and print them ourselves.
     #
+    time.sleep(1)
     try:
 
         #
@@ -194,17 +196,6 @@ def tick():
 
             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.05:
-
-                # Stops accelerating
-                '''
-                if selfSpeed < 7:
-                    ai.setPower(30)
-                else:
-                    ai.setPower(15)
-
-                if selfSpeed < 10:
-                    ai.setPower(45)
-                '''
                 ai.thrust()
                 mode = "ready"
 
