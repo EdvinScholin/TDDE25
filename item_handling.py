@@ -173,10 +173,9 @@ def tick():
             prevTrackRad = ai.selfTrackingRad()
 
             print(angle)
-            '''
+
             if angle < 1 and selfSpeed < 5:
-                mode = "ready"
-            '''
+                mode = "jo"
 
             if 5 < power < 55:
                 ai.setPower(power)
