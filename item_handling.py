@@ -193,7 +193,7 @@ def tick():
 
             print(angle)
 
-            if angle < 0.1:
+            if angle < 1:
                 mode = "ready"
 
             if 5 < power < 55:
