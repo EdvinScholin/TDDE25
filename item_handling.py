@@ -118,8 +118,9 @@ def tick():
             if wallDistance < 80:
                 power = 55
             mode = "stop"
+            return
 
-        elif mode == "ready":
+        if mode == "ready":
 
             if itemCountScreen > 0:
                 ai.setPower(45)
