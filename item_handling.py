@@ -162,7 +162,7 @@ def tick():
             absItemDir = itemDir % (2*math.pi)
 
             try:
-                power = selfSpeed**2 * (ai.selfMass()+5) / (2*itemDist)
+                power = selfSpeed**2 * (ai.selfMass()+5) / (2*itemDist + 40)
             except ZeroDivisionError:
                 power = 55
 
