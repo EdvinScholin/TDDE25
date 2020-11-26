@@ -155,7 +155,8 @@ def tick():
                 mode == "ready"
                 return
 
-            movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
+            movItemDiff = angleDiff(
+                ai.selfTrackingRad(), ai.selfTrackingRad() + math.pi)
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
 
