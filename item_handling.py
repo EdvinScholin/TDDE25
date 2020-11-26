@@ -159,7 +159,7 @@ def tick():
                 angle = itemDir
 
             else:
-                mode = "stop"
+                mode = "s"
                 return
 
             # Turns to target direction
