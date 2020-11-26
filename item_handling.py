@@ -118,16 +118,15 @@ def tick():
             except ZeroDivisionError:
                 power = 55
 
-            if 30 <= power <= 55:
+            if 20 <= power <= 55:
                 # if wallDistance < 80:
                 power = 55
                 mode = "stop"
-                return
 
-            if itemCountScreen > 0:
+            elif itemCountScreen > 0:
                 ai.setPower(45)
                 mode = "aim"
-
+            '''
             else:
                 ai.turnToRad(middleDir)
 
@@ -138,11 +137,12 @@ def tick():
                         ai.setPower(5)
                     ai.thrust()
 
-                '''
+                """
                 elif angleDiff(selfHeading, middleDir) < 0.5:
                     power = 55
                     mode = "stop"
-                '''
+                """
+            '''
 
         elif mode == "aim":
             if itemCountScreen == 0:
