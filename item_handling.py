@@ -108,6 +108,11 @@ def tick():
             itemDist = math.sqrt(aimAtX**2 + aimAtY**2)
             itemDir = math.atan2(aimAtY, aimAtX)
 
+            try:
+                power = selfSpeed**2 * (ai.selfMass()+5) / (2*itemDist + 40)
+            except ZeroDivisionError:
+                power = 55
+
         print("tick count:", tickCount, "mode", mode)
 
         # Move away from wall
@@ -160,11 +165,6 @@ def tick():
                 ai.selfTrackingRad(), ai.selfTrackingRad() + itemId)
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
-
-            try:
-                power = selfSpeed**2 * (ai.selfMass()+5) / (2*itemDist + 40)
-            except ZeroDivisionError:
-                power = 55
 
             if selfSpeed < 5:
                 angle = itemDir
