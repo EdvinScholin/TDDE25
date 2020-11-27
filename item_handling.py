@@ -120,7 +120,7 @@ def tick():
         if mode == "ready":
 
             try:
-                power = selfSpeed**2 * (ai.selfMass()+5) / (2*wallDistance-40)
+                power = 2*selfSpeed**2 * (ai.selfMass()+5) / wallDistance
             except ZeroDivisionError:
                 power = 55
 
