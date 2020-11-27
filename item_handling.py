@@ -125,7 +125,6 @@ def tick():
                 power = 55
 
             if 20 <= power:
-                # if wallDistance < 80:
                 power = 55
                 mode = "stop"
 
@@ -143,8 +142,8 @@ def tick():
                 print(middleDisX)
                 print(middleDisY)
 
-                # ai.setPower(15)
-                # ai.thrust()
+                ai.setPower(15)
+                ai.thrust()
 
                 '''
                 if angleDiff(selfHeading, middleDir) < 0.1:
@@ -173,7 +172,7 @@ def tick():
             if selfSpeed < 5:
                 angle = itemDir
 
-            elif power >= 40 or movItemDiff >= 3*math.pi/4:
+            elif itemDist < 20 or movItemDiff >= 3*math.pi/4:
                 mode = "stop"
                 return
 
@@ -183,6 +182,8 @@ def tick():
             elif movItemDiff:
                 angle = (math.pi + movItemDiff)/2
                 # angle = (3*absItemDir - selfTrackRad)/2
+            
+            print("slut")
 
             mode = "ready"
             '''
@@ -223,7 +224,7 @@ def tick():
             angle2 = angleDiff(prevTrackRad, ai.selfTrackingRad())
             print(angle)
 
-            if angle < math.pi/2:
+            if angle < math.pi/10:
                 mode = "ready"
 
             if 5 < power < 55:
