@@ -109,9 +109,9 @@ def tick():
             itemDir = math.atan2(aimAtY, aimAtX)
 
             try:
-                power = selfSpeed**2 * (ai.selfMass()+5) / (2*itemDist + 40)
+                power2 = selfSpeed**2 * (ai.selfMass()+5) / (2*itemDist + 40)
             except ZeroDivisionError:
-                power = 55
+                power2 = 55
 
         print("tick count:", tickCount, "mode", mode)
 
@@ -119,55 +119,74 @@ def tick():
 
         if mode == "ready":
 
+            
+            '''
             try:
                 power = 2*selfSpeed**2 * (ai.selfMass()+5) / wallDistance
             except ZeroDivisionError:
                 power = 55
 
-            if 20 <= power:
+            print(power)
+
+            if 50 <= power:
+                print("wall")
                 power = 55
                 mode = "stop"
+            '''
+            print("wallDist: ", wallDistance)
+            if stop_at_point(wallDistance):
+                print("wall")
+                power = 55
+                mode = "stop"
+                return
 
+            ai.setPower(20)
+            ai.thrust()
+
+            '''
             elif itemCountScreen > 0:
-                print("aim")
-                if wallDistance < 50:
-                    ai.setPower(55 - power)
+                #print("aim")
+                #if wallDistance < 50:
+                # ai.setPower(55 - power)
+
                 ai.setPower(45)
                 mode = "aim"
 
             else:
-                print("middle")
+                #print("middle")
                 ai.turnToRad(middleDir)
-                print(middleDir)
-                print(middleDisX)
-                print(middleDisY)
+                #print(middleDir)
+                #print(middleDisX)
+                #print(middleDisY)
 
-                ai.setPower(15)
+                ai.setPower(45)
                 ai.thrust()
 
-                '''
+                """
                 if angleDiff(selfHeading, middleDir) < 0.1:
                     if selfSpeed < 8:
                         ai.setPower(12)
                     else:
                         ai.setPower(5)
                     ai.thrust()
-                '''
+                """
                 """
                 elif angleDiff(selfHeading, middleDir) < 0.5:
                     power = 55
                     mode = "stop"
                 """
 
-        elif mode == "aim":
+            elif mode == "aim":
             if itemCountScreen == 0:
-                mode == "ready"
+                print("nope")
+                mode = "ready"
                 return
 
             movItemDiff = angleDiff(
                 ai.selfTrackingRad(), ai.selfTrackingRad() + itemId)
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
+            print("yay")
 
             if selfSpeed < 5:
                 angle = itemDir
@@ -178,25 +197,25 @@ def tick():
 
             elif movItemDiff < math.pi/2:
                 angle = 2*absItemDir - selfTrackRad
-
+            """
             elif movItemDiff:
                 angle = (math.pi + movItemDiff)/2
                 # angle = (3*absItemDir - selfTrackRad)/2
-            
+            """
             print("slut")
 
             mode = "ready"
-            '''
+            """
             else:
                 mode = "s"
                 return
-            '''
+            """
 
             # Turns to target direction
             ai.turnToRad(angle)
             ai.thrust()
 
-            '''
+            """
             # Thrust if we are in a sufficient right direction
             if angleDiff(selfHeading, itemDir) < 0.05:
                 if selfSpeed < 50:
@@ -208,20 +227,20 @@ def tick():
 
             else:
                 mode = "ready"
+            """
             '''
-
         elif mode == "stop":
 
             # if angle != math.pi:
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             angle = angleDiff(ai.selfTrackingRad(), ai.selfHeadingRad())
-            '''
+            """
             if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
-            '''
+            """
 
-            angle2 = angleDiff(prevTrackRad, ai.selfTrackingRad())
+            #angle2 = angleDiff(prevTrackRad, ai.selfTrackingRad())
             print(angle)
 
             if angle < math.pi/10:
@@ -285,7 +304,7 @@ def tick():
 
             if angleDiff(selfHeading, itemDir) < 0.05 or selfSpeed < 1:
                 mode = "ready"
-            '''
+        '''
 
     except:
         print(traceback.print_exc())
@@ -298,6 +317,29 @@ def angleDiff(one, two):
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
 
+
+def stop_at_point(objDist):
+
+    v0 = ai.selfSpeed()
+    m = ai.selfMass() + 5
+    p = 55
+    a = p / m
+    a2 = 45 / m
+
+    oldb = (v0)**2 / (2 * a)
+    print("brake: ", oldb)
+
+    brakeDist = (v0 + a2)**2 / (2 * a)
+    print("futbrake: ", brakeDist)
+
+    # s = 2 * v0**2 * m / p
+
+    if objDist <= brakeDist:
+        return True
+    
+    return False
+        
+    
 
 def time_of_impact(px, py, vx, vy, s):
     """
