@@ -1,4 +1,4 @@
-# Created by xp-mapedit on Mon Nov 30 16:29:18 2020
+# Created by xp-mapedit on Tue Dec  1 11:38:15 2020
 
 mapwidth : 20
 mapheight : 20
@@ -262,23 +262,23 @@ teamsharescore : no
 
 mapData: \multiline: EndOfMapdata
 xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxx
-x       xxxxxxxxxxxx
-x       xxxxxxxxxxxx
-x       xxxxxxxxxxxx
-x   x   xxxxxxxxxxxx
-x       xxxxxxxxxxxx
-x 1     xxxxxxxxxxxx
-x       xxxxxxxxxxxx
+x        c         x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x 1                x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
 xxxxxxxxxxxxxxxxxxxx
 EndOfMapdata

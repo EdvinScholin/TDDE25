@@ -1,4 +1,4 @@
-# Created by xp-mapedit on Mon Nov 30 16:29:59 2020
+# Created by xp-mapedit on Tue Dec  1 11:04:56 2020
 
 mapwidth : 32
 mapheight : 32
@@ -105,11 +105,11 @@ teamfuel : no
 capturetheflag : no
 cloakedexhaust : yes
 cloakedshield : yes
-cannonsuseitems : no
+cannonsuseitems : yes
 cannonsdefend : no
 cannonsmartness : 1
 cannondeadtime : 72
-cannonflak : no
+cannonflak : yes
 identifymines : no
 maxminesperpack : 2
 minelife : 1
@@ -138,9 +138,9 @@ allowsmartmissiles : no
 allowheatseekers : no
 allowtorpedoes : no
 allowplayercrashes : yes
-allowplayerbounces : yes
+allowplayerbounces : no
 allowplayerkilling : yes
-allowshields : no
+allowshields : yes
 allownukes : no
 allowclusters : no
 allowmodifiers : no
@@ -277,8 +277,8 @@ x   xxxxxx                     x
 x                              x
 x                              x
 x                 xxxx         x
-x                              x
-x       xxxxx          xxxx    x
+x                             dx
+xf      xxxxx          xxxx    x
 x                              x
 x                              x
 x                              x
@@ -290,7 +290,7 @@ x                              x
 x                   xxxxx      x
 x                              x
 x     xxxxx                    x
-x 2                   1        x
+x 2          3        1        x
 x                              x
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 EndOfMapdata
