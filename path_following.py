@@ -61,6 +61,8 @@ def tick():
 
         selfX = ai.selfX()
         selfY = ai.selfY()
+        selfVelX = ai.selfVelX()
+        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
 
         selfHeading = ai.selfHeadingRad() 
@@ -68,9 +70,10 @@ def tick():
         pi = math.pi
         
 
-        sq = chr(9610)
         mapWidth = ai.mapWidthBlocks()
         mapHeight = ai.mapHeightBlocks()
+
+        shotCount = ai.shotCountScreen()
 
         ai.setMaxMsgs(15)
         maxMsgs = ai.getMaxMsgs()
@@ -82,10 +85,32 @@ def tick():
 
         print ("tick count:", tickCount, "mode:", mode)
 
+        if tickCount == 1:
+            ai.shield()
+
+        for shots in range(shotCount):
+            shotSpeed = ai.shotSpeed(shots)
+            shotX = ai.shotX(shots)
+            shotY = ai.shotY(shots)
+            shotVelX = ai.shotVelX(shots)
+            shotVelY = ai.shotVelY(shots)
+
+            relSelfX = shotX - selfX
+            relSelfY = shotY - selfY
+            relSpeedX = shotVelX - selfVelX
+            relSpeedY = shotVelY - selfVelY
+
+            print("time", time_of_impact(relSelfX, relSelfY, relSpeedX, relSpeedY, shotSpeed))
+
+
+
+
+
+
+
         if mode == "wait" :
             if playerCount > 1:
                 mode = "ready"
-
 
         elif mode == "ready":
             stopCount += 1
@@ -148,7 +173,6 @@ def tick():
             goal = pixel_to_block(xCord, yCord)
 
 
-            print(goal)
 
             if not goal in all_nodes:
                 print("hej")
@@ -181,8 +205,6 @@ def tick():
             targetDistance = math.hypot(x, y)
 
 
-            print(targetDirection)
-            print(targetDistance)
 
             ai.turnToRad(targetDirection)
 
@@ -347,6 +369,37 @@ def stop_at_point(objDist):
         return True
     
     return False
+
+def time_of_impact(px, py, vx, vy, s):
+    """
+    Determine the time of impact, when bullet hits moving target
+    Parameters:
+        px, py = initial target position in x,y relative to shooter
+        vx, vy = initial target velocity in x,y relative to shooter
+        s = initial bullet speed
+        t = time to impact, in our case ticks
+    """
+
+    a = s * s - (vx * vx + vy * vy)
+    b = px * vx + py * vy
+    c = px * px + py * py
+
+    d = b*b + a*c
+
+    t = 0
+
+    if d >= 0:
+        try:
+            t = (b + math.sqrt(d)) / a
+        except ZeroDivisionError:
+            t = (b + math.sqrt(d))
+        if t < 0:
+            t = 0
+
+    return t
+
+
+
 #
 # Parse the command line arguments
 #
