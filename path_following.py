@@ -97,10 +97,12 @@ def tick():
 
             # Starts mission 7
             if stopCount == 1:
+                
                 ai.talk("Teacherbot:start-mission 10")
+
                 for x in range(mapWidth):
                     for y in range(mapHeight):
-                        if ai.mapData(x, y) == 0:
+                        if (ai.mapData(x, y) == 0 or 30 <= ai.mapData(x, y) <= 39) and block_neighbors((x, y)):
                             all_nodes.append((x, y))
 
 
@@ -124,6 +126,11 @@ def tick():
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
+            # Change mode to aim
+            mode = "cords"
+
+        elif mode == "cords":
+
             # Saves the coordinates of the last message in
             # tasks in the variables xCord and yCord
             coordinates = []
@@ -133,7 +140,6 @@ def tick():
             xCord = coordinates[0]
             yCord = coordinates[1]
 
-            # Change mode to aim
             mode = "path"
 
         elif mode == "path":
@@ -142,8 +148,16 @@ def tick():
             goal = pixel_to_block(xCord, yCord)
 
 
+            print(goal)
+
+            if not goal in all_nodes:
+                print("hej")
+                all_nodes.append(goal)
+
+
             path = list(astar.find_path(selfBlock, goal, neighbors_fnct=neighbors,
                         heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
+
 
             print(path)
             mode = "aim"
@@ -177,7 +191,7 @@ def tick():
             
 
         elif mode == "travel":
-            ai.setPower(5)
+            ai.setPower(30)
 
             selfBlock = pixel_to_block(selfX, selfY)
             x = path[1][0] - selfBlock[0]
@@ -191,7 +205,6 @@ def tick():
                 nextTargetDirection = math.atan2(b, a)
 
 
-
             ai.thrust()
             
 
@@ -199,7 +212,7 @@ def tick():
 
             if targetDistance == 0:
                 path.pop(0)
-                if len(path) == 2:
+                if len(path) == 2 or len(path) == 1:
                     ai.turnToRad(selfHeading - pi)
                     mode = "stop"
                 elif angleDiff(nextTargetDirection, selfHeading) > 0.1:
@@ -211,11 +224,16 @@ def tick():
             
 
         elif mode == "stop":
-            ai.setPower(5)
+            ai.setPower(20)
             ai.thrust()
 
-            if selfSpeed < 0.1:
-                mode = "aim"
+            print(selfSpeed)
+
+            if selfSpeed < 0.5:
+                if len(path) == 1:
+                    mode = "completed_task"
+                else:
+                    mode = "aim"
             
 
 
@@ -244,7 +262,7 @@ def tick():
             # last task in the list and change mode to aim
             else:
                 tasks.pop()
-                mode = "aim"
+                mode = "cords"
                  
 
         elif mode == "completed_all_tasks":
@@ -274,6 +292,11 @@ def angleDiff(one, two):
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
 
+def block_to_pixel(x, y):
+    pixelX = x*blockSize - blockSize/2
+    pixely = y*blockSize - blockSize/2
+    return (pixelX, pixely)
+
 def pixel_to_block(x, y):
     blockX = x//blockSize
     blockY = y//blockSize
@@ -296,9 +319,34 @@ def distance(n1, n2):
     (x2, y2) = n2
     return math.hypot(x2 - x1, y2 - y1)
 
+def block_neighbors(node):
+    dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
+    for dir in dirs:
+        neighbor = (node[0] + dir[0], node[1] + dir[1])
+        if ai.mapData(neighbor[0], neighbor[1]) == 1:
+            return False
+    return True
 
+def stop_at_point(objDist):
 
+    v0 = ai.selfSpeed()
+    m = ai.selfMass() + 5
+    p = 55
+    a = p / m
+    a2 = 45 / m
 
+    oldb = (v0)**2 / (2 * a)
+    print("brake: ", oldb)
+
+    brakeDist = (v0 + a2)**2 / (2 * a)
+    print("futbrake: ", brakeDist)
+
+    # s = 2 * v0**2 * m / p
+
+    if objDist <= brakeDist:
+        return True
+    
+    return False
 #
 # Parse the command line arguments
 #
