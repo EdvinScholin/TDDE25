@@ -234,6 +234,9 @@ def tick():
             # if angle != math.pi:
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
+            # -------------
+            # ai.selfHeadingRad() fördröjd ett tick
+            # -------------
             angle = angleDiff(ai.selfTrackingRad(), ai.selfHeadingRad())
             """
             if angleDiff(prevTrackRad, ai.selfTrackingRad()) < 0.1:
