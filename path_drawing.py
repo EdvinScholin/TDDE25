@@ -68,9 +68,9 @@ def tick():
 
             for x in range(mapWidth):
                 for y in range(mapHeight):
-                    if ai.mapData(x, y) == 0:
+                    if (ai.mapData(x, y) == 0 or 30 <= ai.mapData(x, y) <= 39) and block_neighbors((x, y)):
                         all_nodes.append((x, y))
-
+            print(all_nodes)
             mode = "draw"
 
 
@@ -86,7 +86,7 @@ def tick():
                         print("x", end="")
                     else:
                         print("o", end="")  
-                elif element[0] == 31:
+                elif element[0] == mapWidth-1:
                         if ai.mapData(element[0], element[1]) == 1:
                             print(sq, end="\n")
                         else:
@@ -105,6 +105,14 @@ def tick():
 
     except:
         print(traceback.print_exc())
+
+def block_neighbors(node):
+    dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
+    for dir in dirs:
+        neighbor = (node[0] + dir[0], node[1] + dir[1])
+        if ai.mapData(neighbor[0], neighbor[1]) == 1:
+            return False
+    return True
 
 def neighbors(node):
     dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]

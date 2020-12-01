@@ -1,8 +1,8 @@
-# Created by xp-mapedit on Tue Dec  1 11:04:56 2020
+# Created by xp-mapedit on Tue Dec  1 11:38:15 2020
 
-mapwidth : 32
-mapheight : 32
-mapname : Simple
+mapwidth : 20
+mapheight : 20
+mapname : ett_test
 mapauthor : bordox
 limitedlives : yes
 worldlives : 0
@@ -105,11 +105,11 @@ teamfuel : no
 capturetheflag : no
 cloakedexhaust : yes
 cloakedshield : yes
-cannonsuseitems : yes
+cannonsuseitems : no
 cannonsdefend : no
 cannonsmartness : 1
 cannondeadtime : 72
-cannonflak : yes
+cannonflak : no
 identifymines : no
 maxminesperpack : 2
 minelife : 1
@@ -138,9 +138,9 @@ allowsmartmissiles : no
 allowheatseekers : no
 allowtorpedoes : no
 allowplayercrashes : yes
-allowplayerbounces : no
+allowplayerbounces : yes
 allowplayerkilling : yes
-allowshields : yes
+allowshields : no
 allownukes : no
 allowclusters : no
 allowmodifiers : no
@@ -261,36 +261,24 @@ cannonmaxscore : 100.0
 teamsharescore : no
 
 mapData: \multiline: EndOfMapdata
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-x                              x
-x                              x
-x                              x
-x        x                     x
-x        x     x               x
-x        x     x               x
-x        x     x               x
-x        x     x               x
-x              x     xxxx      x
-x              x               x
-x                              x
-x   xxxxxx                     x
-x                              x
-x                              x
-x                 xxxx         x
-x                             dx
-xf      xxxxx          xxxx    x
-x                              x
-x                              x
-x                              x
-x  x           xxx             x
-x  x    xxxx                   x
-x  x                           x
-x  x                           x
-x                              x
-x                   xxxxx      x
-x                              x
-x     xxxxx                    x
-x 2          3        1        x
-x                              x
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx
+x        c         x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x 1                x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+x                  x
+xxxxxxxxxxxxxxxxxxxx
 EndOfMapdata
