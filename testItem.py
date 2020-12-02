@@ -104,7 +104,7 @@ def tick():
 
         if mode == "ready":
             
-            if wallDistance == 0:
+            if abs(wallDistance) < 1:
                 p = 55
             else:    
                 p = selfSpeed**2 * (selfMass+5) / wallDistance
@@ -113,7 +113,7 @@ def tick():
 
             print("power: ", p)
 
-            if 50 <= p or wallDistance < 5:
+            if 40 <= p:
                 mode = "stop"
                 prevTrackRad = ai.selfTrackingRad()
 
@@ -126,12 +126,13 @@ def tick():
                 '''
 
             elif itemCountScreen > 0:
-                ai.setPower(45)
+                if selfSpeed < 20:
+                    ai.setPower(55)
                 mode = "aim"
 
             else:
                 ai.turnToRad(middleDir)
-                ai.setPower(45)
+                ai.setPower(55)
                 ai.thrust()      
 
         elif mode == "stop":
@@ -154,21 +155,27 @@ def tick():
                 mode = "ready"
                 return
 
-            movItemDiff = angleDiff(
-                ai.selfTrackingRad(), ai.selfTrackingRad() + itemDir)
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = itemDir % (2*math.pi)
-
-            if selfSpeed < 5:
-                angle = itemDir
-                
-                '''
-                # elif stop_at_point(itemDist + 50):  
-                elif round(itemDist, 1) == 0 or movItemDiff > math.pi/2:
+            movItemDiff = angleDiff(
+                ai.selfTrackingRad(), itemDir)
+            
+            if stop_at_point(itemDist + 50):  
+                # elif round(itemDist, 1) == 0 or movItemDiff > math.pi/2:
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
-                '''
+            
+            if selfSpeed < 5 or  movItemDiff == math.pi/2:
+                angle = itemDir
+            
+            elif movItemDiff > math.pi/2:
+                # ai.setMaxTurnRad(math.pi)
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
+                print("movItemDiff: ", movItemDiff)
+                return
+                
             else:
                 angle = 2*absItemDir - selfTrackRad
             
@@ -207,7 +214,7 @@ def stop_at_point(objDist):
     v0 = ai.selfSpeed()
     m = ai.selfMass() + 5
     a = p / m
-    a2 = 45 / m
+    a2 = p / m
     s = objDist
     
     maxV0 = math.sqrt(2*a*s)
@@ -260,7 +267,7 @@ def time_of_impact(px, py, vx, vy, s):
 parser = OptionParser()
 
 parser.add_option ("-p", "--port", action="store", type="int", 
-                   dest="port", default=15348, 
+                   dest="port", default=15347, 
                    help="The port number. Used to avoid port collisions when" 
                    " connecting to the server.")
 
