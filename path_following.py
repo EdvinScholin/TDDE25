@@ -14,6 +14,7 @@ from optparse import OptionParser
 #
 tickCount = 0
 stopCount = 0
+stopCount2 = 0
 mode = "wait"
 xCord = 0
 yCord = 0
@@ -44,15 +45,20 @@ def tick():
         global lenTasks
         global all_nodes
         global path
+        global stopCount2
         #
         # Reset the state machine if we die.
         #
         if not ai.selfAlive():
             tickCount = 0
-            mode = "wait"
+            if stopCount2 == 0:
+                mode = "wait"
+            else:
+                mode = "cords"
             return
 
         tickCount += 1
+        stopCount2 += 1
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
@@ -88,29 +94,11 @@ def tick():
         if tickCount == 1:
             ai.shield()
 
-        for shots in range(shotCount):
-            shotSpeed = ai.shotSpeed(shots)
-            shotX = ai.shotX(shots)
-            shotY = ai.shotY(shots)
-            shotVelX = ai.shotVelX(shots)
-            shotVelY = ai.shotVelY(shots)
-
-            relSelfX = shotX - selfX
-            relSelfY = shotY - selfY
-            relSpeedX = shotVelX - selfVelX
-            relSpeedY = shotVelY - selfVelY
-
-            print("time", time_of_impact(relSelfX, relSelfY, relSpeedX, relSpeedY, shotSpeed))
-
-
-
-
-
-
 
         if mode == "wait" :
             if playerCount > 1:
                 mode = "ready"
+
 
         elif mode == "ready":
             stopCount += 1
@@ -120,9 +108,8 @@ def tick():
                 mode = "wait"
                 return
 
-            # Starts mission 7
+            # Starts mission 7 and create the map
             if stopCount == 1:
-                
                 ai.talk("Teacherbot:start-mission 10")
 
                 for x in range(mapWidth):
@@ -154,6 +141,7 @@ def tick():
             # Change mode to aim
             mode = "cords"
 
+
         elif mode == "cords":
 
             # Saves the coordinates of the last message in
@@ -165,55 +153,52 @@ def tick():
             xCord = coordinates[0]
             yCord = coordinates[1]
 
+            #Change mode to path
             mode = "path"
+
 
         elif mode == "path":
          
+            # Calculate the start and goal position of the path
             selfBlock = pixel_to_block(selfX, selfY)
             goal = pixel_to_block(xCord, yCord)
 
-
-
-            if not goal in all_nodes:
-                print("hej")
+            # If the goal is next to a block add it to the all_nodes list
+            if not (goal in all_nodes):
+                print("goal:", goal)
                 all_nodes.append(goal)
 
-
+            # Create the path using an a* algorithm
             path = list(astar.find_path(selfBlock, goal, neighbors_fnct=neighbors,
                         heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
 
-
-            print(path)
+            # Change mode to aim
             mode = "aim"
 
 
-
-
-
-
-
-
-
         elif mode == "aim":
+
+            # Calculate the the the direction of the target
+            # and the distance to the target
             selfBlock = pixel_to_block(selfX, selfY)
-
-
             x = path[1][0] - selfBlock[0]
             y = path[1][1] - selfBlock[1]
-
             targetDirection = math.atan2(y, x)
             targetDistance = math.hypot(x, y)
 
 
-
+            # Turns the ship to the target direction
             ai.turnToRad(targetDirection)
 
+            # If you are looking at the target change mode to travel
             if angleDiff(targetDirection, selfHeading) < 0.03:
                 mode = "travel"
             
 
         elif mode == "travel":
-            ai.setPower(30)
+
+            ai.setPower(40)
+            ai.thrust()
 
             selfBlock = pixel_to_block(selfX, selfY)
             x = path[1][0] - selfBlock[0]
@@ -226,12 +211,6 @@ def tick():
                 b = path[2][1] - path[1][1]
                 nextTargetDirection = math.atan2(b, a)
 
-
-            ai.thrust()
-            
-
-            print(path)
-
             if targetDistance == 0:
                 path.pop(0)
                 if len(path) == 2 or len(path) == 1:
@@ -243,10 +222,10 @@ def tick():
                 else:
                     mode = "aim"
             
-            
 
         elif mode == "stop":
-            ai.setPower(20)
+            
+            ai.setPower(25)
             ai.thrust()
 
             print(selfSpeed)
@@ -315,8 +294,8 @@ def angleDiff(one, two):
     return min(a1, a2)
 
 def block_to_pixel(x, y):
-    pixelX = x*blockSize - blockSize/2
-    pixely = y*blockSize - blockSize/2
+    pixelX = x*blockSize + blockSize/2
+    pixely = y*blockSize + blockSize/2
     return (pixelX, pixely)
 
 def pixel_to_block(x, y):
@@ -398,6 +377,40 @@ def time_of_impact(px, py, vx, vy, s):
 
     return t
 
+def find_intersection(p0, p1, p2, p3):
+
+    s10_x = p1[0] - p0[0]
+    s10_y = p1[1] - p0[1]
+    s32_x = p3[0] - p2[0]
+    s32_y = p3[1] - p2[1]
+
+    denom = s10_x * s32_y - s32_x * s10_y
+
+    if denom == 0 : return None # collinear
+
+    denom_is_positive = denom > 0
+
+    s02_x = p0[0] - p2[0]
+    s02_y = p0[1] - p2[1]
+
+    s_numer = s10_x * s02_y - s10_y * s02_x
+
+    if (s_numer < 0) == denom_is_positive : return None # no collision
+
+    t_numer = s32_x * s02_y - s32_y * s02_x
+
+    if (t_numer < 0) == denom_is_positive : return None # no collision
+
+    if (s_numer > denom) == denom_is_positive or (t_numer > denom) == denom_is_positive : return None # no collision
+
+
+    # collision detected
+
+    t = t_numer / denom
+
+    intersection_point = [ p0[0] + (t * s10_x), p0[1] + (t * s10_y) ]
+
+    return intersection_point
 
 
 #

@@ -1,7 +1,7 @@
-# Created by xp-mapedit on Tue Dec  1 11:38:15 2020
+# Created by xp-mapedit on Wed Dec  2 10:38:23 2020
 
-mapwidth : 20
-mapheight : 20
+mapwidth : 21
+mapheight : 21
 mapname : ett_test
 mapauthor : bordox
 limitedlives : yes
@@ -23,7 +23,7 @@ tankshipshape : (NM:fueltank)(AU:John E. Norlin)(SH: 15,0 14,-5 9,-8 -5,-8 -3,-8
 shipmass : 20.0
 shotmass : 0.8
 shotspeed : 21.0
-shotlife : 60
+shotlife : 120
 maxplayershots : 20
 firerepeatrate : 13
 keepshots : no
@@ -109,7 +109,7 @@ cannonsuseitems : no
 cannonsdefend : no
 cannonsmartness : 1
 cannondeadtime : 72
-cannonflak : no
+cannonflak : yes
 identifymines : no
 maxminesperpack : 2
 minelife : 1
@@ -140,7 +140,7 @@ allowtorpedoes : no
 allowplayercrashes : yes
 allowplayerbounces : yes
 allowplayerkilling : yes
-allowshields : no
+allowshields : yes
 allownukes : no
 allowclusters : no
 allowmodifiers : no
@@ -261,24 +261,25 @@ cannonmaxscore : 100.0
 teamsharescore : no
 
 mapData: \multiline: EndOfMapdata
-xxxxxxxxxxxxxxxxxxxx
-x        c         x
-x                  x
-x                  x
-x                  x
-x                  x
-x                  x
-x                  x
-x                  x
-x 1                x
-x                  x
-x                  x
-x                  x
-x                  x
-x                  x
-x                  x
-x                  x
-x                  x
-x                  x
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxx
+x                   x
+x                   x
+x                   x
+x                   x
+x                   x
+x                   x
+x                   x
+x                   x
+x                   x
+x         1         x
+x                   x
+x                   x
+x                   x
+x                   x
+x                   x
+x                   x
+x                   x
+x 2                 x
+x                   x
+xxxxxxxxxxxxxxxxxxxxx
 EndOfMapdata

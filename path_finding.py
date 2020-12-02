@@ -15,7 +15,6 @@ from optparse import OptionParser
 tickCount = 0
 mode = "ready"
 all_nodes = []
-# add more if needed
 
 def tick():
     #
@@ -44,51 +43,36 @@ def tick():
         # Read some "sensors" into local variables, to avoid excessive calls to the API
         # and improve readability.
         #
-
-        selfX = ai.selfX()
-        selfY = ai.selfY()
-        selfVelX = ai.selfVelX()
-        selfVelY = ai.selfVelY()
-        selfSpeed = ai.selfSpeed()
-
-        selfHeading = ai.selfHeadingRad() 
-
         mapWidth = ai.mapWidthBlocks()
         mapHeight = ai.mapHeightBlocks()
-        # 0-2pi, 0 in x direction, positive toward y
-
-        # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode", mode)
 
 
         if mode == "ready":
 
+            # Creates the map in a list all_nodes
             for x in range(mapWidth):
                 for y in range(mapHeight):
                     if ai.mapData(x, y) == 0:
                         all_nodes.append((x, y))
             mode = "path"
-
-  
-            
+    
 
         elif mode == "path":
        
-            
+            # Creates the path using an a* algorithm
             path = list(astar.find_path((1, 1), (15, 30), neighbors_fnct=neighbors,
                         heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
-            
-                    
-
+  
             print(path)
-            
-            
-
     except:
         print(traceback.print_exc())
 
 def neighbors(node):
+    """
+    Calculates the neighbors to a node
+    """
     dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
     result = []
     for dir in dirs:
@@ -98,9 +82,15 @@ def neighbors(node):
     return result
 
 def cost(n1, n2):
+    """
+    The cost of moving to another node is 1
+    """
     return 1
 
 def distance(n1, n2):
+    """
+    Calculates the distance between to nodes
+    """
     (x1, y1) = n1
     (x2, y2) = n2
     return math.hypot(x2 - x1, y2 - y1)
