@@ -15,7 +15,7 @@ tickCount = 0
 readyCount = 0
 stopCount = 0
 mode = "wait"
-selectItemType = -1
+desiredItemType = -1
 itemId = 0
 prevTrackRad = 0
 prevSelfItem = 0
@@ -39,7 +39,7 @@ def tick():
         global readyCount
         global stopCount
         global mode
-        global selectItemType
+        global desiredItemType
         global itemId
         global prevTrackRad
         global prevSelfItem
@@ -65,6 +65,7 @@ def tick():
         selfVelX = ai.selfVelX()
         selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
+        selfMass = ai.selfMass()
 
         selfHeading = ai.selfHeadingRad()
 
@@ -73,7 +74,7 @@ def tick():
         middleDisY = ai.radarHeight()/2 - ai.selfRadarY()                 
         middleDir = math.atan2(middleDisY, middleDisX)
 
-        itemCount = ai.itemCountScreen()
+        wallDistance = ai.wallFeelerRad(1000, ai.selfTrackingRad())
 
         ai.setMaxTurnRad(2*math.pi)
 
@@ -84,7 +85,7 @@ def tick():
         if mode == "wait":
             mode = "ready"
 
-        if mode == "ready":
+        elif mode == "ready":
             
             # To limit times mode we start the mission
             stopCount += 1
@@ -96,212 +97,182 @@ def tick():
             if "collect-item" in ai.scanTalkMsg(0):
                 mode = "scan"
         
-        if mode == "scan":
+        elif mode == "scan":
             
+            # Scan in the most recent message
             message = ai.scanTalkMsg(0)
             
+            # Second element in list will be our desired item
             messageList = list(message.split(" "))
-            selectItemType = messageList[1]
+            desiredItemType = messageList[1]
 
-            if selectItemType in itemDict:
-                selectItemType = itemDict[selectItemType]
+            if desiredItemType in itemDict:
+                desiredItemType = itemDict[desiredItemType]
             
-            prevSelfItem = ai.selfItem(selectItemType)
+            # Save how many items of the desired item we already have
+            prevSelfItem = ai.selfItem(desiredItemType)
                     
-            mode = "aim"
-            
-        if mode == "aim":
+            mode = "checkSituation"  
+        
+        # Take the closest item
+        itemCount = ai.itemCountScreen()   
+        prevItemDist = 1000
+        prevDesiredItemDist = 1000
+        desirededItemCount = 0
 
-            # Take the closest item   
-            itemCountScreen = ai.itemCountScreen()
-            prevItemDist = 1000
-            prevSelectItemDist = 1000
-            selectedItemCount = 0
+        if itemCount > 0:
+
+            for index in range(itemCount):
+                        
+                itemDist = ai.itemDist(index)
+                
+                if ai.itemType(index) == desiredItemType:
+                    desirededItemCount += 1
+                    
+                    if itemDist < prevDesiredItemDist:
+                        prevDesiredItemDist = itemDist
+                        itemId = index
             
-            if itemCount == 0:
-                
+                else:
+                    if itemDist < prevItemDist:
+                        prevItemDist = itemDist
+                        restItemId = index  
+            
+            # If there are none of the desired type, we want to take the closest item 
+            if desirededItemCount == 0:
+                itemId = restItemId
+
+            # item position and velocity
+            itemX = ai.itemX(itemId)
+            itemY = ai.itemY(itemId)
+            itemVelX = ai.itemVelX(itemId)
+            itemVelY = ai.itemVelY(itemId)
+
+            # items initial position relative to self
+            relX = itemX - selfX
+            relY = itemY - selfY
+
+            # items initial velocity relative to self
+            relVelX = itemVelX - selfVelX
+            relVelY = itemVelY - selfVelY
+
+            # Time of impact, when ship is supposed to hit item
+            try:
+                t = time_of_impact(relX, relY, relVelX, relVelY, selfSpeed)
+            except ZeroDivisionError:
+                pass
+
+            # Point of impact, where ship is supposed to hit item
+            aimAtX = relX + relVelX*t
+            aimAtY = relY + relVelY*t
+
+            # Direction of aimpoint
+            itemDist = math.sqrt(aimAtX**2 + aimAtY**2)
+            itemDir = math.atan2(aimAtY, aimAtX)
+
+        if mode == "checkSituation":
+
+            if abs(wallDistance) < 1:
+                p = 55
+            else:    
+                p = selfSpeed**2 * (selfMass+5) / wallDistance
+            
+            if 40 <= p:
+                mode = "stop"
+                prevTrackRad = ai.selfTrackingRad()
+            
+            elif itemCount > 0:
+                ai.setPower(45)
+                mode = "aim"
+            
+            else:
                 ai.turnToRad(middleDir)
+                ai.setPower(45)
+                ai.thrust()
+        
+        elif mode == "aim":
+            if itemCount == 0:
+                mode = "checkSituation"
+                return
+            
+            if ai.itemSpeed(itemId) > 0:
+                selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
+                absItemDir = itemDir % (2*math.pi)
+                movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
                 
+                if stop_at_point(itemDist + 50):  
+                    prevTrackRad = ai.selfTrackingRad()
+                    mode = "stop"
+                    return
+                
+                if selfSpeed < 5 or movItemDiff == math.pi/2:
+                    angle = itemDir
+                
+                elif movItemDiff > math.pi/2:
+                    prevTrackRad = ai.selfTrackingRad()
+                    mode = "stop"
+                    return
+                    
+                else:
+                    angle = 2*absItemDir - selfTrackRad
+                
+                mode = "checkSituation"
+
+                # Turns to target direction
+                ai.turnToRad(angle)
+                ai.thrust()
+            
+            else:
+                # If item has no velocity 
+                itemStopped = math.atan2(relY, relX)
+                ai.turnToRad(itemStopped)
+
                 # Thrust if we are in a sufficient right direction
-                if angleDiff(selfHeading, middleDir) < 0.1:                    
+                if angleDiff(selfHeading, itemStopped) < 0.1:
                     ai.setPower(30)
                     ai.thrust()
-            
+        
                 # Stop if we are in a sufficient wrong direction
-                elif angleDiff(ai.selfTrackingRad(), middleDir) > 0.8 and selfSpeed > 3:
+                if angleDiff(ai.selfTrackingRad(), itemStopped) > 0.8 and selfSpeed > 3:
                     if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
                         mode = "stop"
-            else:
-                for index in range(itemCountScreen):
-                    
-                    itemDist = ai.itemDist(index)
-                    
-                    if ai.itemType(index) == selectItemType:
-                        selectedItemCount += 1
-                        
-                        if itemDist < prevSelectItemDist:
-                            prevSelectItemDist = itemDist
-                            itemId = index
-                
-                    else:
-                        if itemDist < prevItemDist:
-                            prevItemDist = itemDist
-                            restItemId = index
-                
-                # If there are none of the desired type, we want to take the closest item 
-                if selectedItemCount == 0:
-                    itemId = restItemId
+            
+            # When we have picked up the item, send us to "done"
+            if prevSelfItem < ai.selfItem(desiredItemType):
+                mode = "done"
         
-                # item position and velocity
-                itemX = ai.itemX(itemId)
-                itemY = ai.itemY(itemId)
-                itemVelX = ai.itemVelX(itemId)
-                itemVelY = ai.itemVelY(itemId)
+        elif mode == "stop":
 
-                # items initial position relative to self
-                relX = itemX - selfX
-                relY = itemY - selfY
+            angle = angleDiff(prevTrackRad, ai.selfTrackingRad())
 
-                # items initial velocity relative to self
-                relVelX = itemVelX - selfVelX
-                relVelY = itemVelY - selfVelY
+            if angle < math.pi/2:
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
-                # Time of impact, when ship is supposed to hit item
-                try:
-                    t = time_of_impact(relX, relY, relVelX, relVelY, selfSpeed)
-                except ZeroDivisionError:
-                    pass
-                
-                if ai.itemSpeed(itemId) > 0:
-                
-                    # Point of impact, where ship is supposed to hit item
-                    aimAtX = relX + relVelX*t
-                    aimAtY = relY + relVelY*t
 
-                    # Direction of aimpoint
-                    itemDir = math.atan2(aimAtY, aimAtX)
-
-                    # Turns to item direction
-                    ai.turnToRad(itemDir)
-
-                    # Thrust if we are in a sufficient right direction
-                    if angleDiff(selfHeading, itemDir) < 0.05:
-
-                        if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
-                   
-                            ai.setPower(35)
-                            ai.thrust()
-                            mode = "aim"
-
-                    elif angleDiff(ai.selfTrackingRad(), itemDir) > 0.1:
-                        mode = "adjust"
-                
-                else:
-                    # If item has no velocity 
-                    itemStopped = math.atan2(relY, relX)
-                    ai.turnToRad(itemStopped)
-
-                    # Thrust if we are in a sufficient right direction
-                    if angleDiff(selfHeading, itemStopped) < 0.1:
-                        ai.setPower(30)
-                        ai.thrust()
-            
-                    # Stop if we are in a sufficient wrong direction
-                    if angleDiff(ai.selfTrackingRad(), itemStopped) > 0.8 and selfSpeed > 3:
-                        if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) > 100):
-                            mode = "stop"
-       
-            # Different distances to wall for different speeds
-            if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 100):
-                mode = "closeToWall"
-            
-            if selfSpeed > 12:
-                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 250):
-                    mode = "closeToWall" 
-            
-            if selfSpeed > 18:
-                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 350):
-                    mode = "closeToWall"
-            
-            if selfSpeed > 24:
-                if (0 < ai.wallFeelerRad(1000, ai.selfTrackingRad()) < 450):
-                    mode = "closeToWall"
-        
-        elif mode == "closeToWall":
-            
-            prevTrackRad = ai.selfTrackingRad()
-            ai.turnToRad(ai.selfTrackingRad() - math.pi)
-            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
-            
-            if selfSpeed < 3:
-                mode = "aim"
+            if angle > math.pi/2:
+                mode = "checkSituation"
+                return
             
             ai.setPower(55)
             ai.thrust()
-        
-        elif mode == "stop":
-            if selfSpeed > 1:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
-            angle = angleDiff(ai.selfTrackingRad(), selfHeading)
-
-            if angle < 0.5:
-                mode = "aim"
-
-            ai.setPower(45)
-            ai.thrust()
-
-            if prevSelfItem < ai.selfItem(selectItemType):
-                if selfSpeed < 3:
-                    mode = "done"
-                else:
-                    mode = "stop"
-        
-        elif mode == "adjust":
-            
-            # kolla på rörelseriktningen och målets riktning.
-            # Ta ut riktningen mitt mellan och thrusta.
-            movItemDiff = angleDiff(ai.selfTrackingRad(), itemDir)
-            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
-            absItemDir = itemDir % (2*math.pi)
-            
-            if movItemDiff < math.pi/2:
-                adjustAngle = 2*absItemDir - selfTrackRad
-            
-            elif 3*math.pi/4 > movItemDiff >= math.pi/2:
-                adjustAngle = (3*absItemDir - selfTrackRad)/2
-            
-            elif movItemDiff == math.pi:
-                mode = "stop"
-                return
-            
-            else:    
-                adjustAngle = absItemDir
-            
-            ai.turnToRad(adjustAngle)
-            selfHeading = ai.selfHeadingRad()
-
-            ai.setPower(45)
-            ai.thrust()
-
-            if angleDiff(selfHeading, itemDir) < 0.05:
-                mode = "aim"
-            else:
-                mode = "adjust"
+            if prevSelfItem < ai.selfItem(desiredItemType):
+                mode = "done"
         
         elif mode == "done":
             
-            # Gets the key from the value of our desired item in order to
-            # send a message to teacherbot
-            itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(selectItemType)]
+            # Gets the key from the value in our dictionary of our desired 
+            # item in order to send a message to teacherbot
+            itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(desiredItemType)]
             completed = "Teacherbot: completed collect-item " + itemStrValue
+            print(ai.scanTalkMsg(0))
             ai.removeTalkMsg(0)
             ai.talk(completed)
             mode = "scan"
 
-
     except:
         print(traceback.print_exc())
+
 
 def angleDiff(one, two):
     """Calculates the smallest angle between two angles"""
@@ -309,6 +280,29 @@ def angleDiff(one, two):
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
+
+def stop_at_point(objDist):
+
+    """determine when ship need to stop"""
+
+    p = 55
+    v0 = ai.selfSpeed()
+    m = ai.selfMass() + 5
+    a = p / m
+    a2 = p / m
+    s = objDist
+    
+    maxV0 = math.sqrt(2*a*s)
+    print("Max Velocity: ", maxV0)
+    print("Velocity: ", v0)
+
+    futV = v0 + a2/2
+    futS = s - futV
+    futMaxV0 = math.sqrt(2*a*futS)
+    print("futMaxV0: ", futMaxV0)
+
+    if futMaxV0 <= futV:
+        return True
 
 
 def time_of_impact(px, py, vx, vy, s):
