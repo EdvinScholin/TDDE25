@@ -112,7 +112,7 @@ def tick():
                 p = selfSpeed**2 * (selfMass+5) / wallDistance
             '''
             # We want to brake the ship if power p is to high
-            if brake(wallDistance + 50) and wallDistance != -1:
+            if brake(wallDistance - 50) and wallDistance != -1:
                 mode = "stop"
                 prevTrackRad = ai.selfTrackingRad()
 
@@ -248,7 +248,7 @@ def time_of_impact(px, py, vx, vy, s):
 parser = OptionParser()
 
 parser.add_option("-p", "--port", action="store", type="int",
-                  dest="port", default=15347,
+                  dest="port", default=15348,
                   help="The port number. Used to avoid port collisions when"
                   " connecting to the server.")
 
