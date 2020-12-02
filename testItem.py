@@ -110,11 +110,13 @@ def tick():
             else:
                 p = selfSpeed**2 * (selfMass+5) / wallDistance
 
-            print("wallDistance: ", wallDistance)
+            #print("wallDistance: ", wallDistance)
 
-            print("power: ", p)
+            #print("power: ", p)
 
-            if 40 <= p:
+            #if 40 <= p:
+            if brake(wallDistance - 50):
+                
                 mode = "stop"
                 prevTrackRad = ai.selfTrackingRad()
 
@@ -159,19 +161,19 @@ def tick():
             absItemDir = itemDir % (2*math.pi)
             movItemDiff = angleDiff(
                 ai.selfTrackingRad(), itemDir)
-
+            
             # if stop_at_point(itemDist + 50):
-            if brake(itemDist):
-                # elif round(itemDist, 1) == 0 or movItemDiff > math.pi/2:
+            if brake(itemDist + 50):
+                #ai.setPower(brake(itemDist))
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
-
+            
             if selfSpeed < 5 or movItemDiff == math.pi/2:
                 angle = itemDir
 
             elif movItemDiff > math.pi/2:
-                # ai.setMaxTurnRad(math.pi)
+                ai.setMaxTurnRad(math.pi)
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 print("movItemDiff: ", movItemDiff)
@@ -179,7 +181,7 @@ def tick():
 
             else:
                 angle = 2*absItemDir - selfTrackRad
-
+            
             mode = "ready"
 
             # Turns to target direction
@@ -226,17 +228,18 @@ def stop_at_point(objDist):
         return True
 
 
-def brake(dist):
+def brake(dist, accForce=55, decForce=55):
     """Determine when to brake"""
 
-    m = ai.selfMass()
-    v = ai.selfVel()
-    p = 55
+    m = ai.selfMass() + 5
+    v = ai.selfSpeed()
 
-    ek = m * v**2 / 2
-    ep = p * dist
+    futV = v + accForce / m
+    futDist = dist - v - accForce / (2 * m)
 
-    if not round(ek - ep):
+    futDecForce = m * futV**2 / (2 * futDist)
+
+    if futDecForce >= decForce:
         return True
     return False
 
@@ -278,7 +281,7 @@ def time_of_impact(px, py, vx, vy, s):
 parser = OptionParser()
 
 parser.add_option("-p", "--port", action="store", type="int",
-                  dest="port", default=15347,
+                  dest="port", default=15348,
                   help="The port number. Used to avoid port collisions when"
                   " connecting to the server.")
 
