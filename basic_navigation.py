@@ -19,6 +19,7 @@ yCord = 0
 tasks = []
 send = []
 lenTasks = 0
+prevTrackRad = 0
 # add more if needed
 
 def tick():
@@ -38,6 +39,7 @@ def tick():
         global tasks
         global send
         global lenTasks
+        global prevTrackRad
         #
         # Reset the state machine if we die.
         #
@@ -58,6 +60,7 @@ def tick():
         selfSpeed = ai.selfSpeed()
 
         selfHeading = ai.selfHeadingRad() 
+        selfTrackingRad = ai.selfTrackingRad()
         playerCount = ai.playerCountServer()
         pi = math.pi
 
@@ -114,6 +117,11 @@ def tick():
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
+            mode = "cords"
+
+
+        elif mode == "cords":
+
             # Saves the coordinates of the last message in
             # tasks in the variables xCord and yCord
             coordinates = []
@@ -129,62 +137,51 @@ def tick():
 
         elif mode == "aim":
 
-            # Turns to the target
-            ai.turnToRad(targetDirection)
-            
-            # If you are looking at the target change mode to travel
-            print(angleDiff(targetDirection, ai.selfHeadingRad()))
-            if angleDiff(targetDirection, ai.selfHeadingRad()) < 0.03:
-                mode = "travel"
+            if targetDistance < 10:
+                mode = "completed_task"
 
+            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
+            absItemDir = targetDirection % (2*math.pi)
 
-        elif mode == "travel":
+            movItemDiff = angleDiff(selfTrackingRad, targetDirection)
 
-
-            
-            # If you are close to the target head towards it with 
-            # a low speed and when really close change mode to stop
-            if targetDistance < 300:
-                ai.setPower(5)
-                if selfSpeed < 10:
-                    ai.thrust()
-                if targetDistance < 20:
-                    ai.turnToRad(selfHeading + pi)
-                    mode = "stop"
-
-            # If you are far away from the target 
-            # head towards it with a higher speed
-            if targetDistance > 300:
-                ai.setPower(10)
-                if selfSpeed < 30:
-                    ai.thrust()
-
-            # If you are close to the target change mode to stop
-            if targetDistance < 350 and targetDistance > 300:
-                ai.turnToRad(selfHeading + pi)
+            if brake(targetDistance + 50):  
+                prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
+                return
+
+            if selfSpeed < 5 or movItemDiff == math.pi/2:
+                angle = targetDirection
+
+            elif movItemDiff > math.pi/2:
+                prevTrackRad = selfTrackingRad
+                mode = "stop"
+                return
+
+            else:
+                angle = 2*absItemDir -selfTrackRad
+
+            
+
+            ai.turnToRad(targetDirection)
+            ai.thrust()
             
 
         elif mode == "stop":
 
-            # If you are really close to the target with
-            # a low speed change mode to completed_task
-            if targetDistance < 50:
-                ai.setPower(10)
-                ai.thrust()
-                if selfSpeed < 0.4:
-                    mode = "completed_task"               
+            if targetDistance < 10:
+                mode = "completed_task"
 
-            # If you're further away from the target and
-            # have a low speed change mode to travel
-            else:
-                ai.setPower(25)
-                ai.thrust()
-   
-                if selfSpeed < 0.5:
-                    ai.turnToRad(targetDirection)
-                    mode = "travel"
+            angle = angleDiff(prevTrackRad, selfTrackingRad)
 
+            if angle < math.pi/2:
+                ai.turnToRad(selfTrackingRad - math.pi)
+
+            if angle > math.pi/2:
+                mode = "aim"
+
+            ai.setPower(55)
+            ai.thrust()
 
         elif mode == "completed_task":
 
@@ -211,7 +208,7 @@ def tick():
             # last task in the list and change mode to aim
             else:
                 tasks.pop()
-                mode = "aim"
+                mode = "cords"
                  
 
         elif mode == "completed_all_tasks":
@@ -221,14 +218,6 @@ def tick():
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 lenTasks = 0
                 mode = "scan"
-
-            
-
-
-            
-            
-
-
             
 
     except:
@@ -240,6 +229,22 @@ def angleDiff(one, two):
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
+
+
+def brake(dist, accForce=55, decForce=55):
+    """Determine when to brake"""
+
+    m = ai.selfMass() + 5
+    v = ai.selfSpeed()
+
+    futV = v + accForce / m
+    futDist = dist - v - accForce / (2 * m)
+
+    futDecForce = m * futV**2 / (2 * futDist)
+
+    if futDecForce >= decForce:
+        return True
+    return False
 
 #
 # Parse the command line arguments
