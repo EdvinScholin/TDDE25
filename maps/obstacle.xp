@@ -1,4 +1,4 @@
-# Created by xp-mapedit on Tue Dec  1 11:04:56 2020
+# Created by xp-mapedit on Wed Dec  2 10:53:15 2020
 
 mapwidth : 32
 mapheight : 32
@@ -277,8 +277,8 @@ x   xxxxxx                     x
 x                              x
 x                              x
 x                 xxxx         x
-x                             dx
-xf      xxxxx          xxxx    x
+x                              x
+x       xxxxx          xxxx    x
 x                              x
 x                              x
 x                              x
