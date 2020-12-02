@@ -16,6 +16,7 @@ prevTrackRad = 0
 mode = "ready"
 # add more if needed
 
+
 def tick():
     #
     # The API won't print out exceptions, so we have to catch and print them ourselves.
@@ -53,7 +54,7 @@ def tick():
         selfSpeed = ai.selfSpeed()
         selfMass = ai.selfMass()
 
-        selfHeading = ai.selfHeadingRad() 
+        selfHeading = ai.selfHeadingRad()
         # 0-2pi, 0 in x direction, positive toward y
 
         # Allows the ship to turn 360 degrees.
@@ -103,17 +104,19 @@ def tick():
             itemDir = math.atan2(aimAtY, aimAtX)
 
         if mode == "ready":
-            
+
             if abs(wallDistance) < 1:
                 p = 55
-            else:    
+            else:
                 p = selfSpeed**2 * (selfMass+5) / wallDistance
 
-            print("wallDistance: ", wallDistance)
+            #print("wallDistance: ", wallDistance)
 
-            print("power: ", p)
+            #print("power: ", p)
 
-            if 40 <= p:
+            #if 40 <= p:
+            if brake(wallDistance - 50):
+                
                 mode = "stop"
                 prevTrackRad = ai.selfTrackingRad()
 
@@ -133,7 +136,7 @@ def tick():
             else:
                 ai.turnToRad(middleDir)
                 ai.setPower(55)
-                ai.thrust()      
+                ai.thrust()
 
         elif mode == "stop":
 
@@ -142,14 +145,13 @@ def tick():
             if angle < math.pi/2:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
-
             if angle > math.pi/2:
                 mode = "ready"
                 return
-            
+
             ai.setPower(55)
             ai.thrust()
-        
+
         elif mode == "aim":
             if itemCountScreen == 0:
                 mode = "ready"
@@ -160,22 +162,23 @@ def tick():
             movItemDiff = angleDiff(
                 ai.selfTrackingRad(), itemDir)
             
-            if stop_at_point(itemDist + 50):  
-                # elif round(itemDist, 1) == 0 or movItemDiff > math.pi/2:
+            # if stop_at_point(itemDist + 50):
+            if brake(itemDist + 50):
+                #ai.setPower(brake(itemDist))
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
             
-            if selfSpeed < 5 or  movItemDiff == math.pi/2:
+            if selfSpeed < 5 or movItemDiff == math.pi/2:
                 angle = itemDir
-            
+
             elif movItemDiff > math.pi/2:
-                # ai.setMaxTurnRad(math.pi)
+                ai.setMaxTurnRad(math.pi)
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 print("movItemDiff: ", movItemDiff)
                 return
-                
+
             else:
                 angle = 2*absItemDir - selfTrackRad
             
@@ -185,14 +188,10 @@ def tick():
             ai.turnToRad(angle)
             ai.thrust()
 
-
-
-        print ("tick count:", tickCount, "mode", mode)
-
+        print("tick count:", tickCount, "mode", mode)
 
         if mode == "ready":
             pass
-
 
     except:
         print(traceback.print_exc())
@@ -207,7 +206,6 @@ def angleDiff(one, two):
 
 
 def stop_at_point(objDist):
-
     """determine when ship need to stop"""
 
     p = 55
@@ -216,7 +214,7 @@ def stop_at_point(objDist):
     a = p / m
     a2 = p / m
     s = objDist
-    
+
     maxV0 = math.sqrt(2*a*s)
     print("Max Velocity: ", maxV0)
     print("Velocity: ", v0)
@@ -229,7 +227,23 @@ def stop_at_point(objDist):
     if futMaxV0 <= futV:
         return True
 
-    
+
+def brake(dist, accForce=55, decForce=55):
+    """Determine when to brake"""
+
+    m = ai.selfMass() + 5
+    v = ai.selfSpeed()
+
+    futV = v + accForce / m
+    futDist = dist - v - accForce / (2 * m)
+
+    futDecForce = m * futV**2 / (2 * futDist)
+
+    if futDecForce >= decForce:
+        return True
+    return False
+
+
 def time_of_impact(px, py, vx, vy, s):
     """
     Determine the time of impact, when bullet hits moving target
@@ -258,18 +272,18 @@ def time_of_impact(px, py, vx, vy, s):
 
     return t
 
-
     return False
+
 
 #
 # Parse the command line arguments
 #
 parser = OptionParser()
 
-parser.add_option ("-p", "--port", action="store", type="int", 
-                   dest="port", default=15347, 
-                   help="The port number. Used to avoid port collisions when" 
-                   " connecting to the server.")
+parser.add_option("-p", "--port", action="store", type="int",
+                  dest="port", default=15348,
+                  help="The port number. Used to avoid port collisions when"
+                  " connecting to the server.")
 
 (options, args) = parser.parse_args()
 
@@ -279,8 +293,8 @@ name = "Stub"
 # Start the AI
 #
 
-ai.start(tick,["-name", name, 
-               "-join",
-               "-turnSpeed", "64",
-               "-turnResistance", "0",
-               "-port", str(options.port)])
+ai.start(tick, ["-name", name,
+                "-join",
+                "-turnSpeed", "64",
+                "-turnResistance", "0",
+                "-port", str(options.port)])
