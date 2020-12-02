@@ -60,7 +60,6 @@ def tick():
         selfVelX = ai.selfVelX()
         selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
-        selfMass = ai.selfMass()
 
         # 0-2pi, 0 in x direction, positive toward y
 
@@ -75,15 +74,20 @@ def tick():
         middleDir = math.atan2(middleDisY, middleDisX)
 
         # --------------------------------------------------------------------------
-        # Navigation and wallfeeler
+        # Funktioner
         # --------------------------------------------------------------------------
 
         def estimated_target_pos(countScreenFunc, speed):
             """Determine pos x and y of specific objekt"""
 
-            Id = nearest(countScreenFunc)
-
             countScreen = countScreenFunc()
+            previousDist = 1000000
+
+            for index in range(countScreenFunc()):
+                dist = ai.itemDist(index)
+                if dist < previousDist:
+                    previousDist = dist
+                    Id = index
 
             if countScreen > 0:
                 # item position and velocity
@@ -108,11 +112,13 @@ def tick():
                 targetY = relY + relVelY*t
 
                 return targetX, targetY, countScreen
+                
 
-        def navigation(aimAtY, aimAtX, countScreenFunc):
+        def navigation(aimAtX, aimAtY, countScreenFunc):
             """Navigational modes"""
 
             global mode
+            global prevTrackRad
 
             # Direction of aimpoint
             dist = math.sqrt(aimAtX**2 + aimAtY**2)
@@ -120,19 +126,13 @@ def tick():
 
             if mode == "ready":
 
-                '''
-                # Calculate needed power p to brake the ship before crashing into a wall
-                if abs(wallDistance) < 1:
-                    p = 55
-                else:
-                    p = selfSpeed**2 * (selfMass+5) / wallDistance
-                '''
                 # We want to brake the ship if power p is to high
                 if brake(wallDistance + 50) and wallDistance != -1:
-                    mode = "stop"
                     prevTrackRad = ai.selfTrackingRad()
+                    mode = "stop"
+                    
 
-                elif countScreenFunc() > 0:  # Aim if any targets are detected
+                elif countScreenFunc > 0:  # Aim if any targets are detected
                     if selfSpeed < 20:
                         ai.setPower(55)
                     mode = "aim"
@@ -194,9 +194,15 @@ def tick():
                 ai.turnToRad(angle)
                 ai.thrust()
 
+        
+        ############################## Funktionsanrop ##############################
+
+        # Navigation
         aimAtX, aimAtY, countScreen = estimated_target_pos(
             ai.itemCountScreen, selfSpeed)
         navigation(aimAtX, aimAtY, countScreen)
+
+        ############################################################################
 
         print("tick count:", tickCount, "mode", mode)
 
@@ -206,20 +212,6 @@ def tick():
 # --------------------------------------------------------------------------
 # Help functions
 # --------------------------------------------------------------------------
-
-
-def nearest(countScreenFunc):
-    # Add more sensors readings here
-    previousDist = 1000000
-
-    for index in range(countScreenFunc()):
-        dist = ai.itemDist(index)
-        if dist < previousDist:
-            previousDist = dist
-            Id = index
-
-    return Id
-
 
 def angleDiff(one, two):
     """Calculates the smallest angle between two angles"""
@@ -273,8 +265,6 @@ def time_of_impact(px, py, vx, vy, s):
 
     return t
 
-    return False
-
 
 #
 # Parse the command line arguments
@@ -282,7 +272,7 @@ def time_of_impact(px, py, vx, vy, s):
 parser = OptionParser()
 
 parser.add_option("-p", "--port", action="store", type="int",
-                  dest="port", default=15347,
+                  dest="port", default=15348,
                   help="The port number. Used to avoid port collisions when"
                   " connecting to the server.")
 
