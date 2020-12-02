@@ -74,32 +74,34 @@ def tick():
         middleDir = math.atan2(middleDisY, middleDisX)
 
         # Lägg till if-sats senare, i detta fall för items
-        countScreen = ai.itemCountScreen
+        countScreen = ai.itemCountScreen()
         speed = selfSpeed
 
-        # Position in which target will be in when ship/bullet arives
-        aimAtX, aimAtY = estimated_target_pos(countScreen, speed)
+        if countScreen > 0:
+            # Position in which target will be in when ship/bullet arives
+            aimAtX, aimAtY = estimated_target_pos(countScreen, speed)
 
-        # Direction of aimpoint
-        dist = math.sqrt(aimAtX**2 + aimAtY**2)
-        dirRad = math.atan2(aimAtY, aimAtX)
+            # Direction of aimpoint
+            dist = math.sqrt(aimAtX**2 + aimAtY**2)
+            dirRad = math.atan2(aimAtY, aimAtX)
+        
+        else:  # Move towards map middle when no targets are detected
+            ai.turnToRad(middleDir)
+            ai.setPower(55)
+            ai.thrust()
+            return
 
         if mode == "ready":
 
             # We want to brake the ship if power p is to high
-            if brake(wallDistance + 50) and wallDistance != -1:
+            if brake(wallDistance - 50) and wallDistance != -1:
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
 
-            elif countScreen > 0:  # Aim if any targets are detected
+            else:  # Aim if any targets are detected
                 if selfSpeed < 20:
                     ai.setPower(55)
                 mode = "aim"
-
-            else:  # Move towards map middle when no targets are detected
-                ai.turnToRad(middleDir)
-                ai.setPower(55)
-                ai.thrust()
 
         elif mode == "stop":
 
@@ -174,7 +176,7 @@ def estimated_target_pos(countScreen, speed):
 
     previousDist = 1000000
 
-    for index in range(countScreenFunc()):
+    for index in range(countScreen):
         dist = ai.itemDist(index)
         if dist < previousDist:
             previousDist = dist
