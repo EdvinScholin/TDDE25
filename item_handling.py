@@ -73,134 +73,89 @@ def tick():
         middleDisY = ai.radarHeight()/2 - ai.selfRadarY()
         middleDir = math.atan2(middleDisY, middleDisX)
 
-        # --------------------------------------------------------------------------
-        # Funktioner
-        # --------------------------------------------------------------------------
+        # Lägg till if-sats senare, i detta fall för items
+        countScreen = ai.itemCountScreen
+        speed = selfSpeed
 
-        def estimated_target_pos(countScreenFunc, speed):
-            """Determine pos x and y of specific objekt"""
+        # Position in which target will be in when ship/bullet arives
+        aimAtX, aimAtY = estimated_target_pos(countScreen, speed)
 
-            countScreen = countScreenFunc()
-            previousDist = 1000000
+        # Direction of aimpoint
+        dist = math.sqrt(aimAtX**2 + aimAtY**2)
+        dirRad = math.atan2(aimAtY, aimAtX)
 
-            for index in range(countScreenFunc()):
-                dist = ai.itemDist(index)
-                if dist < previousDist:
-                    previousDist = dist
-                    Id = index
+        if mode == "ready":
 
-            if countScreen > 0:
-                # item position and velocity
-                x = ai.itemX(Id)
-                y = ai.itemY(Id)
-                velX = ai.itemVelX(Id)
-                velY = ai.itemVelY(Id)
+            # We want to brake the ship if power p is to high
+            if brake(wallDistance + 50) and wallDistance != -1:
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
 
-                # items initial position relative to self
-                relX = x - selfX
-                relY = y - selfY
-
-                # items initial velocity relative to self
-                relVelX = velX - selfVelX
-                relVelY = velY - selfVelY
-
-                # Time of impact, when ship is supposed to reach target
-                t = time_of_impact(relX, relY, relVelX, relVelY, speed)
-
-                # Point of impact, where shot is supposed to hit target
-                targetX = relX + relVelX*t
-                targetY = relY + relVelY*t
-
-                return targetX, targetY, countScreen
-                
-
-        def navigation(aimAtX, aimAtY, countScreenFunc):
-            """Navigational modes"""
-
-            global mode
-            global prevTrackRad
-
-            # Direction of aimpoint
-            dist = math.sqrt(aimAtX**2 + aimAtY**2)
-            dirRad = math.atan2(aimAtY, aimAtX)
-
-            if mode == "ready":
-
-                # We want to brake the ship if power p is to high
-                if brake(wallDistance + 50) and wallDistance != -1:
-                    prevTrackRad = ai.selfTrackingRad()
-                    mode = "stop"
-                    
-
-                elif countScreenFunc > 0:  # Aim if any targets are detected
-                    if selfSpeed < 20:
-                        ai.setPower(55)
-                    mode = "aim"
-
-                else:  # Move towards map middle when no targets are detected
-                    ai.turnToRad(middleDir)
+            elif countScreen > 0:  # Aim if any targets are detected
+                if selfSpeed < 20:
                     ai.setPower(55)
-                    ai.thrust()
+                mode = "aim"
 
-            elif mode == "stop":
-
-                angle = angleDiff(prevTrackRad, ai.selfTrackingRad())
-
-                if angle < math.pi/2:
-                    ai.turnToRad(ai.selfTrackingRad() - math.pi)
-
-                if angle > math.pi/2:
-                    mode = "ready"
-                    return
-
+            else:  # Move towards map middle when no targets are detected
+                ai.turnToRad(middleDir)
                 ai.setPower(55)
                 ai.thrust()
 
-            elif mode == "aim":
-                if countScreenFunc == 0:
-                    mode = "ready"
-                    return
+        elif mode == "stop":
 
-                # Convert selfTrackingRad and ItemDir to positive radians
-                selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
-                absItemDir = dirRad % (2*math.pi)
+            angle = angleDiff(prevTrackRad, ai.selfTrackingRad())
 
-                # Calculate angle difference
-                movItemDiff = angleDiff(
-                    ai.selfTrackingRad(), dirRad)
+            if angle < math.pi/2:
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
-                # Ship stops when target is reached. Not necessary.
-                '''
-                if brake(dist + 50):  
-                    prevTrackRad = ai.selfTrackingRad()
-                    mode = "stop"
-                    return
-                '''
-
-                # Move towards target
-                if selfSpeed < 5 or movItemDiff == math.pi/2:
-                    angle = dirRad
-
-                elif movItemDiff > math.pi/2:  # if angle between selfTrackingRad and item direction
-                    prevTrackRad = ai.selfTrackingRad()
-                    mode = "stop"
-                    return
-
-                else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
-                    angle = 2*absItemDir - selfTrackRad
-
+            if angle > math.pi/2:
                 mode = "ready"
+                return
 
-                ai.turnToRad(angle)
-                ai.thrust()
+            ai.setPower(55)
+            ai.thrust()
 
-        
+        elif mode == "aim":
+            if countScreen == 0:
+                mode = "ready"
+                return
+
+            # Convert selfTrackingRad and ItemDir to positive radians
+            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
+            absItemDir = dirRad % (2*math.pi)
+
+            # Calculate angle difference
+            movItemDiff = angleDiff(
+                ai.selfTrackingRad(), dirRad)
+
+            # Ship stops when target is reached. Not necessary.
+            '''
+            if brake(dist + 50):  
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
+                return
+            '''
+
+            # Move towards target
+            if selfSpeed < 5 or movItemDiff == math.pi/2:
+                angle = dirRad
+
+            elif movItemDiff > math.pi/2:  # if angle between selfTrackingRad and item direction
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
+                return
+
+            else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
+                angle = 2*absItemDir - selfTrackRad
+
+            mode = "ready"
+
+            ai.turnToRad(angle)
+            ai.thrust()
+
         ############################## Funktionsanrop ##############################
 
         # Navigation
-        aimAtX, aimAtY, countScreen = estimated_target_pos(
-            ai.itemCountScreen, selfSpeed)
-        navigation(aimAtX, aimAtY, countScreen)
 
         ############################################################################
 
@@ -212,6 +167,43 @@ def tick():
 # --------------------------------------------------------------------------
 # Help functions
 # --------------------------------------------------------------------------
+
+
+def estimated_target_pos(countScreen, speed):
+    """Determine pos x and y of specific objekt"""
+
+    previousDist = 1000000
+
+    for index in range(countScreenFunc()):
+        dist = ai.itemDist(index)
+        if dist < previousDist:
+            previousDist = dist
+            Id = index
+
+    if countScreen > 0:
+        # item position and velocity
+        x = ai.itemX(Id)
+        y = ai.itemY(Id)
+        velX = ai.itemVelX(Id)
+        velY = ai.itemVelY(Id)
+
+        # items initial position relative to self
+        relX = x - ai.selfX()
+        relY = y - ai.selfY()
+
+        # items initial velocity relative to self
+        relVelX = velX - ai.selfVelX()
+        relVelY = velY - ai.selfVelY()
+
+        # Time of impact, when ship is supposed to reach target
+        t = time_of_impact(relX, relY, relVelX, relVelY, speed)
+
+        # Point of impact, where shot is supposed to hit target
+        targetX = relX + relVelX*t
+        targetY = relY + relVelY*t
+
+        return targetX, targetY
+
 
 def angleDiff(one, two):
     """Calculates the smallest angle between two angles"""
