@@ -84,16 +84,21 @@ def tick():
             # Direction of aimpoint
             dist = math.sqrt(aimAtX**2 + aimAtY**2)
             dirRad = math.atan2(aimAtY, aimAtX)
-        
+
         else:  # Move towards map middle when no targets are detected
             ai.turnToRad(middleDir)
             ai.setPower(55)
             ai.thrust()
             return
 
+        # ---------------------------------------------------------------------------
+        # Navigational modes, input is dist(only if ship need to stop at destination)
+        # and dirRad to target
+        # ---------------------------------------------------------------------------
+
         if mode == "ready":
 
-            # We want to brake the ship if power p is to high
+            # Wallfeeler
             if brake(wallDistance - 50) and wallDistance != -1:
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
@@ -117,7 +122,7 @@ def tick():
             ai.setPower(55)
             ai.thrust()
 
-        elif mode == "aim":
+        elif mode == "aim":  # dela upp i aim och travel
             if countScreen == 0:
                 mode = "ready"
                 return
@@ -154,12 +159,6 @@ def tick():
 
             ai.turnToRad(angle)
             ai.thrust()
-
-        ############################## Funktionsanrop ##############################
-
-        # Navigation
-
-        ############################################################################
 
         print("tick count:", tickCount, "mode", mode)
 
