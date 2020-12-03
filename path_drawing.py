@@ -48,6 +48,7 @@ def tick():
         # and improve readability.
         #
         sq = chr(9610)
+        
         mapWidth = ai.mapWidthBlocks()
         mapHeight = ai.mapHeightBlocks()
 
@@ -64,7 +65,7 @@ def tick():
             # Creates the map that we us to create the path in a list all_nodes
             for x in range(mapWidth):
                 for y in range(mapHeight):
-                    if (ai.mapData(x, y) == 0 or 30 <= ai.mapData(x, y) <= 39) and block_neighbors((x, y)):
+                    if (ai.mapData(x, y) == 0 or 30 <= ai.mapData(x, y) <= 39):
                         all_nodes.append((x, y))
             
             # Change mode to draw
@@ -75,7 +76,7 @@ def tick():
 
             # Creates the path using an a* algorithm
             path = list(astar.find_path((2, 2), (29, 29), neighbors_fnct=neighbors,
-                        heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
+                        heuristic_cost_estimate_fnct=heuristic_cost_estimate, distance_between_fnct=distance))
 
             # Prints the map with the path in the terminal
             for element in mapp:
@@ -105,20 +106,16 @@ def tick():
         print(traceback.print_exc())
 
 def block_neighbors(node):
-    """
-    Checks if a node has a neighbor that is a block
-    """
+    """ Checks if a node has a neighbor that is a block """
     dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
     for dir in dirs:
         neighbor = (node[0] + dir[0], node[1] + dir[1])
         if ai.mapData(neighbor[0], neighbor[1]) == 1:
-            return False
-    return True
+            return True
+    return False
 
 def neighbors(node):
-    """
-    Calculates the neighbors to a node
-    """
+    """ Calculates the neighbors to a node """
     dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
     result = []
     for dir in dirs:
@@ -127,16 +124,14 @@ def neighbors(node):
             result.append(neighbor)
     return result
 
-def cost(n1, n2):
-    """
-    The cost of moving to another node is 1
-    """
+def heuristic_cost_estimate(n1, n2):
+    """ If a node is next to wall increase the cost to 5 """
+    if block_neighbors(n1):
+        return 5
     return 1
 
 def distance(n1, n2):
-    """
-    Calculates the distance between to nodes
-    """
+    """ Calculates the distance between to nodes """
     (x1, y1) = n1
     (x2, y2) = n2
     return math.hypot(x2 - x1, y2 - y1)
