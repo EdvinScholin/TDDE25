@@ -22,6 +22,8 @@ itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak":
             "laser": 11, "emergencythrust": 12, "tractorbeam": 13, "autopilot": 14,
             "emergencyshield": 15, "itemdeflector": 16, "hyperjump": 17, "phasing": 18,
             "mirror": 19, "armor": 20}
+prevSelfItem = 0
+desiredItemType = -1
 
 
 def tick():
@@ -37,6 +39,8 @@ def tick():
         global prevTrackRad
         global mode
         global itemDict
+        global prevSelfItem
+        global desiredItemType
 
         #
         # Reset the state machine if we die.
@@ -77,9 +81,12 @@ def tick():
         countScreen = ai.itemCountScreen()
         speed = selfSpeed
 
-        if countScreen > 0:
+        if countScreen > 0: 
+
+
             # Position in which target will be in when ship/bullet arives
-            aimAtX, aimAtY = estimated_target_pos(countScreen, speed)
+            Id = target_Id("item")
+            aimAtX, aimAtY = target_pos(Id, speed)
 
             # Direction of aimpoint
             dist = math.sqrt(aimAtX**2 + aimAtY**2)
@@ -92,11 +99,56 @@ def tick():
             return
 
         # ---------------------------------------------------------------------------
+        # Teacherbot
+        # ---------------------------------------------------------------------------
+    
+        if tickCount == 1:
+            ai.talk("teacherbot: start-mission 8")
+
+        elif mode == "ready":
+
+            # "collect-item mine"
+
+            # Scan in the most recent message
+            message = ai.scanTalkMsg(0)
+            
+            # Second element in list will be our desired item
+            messageList = list(message.split(" "))
+
+            # Read message
+            if "collect-item" in ai.scanTalkMsg(0):
+                
+                desiredItemType = messageList[1]
+
+                if desiredItemType in itemDict:
+                    desiredItemType = itemDict[desiredItemType]
+
+                if prevSelfItem < ai.selfItem(desiredItemType):
+                    mode = "mission done"
+                else:
+                    mode = "navigation"
+
+                # Save how many items of the desired item we already have
+                prevSelfItem = ai.selfItem(desiredItemType)
+
+
+        elif mode == "mission done": 
+            
+            # Gets the key from the value in our dictionary of our desired 
+            # item in order to send a message to teacherbot
+            itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(desiredItemType)]
+            completed = "Teacherbot: completed collect-item " + itemStrValue
+            print(ai.scanTalkMsg(0))
+            ai.removeTalkMsg(0)
+            ai.talk(completed)
+            mode = "ready"
+
+        # ---------------------------------------------------------------------------
         # Navigational modes, input is dist(only if ship need to stop at destination)
         # and dirRad to target
         # ---------------------------------------------------------------------------
 
-        if mode == "ready":
+        elif mode == "navigation":
 
             # Wallfeeler
             if brake(wallDistance - 50) and wallDistance != -1:
@@ -170,40 +222,84 @@ def tick():
 # --------------------------------------------------------------------------
 
 
-def estimated_target_pos(countScreen, speed):
-    """Determine pos x and y of specific objekt"""
-
+def target_Id(objType):
+    """Determine nearest desired objekt else nearest random objekt"""
+    
+    '''
     previousDist = 1000000
 
     for index in range(countScreen):
-        dist = ai.itemDist(index)
+        dist = distFunc(index)
         if dist < previousDist:
             previousDist = dist
             Id = index
+    '''
 
-    if countScreen > 0:
-        # item position and velocity
-        x = ai.itemX(Id)
-        y = ai.itemY(Id)
-        velX = ai.itemVelX(Id)
-        velY = ai.itemVelY(Id)
+    if objType == "item":
+        countScreen = ai.itemCountScreen()
+        distFunc = ai.itemDist
+        typeFunc = ai.itemType
+    
+    elif objType == "asteroid":
+        countScreen = ai.asteroidCountScreen()
+        distFunc = ai.asteroidDist
+        typeFunc = ai.asteroidType
 
-        # items initial position relative to self
-        relX = x - ai.selfX()
-        relY = y - ai.selfY()
+    # Kan lägga till för varje objekt typ
 
-        # items initial velocity relative to self
-        relVelX = velX - ai.selfVelX()
-        relVelY = velY - ai.selfVelY()
+    # Take the closest item   
+    prevDist = 1000
+    prevDesiredDist = 1000
+    desirededCount = 0
 
-        # Time of impact, when ship is supposed to reach target
-        t = time_of_impact(relX, relY, relVelX, relVelY, speed)
+    for index in range(countScreen):
+                        
+        dist = distFunc(index)
+        
+        if typeFunc(index) == desiredItemType:
+            desirededCount += 1
+            
+            if dist < prevDesiredDist:
+                prevDesiredDist = dist
+                Id = index
+    
+        else:
+            if dist < prevDist:
+                prevDist = dist
+                restId = index  
+    
+    # If there are none of the desired type, we want to take the closest item 
+    if desirededCount == 0:
+        Id = restId
 
-        # Point of impact, where shot is supposed to hit target
-        targetX = relX + relVelX*t
-        targetY = relY + relVelY*t
+    return Id
 
-        return targetX, targetY
+
+def target_pos(Id, speed):
+    """"Determine pos x and y of specific objekt"""
+
+    # item position and velocity
+    x = ai.itemX(Id)
+    y = ai.itemY(Id)
+    velX = ai.itemVelX(Id)
+    velY = ai.itemVelY(Id)
+
+    # items initial position relative to self
+    relX = x - ai.selfX()
+    relY = y - ai.selfY()
+
+    # items initial velocity relative to self
+    relVelX = velX - ai.selfVelX()
+    relVelY = velY - ai.selfVelY()
+
+    # Time of impact, when ship is supposed to reach target
+    t = time_of_impact(relX, relY, relVelX, relVelY, speed)
+
+    # Point of impact, where shot is supposed to hit target
+    targetX = relX + relVelX*t
+    targetY = relY + relVelY*t
+
+    return targetX, targetY
 
 
 def angleDiff(one, two):
