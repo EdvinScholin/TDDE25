@@ -12,11 +12,14 @@ from optparse import OptionParser
 # Global variables that persist between ticks
 #
 tickCount = 0
-prevTrackRad = 0
 mode = "ready"
 
 # add more if needed
 
+# Movement
+prevTrackRad = 0
+
+# Items
 itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak": 4,
             "sensor": 5, "transporter": 6, "tank": 7, "mine": 8, "missile": 9, "ecm": 10,
             "laser": 11, "emergencythrust": 12, "tractorbeam": 13, "autopilot": 14,
@@ -81,9 +84,7 @@ def tick():
         countScreen = ai.itemCountScreen()
         speed = selfSpeed
 
-        if countScreen > 0: 
-
-
+        if countScreen > 0:
             # Position in which target will be in when ship/bullet arives
             Id = target_Id("item")
             aimAtX, aimAtY = target_pos(Id, speed)
@@ -101,18 +102,19 @@ def tick():
         # ---------------------------------------------------------------------------
         # Teacherbot
         # ---------------------------------------------------------------------------
-    
+
         if tickCount == 1:
             ai.talk("teacherbot: start-mission 9")
 
         elif mode == "ready":
             # Scan in the most recent message
             message = ai.scanTalkMsg(0)
-            
+
             # Second element in list will be our desired item
             messageList = list(message.split(" "))
 
             # Read message
+<<<<<<< HEAD
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
 
                 if "use-item" in ai.scanTalkMsg(0):
@@ -125,6 +127,11 @@ def tick():
 
                     if desiredItemType in itemDict:
                         desiredItemType = itemDict[desiredItemType]
+=======
+            if "collect-item" in ai.scanTalkMsg(0):
+
+                desiredItemType = messageList[1]
+>>>>>>> refs/remotes/origin/master
 
                         # print("desiredItemType:", desiredItemType, type(desiredItemType))
 
@@ -139,11 +146,17 @@ def tick():
                 
 
 
+        elif mode == "mission done":
 
+<<<<<<< HEAD
         elif mode == "mission done": 
             # Gets the key from the value in our dictionary of our desired 
+=======
+            # Gets the key from the value in our dictionary of our desired
+>>>>>>> refs/remotes/origin/master
             # item in order to send a message to teacherbot
-            itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(desiredItemType)]
+            itemStrValue = list(itemDict.keys())[list(
+                itemDict.values()).index(desiredItemType)]
             completed = "Teacherbot: completed collect-item " + itemStrValue
             print(ai.scanTalkMsg(0))
             ai.removeTalkMsg(0)
@@ -231,7 +244,7 @@ def tick():
 
 def target_Id(objType):
     """Determine nearest desired objekt else nearest random objekt"""
-    
+
     '''
     previousDist = 1000000
 
@@ -246,7 +259,7 @@ def target_Id(objType):
         countScreen = ai.itemCountScreen()
         distFunc = ai.itemDist
         typeFunc = ai.itemType
-    
+
     elif objType == "asteroid":
         countScreen = ai.asteroidCountScreen()
         distFunc = ai.asteroidDist
@@ -254,28 +267,28 @@ def target_Id(objType):
 
     # Kan lägga till för varje objekt typ
 
-    # Take the closest item   
+    # Take the closest item
     prevDist = 1000
     prevDesiredDist = 1000
     desirededCount = 0
 
     for index in range(countScreen):
-                        
+
         dist = distFunc(index)
-        
+
         if typeFunc(index) == desiredItemType:
             desirededCount += 1
-            
+
             if dist < prevDesiredDist:
                 prevDesiredDist = dist
                 Id = index
-    
+
         else:
             if dist < prevDist:
                 prevDist = dist
-                restId = index  
-    
-    # If there are none of the desired type, we want to take the closest item 
+                restId = index
+
+    # If there are none of the desired type, we want to take the closest item
     if desirededCount == 0:
         Id = restId
 

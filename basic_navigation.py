@@ -74,9 +74,6 @@ def tick():
         maxMsgs = ai.getMaxMsgs()
 
         ai.setMaxTurnRad(2*pi)
-        # 0-2pi, 0 in x direction, positive toward y
-
-        # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode:", mode, "targetDistance:", round(targetDistance))
 
@@ -117,6 +114,7 @@ def tick():
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
+            # Change mode to cords
             mode = "cords"
 
 
@@ -137,41 +135,50 @@ def tick():
 
         elif mode == "aim":
 
+            # If you are close to the target change mode to completed_task
             if targetDistance < 10:
                 mode = "completed_task"
 
+            # Convert selfTrackingRad and ItemDir to positive radians
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = targetDirection % (2*math.pi)
 
+            # Calculate angle difference
             movItemDiff = angleDiff(selfTrackingRad, targetDirection)
 
+            # Ship stops when target is reached
             if brake(targetDistance + 50):  
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
 
+            # Move towards target
             if selfSpeed < 5 or movItemDiff == math.pi/2:
                 angle = targetDirection
 
+            # If angle between selfTrackingRad and item direction is to big change mode to stop
             elif movItemDiff > math.pi/2:
                 prevTrackRad = selfTrackingRad
                 mode = "stop"
                 return
 
+            # Uses opposite velocity vektor to cancel out unwanted velocity vektors
             else:
                 angle = 2*absItemDir -selfTrackRad
 
             
-
+            # Aims at the target and thrusts
             ai.turnToRad(targetDirection)
             ai.thrust()
             
 
         elif mode == "stop":
 
+            # If you are close to the target change mode to completed_task
             if targetDistance < 10:
                 mode = "completed_task"
 
+            # Calculate angle difference
             angle = angleDiff(prevTrackRad, selfTrackingRad)
 
             if angle < math.pi/2:
@@ -205,7 +212,7 @@ def tick():
                 mode = "completed_all_tasks"
 
             # If you havent completed all the tasks remove the
-            # last task in the list and change mode to aim
+            # last task in the list and change mode to cords
             else:
                 tasks.pop()
                 mode = "cords"

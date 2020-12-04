@@ -130,7 +130,6 @@ def tick():
             if angle < math.pi/2:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
-
             if angle > math.pi/2:
                 mode = "ready"
                 return
