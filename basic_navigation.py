@@ -147,7 +147,7 @@ def tick():
             movItemDiff = angleDiff(selfTrackingRad, targetDirection)
 
             # Ship stops when target is reached
-            if brake(targetDistance + 50):  
+            if brake(targetDistance):  
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
