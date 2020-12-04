@@ -23,6 +23,8 @@ send = []
 lenTasks = 0
 all_nodes = []
 path = []
+prevTrackRad = 0
+dirRad = 0
 # add more if needed
 blockSize = ai.blockSize()
 
@@ -46,6 +48,8 @@ def tick():
         global all_nodes
         global path
         global stopCount2
+        global prevTrackRad
+        global dirRad
         #
         # Reset the state machine if we die.
         #
@@ -72,6 +76,7 @@ def tick():
         selfSpeed = ai.selfSpeed()
 
         selfHeading = ai.selfHeadingRad() 
+        selfTrackingRad = ai.selfTrackingRad()
         playerCount = ai.playerCountServer()
         pi = math.pi
         
@@ -84,12 +89,15 @@ def tick():
         ai.setMaxMsgs(15)
         maxMsgs = ai.getMaxMsgs()
 
+        wallDistance = ai.wallFeelerRad(1000, selfTrackingRad)
+
         ai.setMaxTurnRad(2*pi)
         # 0-2pi, 0 in x direction, positive toward y
 
         # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode:", mode)
+        print("Path: ", path)
 
         if tickCount == 1:
             ai.shield()
@@ -114,7 +122,7 @@ def tick():
 
                 for x in range(mapWidth):
                     for y in range(mapHeight):
-                        if (ai.mapData(x, y) == 0 or 30 <= ai.mapData(x, y) <= 39) and block_neighbors((x, y)):
+                        if (ai.mapData(x, y) == 0 or 30 <= ai.mapData(x, y) <= 39):
                             all_nodes.append((x, y))
 
 
@@ -163,78 +171,110 @@ def tick():
             selfBlock = pixel_to_block(selfX, selfY)
             goal = pixel_to_block(xCord, yCord)
 
-            # If the goal is next to a block add it to the all_nodes list
-            if not (goal in all_nodes):
-                print("goal:", goal)
-                all_nodes.append(goal)
+            
 
             # Create the path using an a* algorithm
             path = list(astar.find_path(selfBlock, goal, neighbors_fnct=neighbors,
-                        heuristic_cost_estimate_fnct=cost, distance_between_fnct=distance))
+                        heuristic_cost_estimate_fnct=heuristic_cost_estimate, distance_between_fnct=distance))
 
+            path.remove(selfBlock)
+            
+            print(path)            
             # Change mode to aim
             mode = "aim"
 
 
-        elif mode == "aim":
-
-            # Calculate the the the direction of the target
-            # and the distance to the target
-            selfBlock = pixel_to_block(selfX, selfY)
-            x = path[1][0] - selfBlock[0]
-            y = path[1][1] - selfBlock[1]
-            targetDirection = math.atan2(y, x)
-            targetDistance = math.hypot(x, y)
-
-
-            # Turns the ship to the target direction
-            ai.turnToRad(targetDirection)
-
-            # If you are looking at the target change mode to travel
-            if angleDiff(targetDirection, selfHeading) < 0.03:
-                mode = "travel"
-            
-
-        elif mode == "travel":
-
-            ai.setPower(40)
-            ai.thrust()
+        elif mode == "aim":  # dela upp i aim och travel 
 
             selfBlock = pixel_to_block(selfX, selfY)
-            x = path[1][0] - selfBlock[0]
-            y = path[1][1] - selfBlock[1]
-            targetDirection = math.atan2(y, x)
-            targetDistance = math.hypot(x, y)
 
-            if len(path) > 2:
-                a = path[2][0] - path[1][0]
-                b = path[2][1] - path[1][1]
-                nextTargetDirection = math.atan2(b, a)
+            x = path[0][0] - selfBlock[0]
+            y = path[0][1] - selfBlock[1]
+
+
+            dirRad = math.atan2(y, x)
+            targetDistance = math.hypot(x, y)
+            print("Targetdistinace:", targetDistance)
+
+            # Convert selfTrackingRad and ItemDir to positive radians
+            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
+            absItemDir = dirRad % (2*math.pi)
+
+            # Calculate angle difference
+            movItemDiff = angleDiff(
+                ai.selfTrackingRad(), dirRad)
 
             if targetDistance == 0:
+                print("hej")
                 path.pop(0)
-                if len(path) == 2 or len(path) == 1:
-                    ai.turnToRad(selfHeading - pi)
+                if len(path) == 1:
                     mode = "stop"
-                elif angleDiff(nextTargetDirection, selfHeading) > 0.1:
-                    ai.turnToRad(selfHeading - pi)
+                if not path:
                     mode = "stop"
-                else:
-                    mode = "aim"
+                return
+
+            # Wallfeeler
+            if brake(wallDistance - 50) and wallDistance != -1:
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
+
+
+            # Move towards target
+            if selfSpeed < 5 or movItemDiff == math.pi/2:
+                angle = dirRad
+
+            elif movItemDiff > math.pi/2:  # if angle between selfTrackingRad and item direction
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
+                return
+
+            else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
+                angle = 2*absItemDir - selfTrackRad
+
+            
+
+            ai.turnToRad(angle)
+            ai.thrust()
+
+
+            
+            
+
+        elif mode == "navigation":
+
+            """
+            # Wallfeeler
+            if brake(wallDistance - 50) and wallDistance != -1:
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
+            """
+
+            
+            if selfSpeed < 20:
+                ai.setPower(55)
+            mode = "aim"
+
+
             
 
         elif mode == "stop":
             
-            ai.setPower(25)
-            ai.thrust()
+            angle = angleDiff(prevTrackRad, ai.selfTrackingRad())
 
-            print(selfSpeed)
+            if angle < math.pi/2:
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
-            if selfSpeed < 0.5:
-                if len(path) == 1:
+            if angle > math.pi/2:
+                if len(path) == 1 or not path:
                     mode = "completed_task"
                 else:
+                    path.pop(0)
                     mode = "aim"
+        
+
+            ai.setPower(55)
+            ai.thrust()
+
             
 
 
@@ -312,7 +352,10 @@ def neighbors(node):
             result.append(neighbor)
     return result
 
-def cost(n1, n2):
+def heuristic_cost_estimate(n1, n2):
+    """ If a node is next to wall increase the cost to 5 """
+    if block_neighbors(n1):
+        return 20
     return 1
 
 def distance(n1, n2):
@@ -325,8 +368,8 @@ def block_neighbors(node):
     for dir in dirs:
         neighbor = (node[0] + dir[0], node[1] + dir[1])
         if ai.mapData(neighbor[0], neighbor[1]) == 1:
-            return False
-    return True
+            return True
+    return False
 
 def stop_at_point(objDist):
 
@@ -377,40 +420,21 @@ def time_of_impact(px, py, vx, vy, s):
 
     return t
 
-def find_intersection(p0, p1, p2, p3):
+def brake(dist, accForce=55, decForce=55):
+    """Determine when to brake"""
 
-    s10_x = p1[0] - p0[0]
-    s10_y = p1[1] - p0[1]
-    s32_x = p3[0] - p2[0]
-    s32_y = p3[1] - p2[1]
+    m = ai.selfMass() + 5
+    v = ai.selfSpeed()
 
-    denom = s10_x * s32_y - s32_x * s10_y
+    futV = v + accForce / m
+    futDist = dist - v - accForce / (2 * m)
 
-    if denom == 0 : return None # collinear
+    futDecForce = m * futV**2 / (2 * futDist)
 
-    denom_is_positive = denom > 0
+    if futDecForce >= decForce:
+        return True
+    return False
 
-    s02_x = p0[0] - p2[0]
-    s02_y = p0[1] - p2[1]
-
-    s_numer = s10_x * s02_y - s10_y * s02_x
-
-    if (s_numer < 0) == denom_is_positive : return None # no collision
-
-    t_numer = s32_x * s02_y - s32_y * s02_x
-
-    if (t_numer < 0) == denom_is_positive : return None # no collision
-
-    if (s_numer > denom) == denom_is_positive or (t_numer > denom) == denom_is_positive : return None # no collision
-
-
-    # collision detected
-
-    t = t_numer / denom
-
-    intersection_point = [ p0[0] + (t * s10_x), p0[1] + (t * s10_y) ]
-
-    return intersection_point
 
 
 #
