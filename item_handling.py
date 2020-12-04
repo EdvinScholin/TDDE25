@@ -440,6 +440,9 @@ def target_pos(Id, speed):
 
     return targetX, targetY
 
+def distance(x, y):
+    
+
 
 def angleDiff(one, two):
     """Calculates the smallest angle between two angles"""
