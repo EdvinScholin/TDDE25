@@ -16,8 +16,19 @@ mode = "ready"
 
 # add more if needed
 
+#Coordinates - Vill helst ha en tuple
+coordinates = []
+prevCoordinates = []
+
+# Message handling
+tasks = []
+lenTasks = 0
+send = []
+
 # Movement
 prevTrackRad = 0
+dist = 0
+dirRad = 0
 
 # Items
 itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak": 4,
@@ -44,18 +55,27 @@ def tick():
         global itemDict
         global prevSelfItem
         global desiredItemType
+        global tasks
+        global lenTasks
+        global send
+        global coordinates
+        global prevCoordinates
+        global dist
+        global dirRad
 
         #
         # Reset the state machine if we die.
         #
         if not ai.selfAlive():
-
             print("dead")
             tickCount = 0
             mode = "ready"
             return
 
         tickCount += 1
+
+        if tickCount == 1:
+            ai.talk("teacherbot: start-mission 9")
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
@@ -64,6 +84,7 @@ def tick():
 
         selfX = ai.selfX()
         selfY = ai.selfY()
+        print("selfCoordinates: ", selfX, selfY)
         selfVelX = ai.selfVelX()
         selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
@@ -80,80 +101,177 @@ def tick():
         middleDisY = ai.radarHeight()/2 - ai.selfRadarY()
         middleDir = math.atan2(middleDisY, middleDisX)
 
+
+        # ---------------------------------------------------------------------------
+        # Cordinates
+        # ---------------------------------------------------------------------------
+
         # Lägg till if-sats senare, i detta fall för items
         countScreen = ai.itemCountScreen()
         speed = selfSpeed
-
-        if countScreen > 0:
-            # Position in which target will be in when ship/bullet arives
-            Id = target_Id("item")
-            aimAtX, aimAtY = target_pos(Id, speed)
-
-            # Direction of aimpoint
-            dist = math.sqrt(aimAtX**2 + aimAtY**2)
-            dirRad = math.atan2(aimAtY, aimAtX)
-
-        else:  # Move towards map middle when no targets are detected
-            ai.turnToRad(middleDir)
-            ai.setPower(55)
-            ai.thrust()
-            return
+            
+            
+    
 
         # ---------------------------------------------------------------------------
         # Teacherbot
         # ---------------------------------------------------------------------------
 
-        if tickCount == 1:
-            ai.talk("teacherbot: start-mission 9")
+        if mode == "ready":
+            
+            if countScreen > 0:
+                # Position in which target will be in when ship/bullet arives
+                Id = target_Id("item")
+                aimAtX, aimAtY = target_pos(Id, speed)
 
-        elif mode == "ready":
+                # Direction of aimpoint
+                dist = math.sqrt(aimAtX**2 + aimAtY**2)
+                dirRad = math.atan2(aimAtY, aimAtX)
+
+            else:  # Move towards map middle when no targets are detected
+                ai.turnToRad(middleDir)
+                ai.setPower(55)
+                ai.thrust()
+                return
+
+
+            '''
             # Scan in the most recent message
             message = ai.scanTalkMsg(0)
 
             # Second element in list will be our desired item
             messageList = list(message.split(" "))
+            '''
 
+            ai.setMaxMsgs(15)
+            maxMsgs = ai.getMaxMsgs()
+            
+            # Clears the tasks list
+            tasks.clear()
+
+            # Scans all the messages sent by teacherbot
+            # and adds them to the list tasks
+            # if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+            for message in range(maxMsgs):
+                if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
+                    tasks.append(ai.scanTalkMsg(message))
+                    if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+                        #ai.removeTalkMsg(message)
+                        pass
+            
+
+            # Save the length of the task in the variable lenTasks
+            lenTasks = len(tasks)
+
+            print("tasks: ", tasks)
+
+            print("coordinates: ", coordinates)
+            
+            '''
             # Read message
-<<<<<<< HEAD
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+            '''
 
-                if "use-item" in ai.scanTalkMsg(0):
-                    desiredItemType = messageList[1]
-                    desiredItemPosX = messageList[2]
-                    desiredItemPosY = messageList[3]
+            if not coordinates:
+                for seq in tasks[-1].split():
+                    if seq.isdigit():
+                        coordinates.append(int(seq))
+                    if seq in itemDict.keys():
+                        desiredItemType = itemDict[seq]
                 
-                if "collect-item" in ai.scanTalkMsg(0):
-                    desiredItemType = messageList[1]
+            if "use-item" in tasks[-1]:
 
-                    if desiredItemType in itemDict:
-                        desiredItemType = itemDict[desiredItemType]
-=======
-            if "collect-item" in ai.scanTalkMsg(0):
-
-                desiredItemType = messageList[1]
->>>>>>> refs/remotes/origin/master
-
-                        # print("desiredItemType:", desiredItemType, type(desiredItemType))
-
-                    if prevSelfItem < ai.selfItem(desiredItemType):
-                        mode = "mission done"
-
-                    else:
-                        mode = "navigation"
-
-                    # Save how many items of the desired item we already have
-                    prevSelfItem = ai.selfItem(desiredItemType)
+                if ai.selfItem(desiredItemType) == 0:
+                    mode = "navigation"
                 
+                else:
+                    # Gör till en funktion!!!!!
+                    xCord = coordinates[0]
+                    yCord = coordinates[1]
+
+                    # Ska sedan sätta x ocg y till globala variabler, så döper om aimAt....
+                    x = xCord - selfX
+                    y = yCord - selfY
+
+                    dist = math.hypot(x, y)
+                    dirRad = math.atan2(y, x)
+
+                    # Ship stops when target is reached. Not necessary.
+                    if brake(dist):  
+                        prevTrackRad = ai.selfTrackingRad()
+                        mode = "stop"
+                        return
+
+                    mode = "navigation"
+
+                    if not coordinates: # Betyder att vi har droppat minan
+                        # Ska röra sig bort där ifrån
+                        ai.detonateMines()
+                        mode = "completed_task"
+                
+                    elif dist < 10:
+                        ai.dropMine()
+                        mode = "completed_task"
+
+            
+            if "collect-item" in tasks[-1]:
+
+                if prevSelfItem < ai.selfItem(desiredItemType):
+                    mode = "completed_task"
+
+                else:
+                    mode = "navigation"
+
+                # Save how many items of the desired item we already have
+                prevSelfItem = ai.selfItem(desiredItemType)
 
 
-        elif mode == "mission done":
+        elif mode == "completed_task":
 
-<<<<<<< HEAD
-        elif mode == "mission done": 
+            # Adds the completed task to a list send
+            xCord = coordinates[0]
+            yCord = coordinates[1]
+            prevCoordinates = coordinates
+            coordinates.clear()
+            print("coordinates cleared: ", coordinates)
+
+            for elem in tasks:
+                new_msg = ""
+                if str(xCord) in elem and str(yCord) in elem:
+                    for seq in elem.split():
+                        if not "[" in seq:
+                            new_msg += seq + " "
+                    completed = "Teacherbot:completed " + new_msg
+                    send.append(completed)
+            
+            # If you have completed all the tasks send the messages from the send list,
+            # clear the send and tasks list and change mode to completed_all_tasks
+            if len(send) == lenTasks:
+                for elem in send:
+                    ai.talk(elem)
+                send.clear()
+                tasks.clear()
+                mode = "completed_all_tasks"
+
+            # If you havent completed all the tasks remove the
+            # last task in the list and change mode to cords
+            else:
+                tasks.pop()
+                mode = "ready"
+                 
+
+        elif mode == "completed_all_tasks":
+
+            # If you recieve a new message from 
+            # teacherbot change mode to scan
+            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+                lenTasks = 0
+                mode = "ready"
+
+
+            '''
+            elif mode == "mission done": 
             # Gets the key from the value in our dictionary of our desired 
-=======
-            # Gets the key from the value in our dictionary of our desired
->>>>>>> refs/remotes/origin/master
             # item in order to send a message to teacherbot
             itemStrValue = list(itemDict.keys())[list(
                 itemDict.values()).index(desiredItemType)]
@@ -161,7 +279,8 @@ def tick():
             print(ai.scanTalkMsg(0))
             ai.removeTalkMsg(0)
             ai.talk(completed)
-            mode = "ready"
+            mode = "scan"
+            '''
 
         # ---------------------------------------------------------------------------
         # Navigational modes, input is dist(only if ship need to stop at destination)
