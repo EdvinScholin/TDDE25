@@ -16,7 +16,7 @@ mode = "ready"
 
 # add more if needed
 
-#Coordinates - Vill helst ha en tuple
+# Coordinates - Vill helst ha en tuple
 coordinates = []
 prevCoordinates = []
 
@@ -101,27 +101,21 @@ def tick():
         middleDisY = ai.radarHeight()/2 - ai.selfRadarY()
         middleDir = math.atan2(middleDisY, middleDisX)
 
-
         # ---------------------------------------------------------------------------
         # Cordinates
         # ---------------------------------------------------------------------------
-
         # Lägg till if-sats senare, i detta fall för items
         countScreen = ai.itemCountScreen()
         speed = selfSpeed
-            
-            
-    
-
         # ---------------------------------------------------------------------------
         # Teacherbot
         # ---------------------------------------------------------------------------
 
         if mode == "ready":
-            
+
             if countScreen > 0:
                 # Position in which target will be in when ship/bullet arives
-                Id = target_Id("item")
+                Id = nearest_desired_target_Id("item")
                 aimAtX, aimAtY = target_pos(Id, speed)
 
                 # Direction of aimpoint
@@ -134,7 +128,6 @@ def tick():
                 ai.thrust()
                 return
 
-
             '''
             # Scan in the most recent message
             message = ai.scanTalkMsg(0)
@@ -145,7 +138,7 @@ def tick():
 
             ai.setMaxMsgs(15)
             maxMsgs = ai.getMaxMsgs()
-            
+
             # Clears the tasks list
             tasks.clear()
 
@@ -156,9 +149,8 @@ def tick():
                 if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
                     tasks.append(ai.scanTalkMsg(message))
                     if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
-                        #ai.removeTalkMsg(message)
+                        # ai.removeTalkMsg(message)
                         pass
-            
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
@@ -166,7 +158,7 @@ def tick():
             print("tasks: ", tasks)
 
             print("coordinates: ", coordinates)
-            
+
             '''
             # Read message
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
@@ -178,43 +170,13 @@ def tick():
                         coordinates.append(int(seq))
                     if seq in itemDict.keys():
                         desiredItemType = itemDict[seq]
-                
-            if "use-item" in tasks[-1]:
 
-                if ai.selfItem(desiredItemType) == 0:
-                    mode = "navigation"
-                
-                else:
-                    # Gör till en funktion!!!!!
-                    xCord = coordinates[0]
-                    yCord = coordinates[1]
+            if "collect-item" in tasks[-1] or ai.selfItem(desiredItemType) == 0:
 
-                    # Ska sedan sätta x ocg y till globala variabler, så döper om aimAt....
-                    x = xCord - selfX
-                    y = yCord - selfY
+                Id = nearest_desired_target_Id("Item")
 
-                    dist = math.hypot(x, y)
-                    dirRad = math.atan2(y, x)
-
-                    # Ship stops when target is reached. Not necessary.
-                    if brake(dist):  
-                        prevTrackRad = ai.selfTrackingRad()
-                        mode = "stop"
-                        return
-
-                    mode = "navigation"
-
-                    if not coordinates: # Betyder att vi har droppat minan
-                        # Ska röra sig bort där ifrån
-                        ai.detonateMines()
-                        mode = "completed_task"
-                
-                    elif dist < 10:
-                        ai.dropMine()
-                        mode = "completed_task"
-
-            
-            if "collect-item" in tasks[-1]:
+                # Targets position relativt self
+                x, y = target_pos(Id, selfSpeed)
 
                 if prevSelfItem < ai.selfItem(desiredItemType):
                     mode = "completed_task"
@@ -222,9 +184,34 @@ def tick():
                 else:
                     mode = "navigation"
 
-                # Save how many items of the desired item we already have
-                prevSelfItem = ai.selfItem(desiredItemType)
+            elif "use-item" in tasks[-1]:
 
+                # Targets position relativt self
+                x, y = relative_pos(coordinates[0], coordinates[1])
+
+                # Ship stops when target is reached. Not necessary.
+                if brake(dist):
+                    prevTrackRad = ai.selfTrackingRad()
+                    mode = "stop"
+                    return
+
+                mode = "navigation"
+
+                if not coordinates:  # Betyder att vi har droppat minan
+                    # Ska röra sig bort där ifrån
+                    ai.detonateMines()
+                    mode = "completed_task"
+
+                elif dist < 10:
+                    ai.dropMine()
+                    mode = "completed_task"
+
+            # Distance and direktion to target
+            dist = math.hypot(x, y)
+            dirRad = math.atan2(y, x)
+
+            # Save how many items of the desired item we already have
+            prevSelfItem = ai.selfItem(desiredItemType)
 
         elif mode == "completed_task":
 
@@ -243,7 +230,7 @@ def tick():
                             new_msg += seq + " "
                     completed = "Teacherbot:completed " + new_msg
                     send.append(completed)
-            
+
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
             if len(send) == lenTasks:
@@ -258,16 +245,14 @@ def tick():
             else:
                 tasks.pop()
                 mode = "ready"
-                 
 
         elif mode == "completed_all_tasks":
 
-            # If you recieve a new message from 
+            # If you recieve a new message from
             # teacherbot change mode to scan
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 lenTasks = 0
                 mode = "ready"
-
 
             '''
             elif mode == "mission done": 
@@ -361,18 +346,10 @@ def tick():
 # --------------------------------------------------------------------------
 
 
-def target_Id(objType):
-    """Determine nearest desired objekt else nearest random objekt"""
+def obj_funcs(objType):
+    """Return objekt specified functions"""
 
-    '''
-    previousDist = 1000000
-
-    for index in range(countScreen):
-        dist = distFunc(index)
-        if dist < previousDist:
-            previousDist = dist
-            Id = index
-    '''
+    # Kan lägga till för varje objekt typ
 
     if objType == "item":
         countScreen = ai.itemCountScreen()
@@ -384,7 +361,13 @@ def target_Id(objType):
         distFunc = ai.asteroidDist
         typeFunc = ai.asteroidType
 
-    # Kan lägga till för varje objekt typ
+    return countScreen, distFunc, typeFunc
+
+
+def nearest_desired_target_Id(objType):
+    """Determine nearest desired objekt else nearest random objekt"""
+
+    countScreen, distFunc, typeFunc = obj_funcs(objType)
 
     # Take the closest item
     prevDist = 1000
@@ -424,8 +407,7 @@ def target_pos(Id, speed):
     velY = ai.itemVelY(Id)
 
     # items initial position relative to self
-    relX = x - ai.selfX()
-    relY = y - ai.selfY()
+    relX, relY = relative_pos(x, y)
 
     # items initial velocity relative to self
     relVelX = velX - ai.selfVelX()
@@ -440,8 +422,13 @@ def target_pos(Id, speed):
 
     return targetX, targetY
 
-def distance(x, y):
-    
+
+def relative_pos(xCord, yCord):
+    """calculate position"""
+    x = xCord - ai.selfX()
+    y = yCord - ai.selfY()
+
+    return x, y
 
 
 def angleDiff(one, two):
