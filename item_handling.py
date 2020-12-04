@@ -113,16 +113,7 @@ def tick():
 
         if mode == "ready":
 
-            if countScreen > 0:
-                # Position in which target will be in when ship/bullet arives
-                Id = nearest_desired_target_Id("item")
-                aimAtX, aimAtY = target_pos(Id, speed)
-
-                # Direction of aimpoint
-                dist = math.sqrt(aimAtX**2 + aimAtY**2)
-                dirRad = math.atan2(aimAtY, aimAtX)
-
-            else:  # Move towards map middle when no targets are detected
+            if countScreen == 0:  # Move towards map middle when no targets are detected
                 ai.turnToRad(middleDir)
                 ai.setPower(55)
                 ai.thrust()
