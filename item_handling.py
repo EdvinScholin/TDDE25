@@ -103,12 +103,9 @@ def tick():
         # ---------------------------------------------------------------------------
     
         if tickCount == 1:
-            ai.talk("teacherbot: start-mission 8")
+            ai.talk("teacherbot: start-mission 9")
 
         elif mode == "ready":
-
-            # "collect-item mine"
-
             # Scan in the most recent message
             message = ai.scanTalkMsg(0)
             
@@ -116,24 +113,34 @@ def tick():
             messageList = list(message.split(" "))
 
             # Read message
-            if "collect-item" in ai.scanTalkMsg(0):
+            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+
+                if "use-item" in ai.scanTalkMsg(0):
+                    desiredItemType = messageList[1]
+                    desiredItemPosX = messageList[2]
+                    desiredItemPosY = messageList[3]
                 
-                desiredItemType = messageList[1]
+                if "collect-item" in ai.scanTalkMsg(0):
+                    desiredItemType = messageList[1]
 
-                if desiredItemType in itemDict:
-                    desiredItemType = itemDict[desiredItemType]
+                    if desiredItemType in itemDict:
+                        desiredItemType = itemDict[desiredItemType]
 
-                if prevSelfItem < ai.selfItem(desiredItemType):
-                    mode = "mission done"
-                else:
-                    mode = "navigation"
+                        # print("desiredItemType:", desiredItemType, type(desiredItemType))
 
-                # Save how many items of the desired item we already have
-                prevSelfItem = ai.selfItem(desiredItemType)
+                    if prevSelfItem < ai.selfItem(desiredItemType):
+                        mode = "mission done"
+
+                    else:
+                        mode = "navigation"
+
+                    # Save how many items of the desired item we already have
+                    prevSelfItem = ai.selfItem(desiredItemType)
+                
+
 
 
         elif mode == "mission done": 
-            
             # Gets the key from the value in our dictionary of our desired 
             # item in order to send a message to teacherbot
             itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(desiredItemType)]
