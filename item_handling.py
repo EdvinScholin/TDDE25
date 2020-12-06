@@ -38,6 +38,7 @@ itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak":
             "mirror": 19, "armor": 20}
 prevSelfItem = 0
 desiredItemType = -1
+item_needed = 1
 
 
 def tick():
@@ -62,6 +63,7 @@ def tick():
         global prevCoordinates
         global dist
         global dirRad
+        global item_needed
 
         #
         # Reset the state machine if we die.
@@ -130,25 +132,26 @@ def tick():
             ai.setMaxMsgs(15)
             maxMsgs = ai.getMaxMsgs()
 
-            # Clears the tasks list
-            tasks.clear()
-
+            #print("tasks: ", tasks)
+           
             # Scans all the messages sent by teacherbot
             # and adds them to the list tasks
-            # if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
-            for message in range(maxMsgs):
-                if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
-                    tasks.append(ai.scanTalkMsg(message))
-                    if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
-                        # ai.removeTalkMsg(message)
-                        pass
+            if not tasks:
+                for message in range(maxMsgs):
+                    if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
+                        tasks.append(ai.scanTalkMsg(message))
+                        ai.removeTalkMsg(message)
+                        # tasks = [ai.scanTalkMsg(message)].copy()
+                        #if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+                        #    ai.removeTalkMsg(message)
+                        
+            print("tasks: ", tasks)
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
-            print("tasks: ", tasks)
 
-            print("coordinates: ", coordinates)
+            # print("coordinates: ", coordinates)
 
             '''
             # Read message
@@ -161,10 +164,14 @@ def tick():
                         coordinates.append(int(seq))
                     if seq in itemDict.keys():
                         desiredItemType = itemDict[seq]
+           
+            #
+            # När granaten har placerats ska den detoneras men kommer aldrig in i
+            # use-item när vi inte har en granat på oss
+            #
+            if "collect-item" in tasks[-1] and ai.selfItem(desiredItemType) = 0:
 
-            if "collect-item" in tasks[-1] or ai.selfItem(desiredItemType) == 0:
-
-                Id = nearest_desired_target_Id("Item")
+                Id = nearest_desired_target_Id("item")
 
                 # Targets position relativt self
                 x, y = target_pos(Id, selfSpeed)
@@ -176,7 +183,21 @@ def tick():
                     mode = "navigation"
 
             elif "use-item" in tasks[-1]:
+                
+                mode = "navigation"
 
+                if not coordinates:  # Betyder att vi har droppat minan
+                    # Ska röra sig bort där ifrån
+                    print("detonate")
+                    item_needed = 1
+                    ai.detonateMines()
+                    mode = "completed_task"
+
+                elif dist < 10:
+                    item_needed = 0
+                    ai.dropMine()
+                    mode = "completed_task"
+                
                 # Targets position relativt self
                 x, y = relative_pos(coordinates[0], coordinates[1])
 
@@ -186,16 +207,6 @@ def tick():
                     mode = "stop"
                     return
 
-                mode = "navigation"
-
-                if not coordinates:  # Betyder att vi har droppat minan
-                    # Ska röra sig bort där ifrån
-                    ai.detonateMines()
-                    mode = "completed_task"
-
-                elif dist < 10:
-                    ai.dropMine()
-                    mode = "completed_task"
 
             # Distance and direktion to target
             dist = math.hypot(x, y)
@@ -205,22 +216,36 @@ def tick():
             prevSelfItem = ai.selfItem(desiredItemType)
 
         elif mode == "completed_task":
+            
+            ########## Tar inte bort gamla tasket
 
             # Adds the completed task to a list send
-            xCord = coordinates[0]
-            yCord = coordinates[1]
-            prevCoordinates = coordinates
-            coordinates.clear()
-            print("coordinates cleared: ", coordinates)
+            if coordinates:
+                xCord = coordinates[0]
+                yCord = coordinates[1]
+                prevCoordinates = coordinates.copy()
+                coordinates.clear()
 
-            for elem in tasks:
-                new_msg = ""
-                if str(xCord) in elem and str(yCord) in elem:
-                    for seq in elem.split():
-                        if not "[" in seq:
-                            new_msg += seq + " "
-                    completed = "Teacherbot:completed " + new_msg
-                    send.append(completed)
+            
+                for elem in tasks:
+                    new_msg = ""
+                    if str(xCord) in elem and str(yCord) in elem:
+                        for seq in elem.split():
+                            if not "[" in seq:
+                                new_msg += seq + " "
+                        completed = "Teacherbot:completed " + new_msg
+                        send.append(completed)
+            
+            else:
+                for elem in tasks:
+                    new_msg = ""
+                    if prevSelfItem in elem:
+                        for seq in elem.split():
+                            if not "[" in seq:
+                                new_msg += seq + " "
+                        completed = "Teacherbot:completed " + new_msg
+                        send.append(completed)
+
 
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
@@ -236,7 +261,7 @@ def tick():
             else:
                 tasks.pop()
                 mode = "ready"
-
+            
         elif mode == "completed_all_tasks":
 
             # If you recieve a new message from
