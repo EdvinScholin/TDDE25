@@ -38,7 +38,7 @@ itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak":
             "mirror": 19, "armor": 20}
 prevSelfItem = 0
 desiredItemType = -1
-placedMine = 0
+item_needed = 1
 
 
 def tick():
@@ -63,7 +63,7 @@ def tick():
         global prevCoordinates
         global dist
         global dirRad
-        global placedMine
+        global item_needed
 
         #
         # Reset the state machine if we die.
@@ -133,7 +133,7 @@ def tick():
             maxMsgs = ai.getMaxMsgs()
 
             #print("tasks: ", tasks)
-
+           
             # Scans all the messages sent by teacherbot
             # and adds them to the list tasks
             if not tasks:
@@ -142,13 +142,14 @@ def tick():
                         tasks.append(ai.scanTalkMsg(message))
                         ai.removeTalkMsg(message)
                         # tasks = [ai.scanTalkMsg(message)].copy()
-                        # if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+                        #if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                         #    ai.removeTalkMsg(message)
-
+                        
             print("tasks: ", tasks)
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
+
 
             # print("coordinates: ", coordinates)
 
@@ -157,13 +158,13 @@ def tick():
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
             '''
 
-            if not coordinates:
+            if not coordinates and tasks:
                 for seq in tasks[-1].split():
                     if seq.isdigit():
                         coordinates.append(int(seq))
                     if seq in itemDict.keys():
                         desiredItemType = itemDict[seq]
-
+           
             #
             # När granaten har placerats ska den detoneras men kommer aldrig in i
             # use-item när vi inte har en granat på oss
@@ -182,21 +183,21 @@ def tick():
                     mode = "navigation"
 
             elif "use-item" in tasks[-1]:
-
+                
                 mode = "navigation"
 
                 if not coordinates:  # Betyder att vi har droppat minan
                     # Ska röra sig bort där ifrån
                     print("detonate")
-                    placedMine = 0
+                    item_needed = 1
                     ai.detonateMines()
                     mode = "completed_task"
 
                 elif dist < 10:
-                    placedMine += 1
+                    item_needed = 0
                     ai.dropMine()
                     mode = "completed_task"
-
+                
                 # Targets position relativt self
                 x, y = relative_pos(coordinates[0], coordinates[1])
 
@@ -206,6 +207,7 @@ def tick():
                     mode = "stop"
                     return
 
+
             # Distance and direktion to target
             dist = math.hypot(x, y)
             dirRad = math.atan2(y, x)
@@ -214,8 +216,8 @@ def tick():
             prevSelfItem = ai.selfItem(desiredItemType)
 
         elif mode == "completed_task":
-
-            # Tar inte bort gamla tasket
+            
+            ########## Tar inte bort gamla tasket
 
             # Adds the completed task to a list send
             if coordinates:
@@ -224,6 +226,7 @@ def tick():
                 prevCoordinates = coordinates.copy()
                 coordinates.clear()
 
+            
                 for elem in tasks:
                     new_msg = ""
                     if str(xCord) in elem and str(yCord) in elem:
@@ -232,16 +235,17 @@ def tick():
                                 new_msg += seq + " "
                         completed = "Teacherbot:completed " + new_msg
                         send.append(completed)
-
+            
             else:
                 for elem in tasks:
                     new_msg = ""
-                    if prevSelfItem in elem:
+                    if str(prevSelfItem) in elem:
                         for seq in elem.split():
                             if not "[" in seq:
                                 new_msg += seq + " "
                         completed = "Teacherbot:completed " + new_msg
                         send.append(completed)
+
 
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
@@ -257,7 +261,7 @@ def tick():
             else:
                 tasks.pop()
                 mode = "ready"
-
+            
         elif mode == "completed_all_tasks":
 
             # If you recieve a new message from
