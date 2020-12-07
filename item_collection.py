@@ -65,7 +65,9 @@ def tick():
         selfVelX = ai.selfVelX()
         selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
-        selfMass = ai.selfMass()
+        try:
+            selfMass = ai.selfMass()
+        except: UnboundLocalError
 
         selfHeading = ai.selfHeadingRad()
 
@@ -98,21 +100,22 @@ def tick():
                 mode = "scan"
         
         elif mode == "scan":
-            
-            # Scan in the most recent message
-            message = ai.scanTalkMsg(0)
-            
-            # Second element in list will be our desired item
-            messageList = list(message.split(" "))
-            desiredItemType = messageList[1]
 
-            if desiredItemType in itemDict:
-                desiredItemType = itemDict[desiredItemType]
-            
-            # Save how many items of the desired item we already have
-            prevSelfItem = ai.selfItem(desiredItemType)
-                    
-            mode = "checkSituation"  
+            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0): 
+                # Scan in the most recent message
+                message = ai.scanTalkMsg(0)
+                
+                # Second element in list will be our desired item
+                messageList = list(message.split(" "))
+                desiredItemType = messageList[1]
+
+                if desiredItemType in itemDict:
+                    desiredItemType = itemDict[desiredItemType]
+                
+                # Save how many items of the desired item we already have
+                prevSelfItem = ai.selfItem(desiredItemType)
+                        
+                mode = "checkSituation"  
         
         # Take the closest item
         itemCount = ai.itemCountScreen()   
@@ -157,10 +160,7 @@ def tick():
             relVelY = itemVelY - selfVelY
 
             # Time of impact, when ship is supposed to hit item
-            try:
-                t = time_of_impact(relX, relY, relVelX, relVelY, selfSpeed)
-            except ZeroDivisionError:
-                pass
+            t = time_of_impact(relX, relY, relVelX, relVelY, selfSpeed)
 
             # Point of impact, where ship is supposed to hit item
             aimAtX = relX + relVelX*t
@@ -255,7 +255,7 @@ def tick():
             
             ai.setPower(55)
             ai.thrust()
-
+           
             if prevSelfItem < ai.selfItem(desiredItemType):
                 mode = "done"
         
@@ -265,7 +265,6 @@ def tick():
             # item in order to send a message to teacherbot
             itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(desiredItemType)]
             completed = "Teacherbot: completed collect-item " + itemStrValue
-            print(ai.scanTalkMsg(0))
             ai.removeTalkMsg(0)
             ai.talk(completed)
             mode = "scan"
@@ -293,13 +292,10 @@ def stop_at_point(objDist):
     s = objDist
     
     maxV0 = math.sqrt(2*a*s)
-    print("Max Velocity: ", maxV0)
-    print("Velocity: ", v0)
 
     futV = v0 + a2/2
     futS = s - futV
     futMaxV0 = math.sqrt(2*a*futS)
-    print("futMaxV0: ", futMaxV0)
 
     if futMaxV0 <= futV:
         return True
@@ -324,7 +320,10 @@ def time_of_impact(px, py, vx, vy, s):
     t = 0
 
     if d >= 0:
-        t = (b + math.sqrt(d)) / a
+        try:
+            t = (b + math.sqrt(d)) / a
+        except ZeroDivisionError:
+            t = (b + math.sqrt(d))
         if t < 0:
             t = 0
 
