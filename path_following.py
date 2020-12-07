@@ -203,6 +203,10 @@ def tick():
             # Calculate angle difference
             movItemDiff = angleDiff(
                 ai.selfTrackingRad(), dirRad)
+            
+            if brake(wallDistance - 50) and wallDistance != -1:
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
 
             if targetDistance == 0:
                 print("hej")
