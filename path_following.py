@@ -71,11 +71,8 @@ def tick():
 
         selfX = ai.selfX()
         selfY = ai.selfY()
-        selfVelX = ai.selfVelX()
-        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
 
-        selfHeading = ai.selfHeadingRad() 
         selfTrackingRad = ai.selfTrackingRad()
         playerCount = ai.playerCountServer()
         pi = math.pi
@@ -83,8 +80,6 @@ def tick():
 
         mapWidth = ai.mapWidthBlocks()
         mapHeight = ai.mapHeightBlocks()
-
-        shotCount = ai.shotCountScreen()
 
         ai.setMaxMsgs(15)
         maxMsgs = ai.getMaxMsgs()
@@ -97,7 +92,6 @@ def tick():
         # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode:", mode)
-        print("Path: ", path)
 
         if tickCount == 1:
             ai.shield()
@@ -171,30 +165,25 @@ def tick():
             selfBlock = pixel_to_block(selfX, selfY)
             goal = pixel_to_block(xCord, yCord)
 
-            
-
             # Create the path using an a* algorithm
             path = list(astar.find_path(selfBlock, goal, neighbors_fnct=neighbors,
                         heuristic_cost_estimate_fnct=heuristic_cost_estimate, distance_between_fnct=distance))
 
+            # Remove the first block of the path
             path.remove(selfBlock)
-            
-            print(path)            
+                       
             # Change mode to aim
             mode = "aim"
 
 
         elif mode == "aim":  # dela upp i aim och travel 
 
+            # Calculate the targetDircetion and targetDistance
             selfBlock = pixel_to_block(selfX, selfY)
-
             x = path[0][0] - selfBlock[0]
             y = path[0][1] - selfBlock[1]
-
-
             dirRad = math.atan2(y, x)
             targetDistance = math.hypot(x, y)
-            print("Targetdistinace:", targetDistance)
 
             # Convert selfTrackingRad and ItemDir to positive radians
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
@@ -203,7 +192,14 @@ def tick():
             # Calculate angle difference
             movItemDiff = angleDiff(
                 ai.selfTrackingRad(), dirRad)
+            
+            # Wallfeeler
+            if brake(wallDistance - 50) and wallDistance != -1:
+                prevTrackRad = ai.selfTrackingRad()
+                mode = "stop"
 
+            # If you are in the targetblock remove to first element from
+            # the list and change mode to aim if the length of the list is 1 or 0
             if targetDistance == 0:
                 print("hej")
                 path.pop(0)
@@ -213,56 +209,34 @@ def tick():
                     mode = "stop"
                 return
 
-            # Wallfeeler
-            if brake(wallDistance - 50) and wallDistance != -1:
-                prevTrackRad = ai.selfTrackingRad()
-                mode = "stop"
-
-
             # Move towards target
             if selfSpeed < 5 or movItemDiff == math.pi/2:
                 angle = dirRad
 
-            elif movItemDiff > math.pi/2:  # if angle between selfTrackingRad and item direction
+            # If angle between selfTrackingRad and item direction is to big change mode to stop
+            elif movItemDiff > math.pi/2:
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
 
-            else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
+            # Uses opposite velocity vektor to cancel out unwanted velocity vektors
+            else:  
                 angle = 2*absItemDir - selfTrackRad
 
-            
-
+            # Aims at the target and thrusts
             ai.turnToRad(angle)
-            ai.thrust()
-
-
-            
-            
-
-        elif mode == "navigation":
-
-            """
-            # Wallfeeler
-            if brake(wallDistance - 50) and wallDistance != -1:
-                prevTrackRad = ai.selfTrackingRad()
-                mode = "stop"
-            """
-
-            
-            if selfSpeed < 20:
-                ai.setPower(55)
-            mode = "aim"
-
-
+            ai.thrust()                 
             
 
         elif mode == "stop":
             
+            # Calculate angle difference
             angle = angleDiff(prevTrackRad, ai.selfTrackingRad())
+
 
             if angle < math.pi/2:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
+
 
             if angle > math.pi/2:
                 if len(path) == 1 or not path:
@@ -271,11 +245,9 @@ def tick():
                     path.pop(0)
                     mode = "aim"
         
-
+            # Aims at the target and thrusts
             ai.setPower(55)
             ai.thrust()
-
-            
 
 
         elif mode == "completed_task":
@@ -313,14 +285,6 @@ def tick():
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 lenTasks = 0
                 mode = "scan"
-
-            
-
-
-            
-            
-
-
             
 
     except:
