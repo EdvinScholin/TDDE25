@@ -169,7 +169,7 @@ def tick():
             # När granaten har placerats ska den detoneras men kommer aldrig in i
             # use-item när vi inte har en granat på oss
             #
-            if "collect-item" in tasks[-1] and ai.selfItem(desiredItemType) = 0:
+            if "collect-item" in tasks[-1] and ai.selfItem(desiredItemType) == 0:
 
                 Id = nearest_desired_target_Id("item")
 
