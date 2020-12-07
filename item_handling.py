@@ -102,6 +102,14 @@ def tick():
         middleDisX = ai.radarWidth()/2 - ai.selfRadarX()
         middleDisY = ai.radarHeight()/2 - ai.selfRadarY()
         middleDir = math.atan2(middleDisY, middleDisX)
+        
+        # Wallfeeler
+        if brake(wallDistance - 50) and wallDistance != -1:
+            ai.turnToRad(ai.selfTrackingRad() + math.pi)
+            ai.setPower(55)
+            ai.thrust()
+            return
+            
 
         # ---------------------------------------------------------------------------
         # Cordinates
@@ -166,54 +174,93 @@ def tick():
                         desiredItemType = itemDict[seq]
            
             #
-            # När granaten har placerats ska den detoneras men kommer aldrig in i
-            # use-item när vi inte har en granat på oss
+            # Nu är det dags att använda en missil och skjuta den
             #
-            if "collect-item" in tasks[-1] and ai.selfItem(desiredItemType) == 0:
 
-                Id = nearest_desired_target_Id("item")
+            if tasks:
 
-                # Targets position relativt self
-                x, y = target_pos(Id, selfSpeed)
+                if "collect-item" in tasks[-1]: 
 
-                if prevSelfItem < ai.selfItem(desiredItemType):
-                    mode = "completed_task"
+                    Id = nearest_desired_target_Id("item")
 
-                else:
+                    # Targets position relativt self
+                    x, y = target_pos(Id, selfSpeed)
+
+                    if prevSelfItem < ai.selfItem(desiredItemType):
+                        mode = "completed_task"
+
+                    else:
+                        mode = "navigation"
+
+                elif "use-item" in tasks[-1]:
+               
                     mode = "navigation"
-
-            elif "use-item" in tasks[-1]:
                 
-                mode = "navigation"
+                    if coordinates:
+                        # Targets position relativt self
+                        x, y = relative_pos(coordinates[0], coordinates[1])
+                    else:
+                        x, y = relative_pos(prevCoordinates[0], prevCoordinates[1])
 
-                if not coordinates:  # Betyder att vi har droppat minan
-                    # Ska röra sig bort där ifrån
-                    print("detonate")
-                    item_needed = 1
-                    ai.detonateMines()
-                    mode = "completed_task"
 
-                elif dist < 10:
-                    item_needed = 0
-                    ai.dropMine()
-                    mode = "completed_task"
+                    if ai.selfItem(desiredItemType) == 0 and ai.mineCountScreen() == 0:
+
+                        Id = nearest_desired_target_Id("item")
+
+                        # Targets position relativt self
+                        x, y = target_pos(Id, selfSpeed)
+
+                    elif not coordinates:# Betyder att vi har droppat minan
+                    
+                        # Rör sig bort från mine
+                        dist = math.hypot(x, y)
+                    
+                        # Om det är en vägg i riktningen vi tänkte åka så åker vi i motsatt rikning
+                        if wallDistance < 350:
+                            dirRad = ai.selfTrackingRad() + math.pi
+                    
+                        elif dist > 300:
+                            print("detonate")
+                            ai.detonateMines()
+                            mode = "completed_task"
+                            print(mode)
+                        
+
+                    elif dist < 20:
+                        item_needed = 0
+                        ai.dropMine()
+                        mode = "completed_task"
+                    
+                        # Vill åka tillbaka där vi kom ifrån
+                        dirRad = ai.selfTrackingRad() + math.pi
                 
-                # Targets position relativt self
-                x, y = relative_pos(coordinates[0], coordinates[1])
+                    '''
+                    # Ship stops when target is reached.
+                    if brake(dist):
+                        prevTrackRad = ai.selfTrackingRad()
+                        mode = "stop"
+                        return
+                    '''
+                
+                # Distance and direktion to target
+                dist = math.hypot(x, y)
+                dirRad = math.atan2(y, x)
 
-                # Ship stops when target is reached. Not necessary.
-                if brake(dist):
+                # Save how many items of the desired item we already have
+                prevSelfItem = ai.selfItem(desiredItemType)
+
+            else: # om vi inte har några tasks
+                
+                print("all tasks done")
+                
+                if selfSpeed > 5:
                     prevTrackRad = ai.selfTrackingRad()
                     mode = "stop"
-                    return
 
-
-            # Distance and direktion to target
-            dist = math.hypot(x, y)
-            dirRad = math.atan2(y, x)
-
-            # Save how many items of the desired item we already have
-            prevSelfItem = ai.selfItem(desiredItemType)
+                '''
+                ai.talk('use-item mine 612 17 [Teacherbot]:[Stub]')
+                return
+                '''
 
         elif mode == "completed_task":
             
@@ -221,34 +268,26 @@ def tick():
 
             # Adds the completed task to a list send
             if coordinates:
-                xCord = coordinates[0]
-                yCord = coordinates[1]
                 prevCoordinates = coordinates.copy()
                 coordinates.clear()
-
             
-                for elem in tasks:
-                    new_msg = ""
-                    if str(xCord) in elem and str(yCord) in elem:
-                        for seq in elem.split():
-                            if not "[" in seq:
-                                new_msg += seq + " "
-                        completed = "Teacherbot:completed " + new_msg
-                        send.append(completed)
-            
-            else:
-                for elem in tasks:
-                    new_msg = ""
-                    if str(prevSelfItem) in elem:
-                        for seq in elem.split():
-                            if not "[" in seq:
-                                new_msg += seq + " "
-                        completed = "Teacherbot:completed " + new_msg
-                        send.append(completed)
+            for elem in tasks:
+                new_msg = ""
+                # if str(prevSelfItem) in elem:
+                for seq in elem.split():
+                    if not "[" in seq:
+                        new_msg += seq + " "
+                completed = "Teacherbot:completed " + new_msg
+                send.append(completed)
 
 
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
+            
+            print("len send: ", len(send))
+            print("len tasks: ", lenTasks)
+
+            
             if len(send) == lenTasks:
                 for elem in send:
                     ai.talk(elem)
@@ -290,15 +329,10 @@ def tick():
 
         elif mode == "navigation":
 
-            # Wallfeeler
-            if brake(wallDistance - 50) and wallDistance != -1:
-                prevTrackRad = ai.selfTrackingRad()
-                mode = "stop"
-
-            else:  # Aim if any targets are detected
-                if selfSpeed < 20:
-                    ai.setPower(55)
-                mode = "aim"
+            # Aim if any targets are detected
+            if selfSpeed < 20:
+                ai.setPower(55)
+            mode = "aim"
 
         elif mode == "stop":
 
