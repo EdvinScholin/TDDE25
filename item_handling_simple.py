@@ -319,7 +319,7 @@ def tick():
 
             # ai.turnToRad(prevTrackRad - math.pi)
 
-            angle = lib.angleDiff(prevTrackRad - math.pi, ai.selfTrackingRad())
+            angle = lib.angleDiff(prevTrackRad, ai.selfTrackingRad())
 
             if angle < math.pi/2:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
