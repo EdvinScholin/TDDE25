@@ -233,6 +233,12 @@ def tick():
                         mode = "completed_task"
                         prevTrackRad = ai.selfTrackingRad()
 
+                    # Ship stops when target is reached.
+                    elif brake(dist):
+                        prevTrackRad = ai.selfTrackingRad()
+                        mode = "stop"
+                        return
+
             else:  # We cannot handle item
                 print("cannot handle task")
                 mode = "ready"
