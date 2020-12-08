@@ -76,6 +76,8 @@ def tick():
 
         tickCount += 1
 
+        print("tick count:", tickCount, "mode", mode)
+
         if tickCount == 1:
             ai.talk("teacherbot: start-mission 9")
 
@@ -105,9 +107,17 @@ def tick():
         
         # Wallfeeler
         if brake(wallDistance - 50) and wallDistance != -1:
+            '''
+            prevTrackRad = ai.selfTrackingRad()
+            mode = "stop"
+            print("wallFeeler")
+            return
+            '''
             ai.turnToRad(ai.selfTrackingRad() + math.pi)
+            print("self heading", ai.selfHeadingRad())
             ai.setPower(55)
             ai.thrust()
+            mode = "ready"
             return
             
 
@@ -199,9 +209,13 @@ def tick():
                     if coordinates:
                         # Targets position relativt self
                         x, y = relative_pos(coordinates[0], coordinates[1])
-                    else:
+                    
+                    elif "mine" in tasks[-1]:
                         Id = nearest_target_Id("mine")
                         x, y = relative_pos(ai.mineX(Id), ai.mineY(Id))
+                    
+                    else: # När vi inte kan hantera mer så quitar vi
+                        ai.quitAI()
 
 
                     if ai.selfItem(desiredItemType) == 0 and ai.mineCountScreen() == 0:
@@ -217,32 +231,32 @@ def tick():
                         dist = math.hypot(x, y)
                     
                         # Om det är en vägg i riktningen vi tänkte åka så åker vi i motsatt rikning
-                        if wallDistance < 350:
-                            dirRad = ai.selfTrackingRad() + math.pi
                     
-                        elif dist > 300:
+                        if dist > 300:
                             print("detonate")
                             ai.detonateMines()
                             prevCoordinates.clear()
                             mode = "completed_task"
                             print(mode)
-                        
+                        return
 
                     elif dist < 20:
+                        print("dropmine")
                         item_needed = 0
                         ai.dropMine()
                         mode = "completed_task"
-                    
+                        
                         # Vill åka tillbaka där vi kom ifrån
-                        dirRad = ai.selfTrackingRad() + math.pi
-                
+                        dirRad = ai.selfTrackingRad() -  math.pi
+                        return
+                        
                     '''
                     # Ship stops when target is reached.
                     if brake(dist):
                         prevTrackRad = ai.selfTrackingRad()
                         mode = "stop"
                         return
-                    '''
+                    ''' 
                 
                 # Distance and direktion to target
                 dist = math.hypot(x, y)
@@ -337,15 +351,24 @@ def tick():
             mode = "aim"
 
         elif mode == "stop":
-
-            angle = angleDiff(prevTrackRad, ai.selfTrackingRad())
-
-            if angle < math.pi/2:
+            
+            ai.turnToRad(prevTrackRad - math.pi)
+            
+            angle = angleDiff(prevTrackRad - math.pi, ai.selfTrackingRad())
+            '''
+            if angle < math.pi/10:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
-            if angle > math.pi/2:
+            else:
                 mode = "ready"
                 return
+            '''
+            if angle < math.pi/2:
+                mode = "ready"
+                return
+            
+            print("prevTrackRad: ", prevTrackRad)
+            
 
             ai.setPower(55)
             ai.thrust()
@@ -376,6 +399,7 @@ def tick():
                 angle = dirRad
 
             elif movItemDiff > math.pi/2:  # if angle between selfTrackingRad and item direction
+                print("aim stop.........")
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
@@ -388,7 +412,6 @@ def tick():
             ai.turnToRad(angle)
             ai.thrust()
 
-        print("tick count:", tickCount, "mode", mode)
 
     except:
         print(traceback.print_exc())
@@ -418,7 +441,7 @@ def obj_funcs(objType):
         return countScreen, distFunc, typeFunc
 
     elif objType == "mine":
-        return ai.mineX, ai.mineY
+        return ai.mineX, ai.mineY, ai.mineCountScreen
 
     elif objType == "laser":
         return ai.laserX, ai.laserY
@@ -427,10 +450,10 @@ def obj_funcs(objType):
 
 def nearest_target_Id(objType):
 
-    xFunc, yFunc = obj_funcs(objType)
+    xFunc, yFunc, countScreen = obj_funcs(objType)
     prevDist = 10000
 
-    for index in range(countScreen):
+    for index in range(countScreen()):
         dist = math.hypot(yFunc(index), xFunc(index))
 
         if dist < prevDist:
