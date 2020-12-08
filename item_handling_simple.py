@@ -212,7 +212,7 @@ def tick():
                         mode = "completed_task"
 
                 elif ai.selfItem(desiredItemType) == 0:
-                    ai.talk('Me: collect-item mine')
+                    ai.talk('collect-item mine [Stub]:[Me]')
                     mode = "scan"
                     return
 
