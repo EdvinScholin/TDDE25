@@ -235,6 +235,7 @@ def tick():
 
                     # Ship stops when target is reached.
                     elif lib.brake(dist):
+                        print("placera")
                         prevTrackRad = ai.selfTrackingRad()
                         mode = "stop"
                         return
