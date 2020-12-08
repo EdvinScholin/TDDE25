@@ -110,13 +110,7 @@ def tick():
         # Wallfeeler
         # ----------------------------------------------------------------------------
 
-        if lib.brake(wallDistance - 50) and wallDistance != -1:
-            """
-            prevTrackRad = ai.selfTrackingRad()
-            mode = "stop"
-            print("wallFeeler")
-            """
-
+        if lib.brake(wallDistance - 100) and wallDistance != -1:
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
             print("self heading", ai.selfHeadingRad())
             ai.setPower(55)
@@ -200,7 +194,7 @@ def tick():
                 # ------------ Tillfälligt ----------
                 if "mine" not in current_task:
                     print("cant handle other items")
-                    ai.quitAI()
+                    return
                 # -----------------------------------
 
                 if not coordinates:  # Meanes that we fire item
