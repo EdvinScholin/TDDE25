@@ -156,7 +156,8 @@ def tick():
             # Scans all the messages sent by teacherbot
             # and adds them to the list tasks
             for message in range(maxMsgs):
-                if ai.scanTalkMsg(message) and "[Teacherbot]" in ai.scanTalkMsg(message):
+                if (ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message)
+                        or "[Stub]:[Stub]" in ai.scanTalkMsg(message)):
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message)
 
@@ -211,7 +212,7 @@ def tick():
                         mode = "completed_task"
 
                 elif ai.selfItem(desiredItemType) == 0:
-                    ai.talk('Teacherbot: collect-item mine')
+                    ai.talk('Stub: collect-item mine')
                     mode = "scan"
                     return
 
@@ -251,7 +252,7 @@ def tick():
                 coordinates.clear()
 
             # for elem in tasks:
-            if '[Stub]' not in current_task:
+            if '[Stub]:[Stub]' not in current_task:
                 new_msg = ""
                 # if str(prevSelfItem) in elem:
                 for seq in current_task.split():
