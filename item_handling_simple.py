@@ -245,12 +245,13 @@ def tick():
             # Tar inte bort gamla tasket
             current_task = tasks[-1]
             # Adds the completed task to a list send
-            if coordinates:
-                prevCoordinates = coordinates.copy()
-                coordinates.clear()
 
             # for elem in tasks:
             if '[Teacherbot]:[Stub] [Stub]' not in current_task:
+                if coordinates:
+                    prevCoordinates = coordinates.copy()
+                    coordinates.clear()
+
                 new_msg = ""
                 # if str(prevSelfItem) in elem:
                 for seq in current_task.split():
