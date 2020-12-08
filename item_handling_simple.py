@@ -244,20 +244,20 @@ def tick():
         elif mode == "completed_task":
 
             # Tar inte bort gamla tasket
-
+            current_task = tasks[-1]
             # Adds the completed task to a list send
             if coordinates:
                 prevCoordinates = coordinates.copy()
                 coordinates.clear()
 
-            for elem in tasks:
-                new_msg = ""
-                # if str(prevSelfItem) in elem:
-                for seq in elem.split():
-                    if not "[" in seq:
-                        new_msg += seq + " "
-                completed = "Teacherbot:completed " + new_msg
-                send.append(completed)
+            # for elem in tasks:
+            new_msg = ""
+            # if str(prevSelfItem) in elem:
+            for seq in current_task.split():
+                if not "[" in seq:
+                    new_msg += seq + " "
+            completed = "Teacherbot:completed " + new_msg
+            send.append(completed)
 
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
