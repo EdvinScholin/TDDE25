@@ -130,14 +130,6 @@ def tick():
 
         if mode == "ready":
 
-            '''
-            if countScreen == 0:  # Move towards map middle when no targets are detected
-                ai.turnToRad(middleDir)
-                ai.setPower(55)
-                ai.thrust()
-                return
-            '''
-
             if not tasks:
                 mode = "scan"
 
@@ -185,6 +177,13 @@ def tick():
             mode = "navigation"
 
             if "collect-item" in current_task:
+
+                if not ai.itemCountScreen():
+                    ai.turnToRad(middleDir)
+                    ai.setPower(55)
+                    ai.thrust()
+                    mode = "ready"
+                    return
 
                 Id = lib.nearest_desired_item_Id(desiredItemType)
 
