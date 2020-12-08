@@ -209,6 +209,9 @@ def tick():
                     dist = math.hypot(x, y)
 
                     # Safe distance from explosion
+                    if wallDistance < 350:
+                        dirRad = prevTrackRad - math.pi
+
                     if dist > 300:
                         ai.detonateMines()
                         prevCoordinates.clear()
@@ -228,6 +231,7 @@ def tick():
                     if dist < 20:
                         ai.dropMine()
                         mode = "completed_task"
+                        prevTrackRad = ai.selfTrackingRad()
 
             else:  # We cannot handle item
                 print("cannot handle task")
