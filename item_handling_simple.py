@@ -314,11 +314,11 @@ def tick():
 
         elif mode == "stop":
 
-            ai.turnToRad(prevTrackRad - math.pi)
+            # ai.turnToRad(prevTrackRad - math.pi)
 
             angle = lib.angleDiff(prevTrackRad - math.pi, ai.selfTrackingRad())
-            '''
-            if angle < math.pi/10:
+
+            if angle < math.pi/2:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             else:
@@ -330,7 +330,7 @@ def tick():
                 return
 
             print("prevTrackRad: ", prevTrackRad)
-
+            '''
             ai.setPower(55)
             ai.thrust()
 
@@ -357,13 +357,10 @@ def tick():
                 angle = dirRad
 
             elif movItemDiff > math.pi/2:  # if angle between selfTrackingRad and item direction
-                angle = dirRad
-                '''
                 print("aim stop.........")
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
-                '''
 
             else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
                 angle = 2*absItemDir - selfTrackRad
