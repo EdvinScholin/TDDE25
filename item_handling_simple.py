@@ -182,7 +182,7 @@ def tick():
                     ai.turnToRad(middleDir)
                     ai.setPower(55)
                     ai.thrust()
-                    mode = "ready"
+                    mode = "mission"
                     return
 
                 Id = lib.nearest_desired_item_Id(desiredItemType)
@@ -325,7 +325,7 @@ def tick():
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             else:
-                mode = "ready"
+                mode = "navigation"
                 return
             '''
             if angle < math.pi/2:
@@ -368,7 +368,7 @@ def tick():
             else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
                 angle = 2*absItemDir - selfTrackRad
 
-            mode = "ready"
+            mode = "mission"
 
             ai.turnToRad(angle)
             ai.thrust()
