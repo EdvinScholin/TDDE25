@@ -111,18 +111,17 @@ def tick():
         # ----------------------------------------------------------------------------
 
         if lib.brake(wallDistance - 50) and wallDistance != -1:
-            '''
             prevTrackRad = ai.selfTrackingRad()
             mode = "stop"
             print("wallFeeler")
-            return
+
             '''
             ai.turnToRad(ai.selfTrackingRad() - math.pi)
             print("self heading", ai.selfHeadingRad())
             ai.setPower(55)
             ai.thrust()
             mode = "ready"
-            return
+            '''
 
         # ---------------------------------------------------------------------------
         # Ready
