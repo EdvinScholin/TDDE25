@@ -211,7 +211,7 @@ def tick():
                         mode = "completed_task"
 
                 elif ai.selfItem(desiredItemType) == 0:
-                    ai.talk('collect-item mine [Teacherbot]:[Stub]')
+                    ai.talk('collect-item mine [Teacherbot]:[Stub]:[Own]')
                     mode = "scan"
                     return
 
@@ -251,13 +251,14 @@ def tick():
                 coordinates.clear()
 
             # for elem in tasks:
-            new_msg = ""
-            # if str(prevSelfItem) in elem:
-            for seq in current_task.split():
-                if not "[" in seq:
-                    new_msg += seq + " "
-            completed = "Teacherbot:completed " + new_msg
-            send.append(completed)
+            if '[Own]' not in current_task:
+                new_msg = ""
+                # if str(prevSelfItem) in elem:
+                for seq in current_task.split():
+                    if not "[" in seq:
+                        new_msg += seq + " "
+                completed = "Teacherbot:completed " + new_msg
+                send.append(completed)
 
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
