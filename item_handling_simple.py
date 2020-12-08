@@ -195,6 +195,12 @@ def tick():
 
             elif "use-item" in current_task:
 
+                # ------------ Tillfälligt ----------
+                if "mine" not in current_task:
+                    print("cant handle other items")
+                    ai.quit()
+                # -----------------------------------
+
                 if not coordinates:  # Meanes that we fire item
 
                     # Placed mine position and distance
