@@ -112,6 +112,7 @@ def tick():
 
         if lib.brake(wallDistance - 100) and wallDistance != -1 and not mode == "stop":
             prevTrackRad = ai.selfTrackingRad()
+            print("wallfeeler")
             mode = "stop"
 
             '''
