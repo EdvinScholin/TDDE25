@@ -324,7 +324,7 @@ def tick():
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             else:
-                mode = "navigation"
+                mode = "mission"
                 return
             '''
             if angle < math.pi/2:
