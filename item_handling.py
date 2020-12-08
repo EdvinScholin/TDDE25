@@ -117,7 +117,6 @@ def tick():
             print("self heading", ai.selfHeadingRad())
             ai.setPower(55)
             ai.thrust()
-            mode = "ready"
             return
             
 
@@ -352,23 +351,24 @@ def tick():
 
         elif mode == "stop":
             
-            ai.turnToRad(prevTrackRad - math.pi)
+            # ai.turnToRad(prevTrackRad - math.pi)
             
             angle = angleDiff(prevTrackRad - math.pi, ai.selfTrackingRad())
-            '''
+            
             if angle < math.pi/10:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             else:
                 mode = "ready"
                 return
+            
             '''
             if angle < math.pi/2:
                 mode = "ready"
                 return
             
             print("prevTrackRad: ", prevTrackRad)
-            
+            ''' 
 
             ai.setPower(55)
             ai.thrust()
