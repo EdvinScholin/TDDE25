@@ -315,7 +315,7 @@ def tick():
 
             ai.turnToRad(prevTrackRad - math.pi)
 
-            angle = angleDiff(prevTrackRad - math.pi, ai.selfTrackingRad())
+            angle = lib.angleDiff(prevTrackRad - math.pi, ai.selfTrackingRad())
             '''
             if angle < math.pi/10:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
@@ -334,16 +334,13 @@ def tick():
             ai.thrust()
 
         elif mode == "aim":  # dela upp i aim och travel
-            if countScreen == 0:
-                mode = "ready"
-                return
 
             # Convert selfTrackingRad and ItemDir to positive radians
             selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
             absItemDir = dirRad % (2*math.pi)
 
             # Calculate angle difference
-            movItemDiff = angleDiff(
+            movItemDiff = lib.angleDiff(
                 ai.selfTrackingRad(), dirRad)
 
             # Ship stops when target is reached. Not necessary.
