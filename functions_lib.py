@@ -54,14 +54,14 @@ def nearest_desired_item_Id(desiredItemType):
     # Take the closest item
     prevDist = 10000
     prevDesiredDist = 10000
-    desirededCount = 0
+    desiredCount = 0
 
     for index in range(ai.itemCountScreen()):
 
         dist = ai.itemDist(index)
 
         if ai.itemType(index) == desiredItemType:
-            desirededCount += 1
+            desiredCount += 1
 
             if dist < prevDesiredDist:
                 prevDesiredDist = dist
@@ -73,7 +73,7 @@ def nearest_desired_item_Id(desiredItemType):
                 restId = index
 
     # If there are none of the desired type, we want to take the closest item
-    if desirededCount == 0:
+    if desiredCount == 0:
         Id = restId
 
     return Id
