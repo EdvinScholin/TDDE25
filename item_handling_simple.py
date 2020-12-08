@@ -211,7 +211,7 @@ def tick():
                         mode = "completed_task"
 
                 elif ai.selfItem(desiredItemType) == 0:
-                    ai.talk('collect-item mine [Teacherbot]:[Stub]:[Own]')
+                    ai.talk('collect-item mine [Teacherbot]')
                     mode = "scan"
                     return
 
@@ -251,7 +251,7 @@ def tick():
                 coordinates.clear()
 
             # for elem in tasks:
-            if '[Own]' not in current_task:
+            if '[Stub]' not in current_task:
                 new_msg = ""
                 # if str(prevSelfItem) in elem:
                 for seq in current_task.split():
