@@ -117,7 +117,7 @@ def tick():
             print("wallFeeler")
             return
             '''
-            ai.turnToRad(ai.selfTrackingRad() + math.pi)
+            ai.turnToRad(ai.selfTrackingRad() - math.pi)
             print("self heading", ai.selfHeadingRad())
             ai.setPower(55)
             ai.thrust()
