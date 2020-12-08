@@ -333,7 +333,7 @@ def tick():
             angle = lib.angleDiff(prevTrackRad, ai.selfTrackingRad())
 
             if angle < math.pi/2:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
+                ai.turnToRad(prevTrackRad - math.pi)
 
             if angle > math.pi/2:
                 mode = "mission"
