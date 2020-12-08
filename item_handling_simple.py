@@ -356,10 +356,13 @@ def tick():
                 angle = dirRad
 
             elif movItemDiff > math.pi/2:  # if angle between selfTrackingRad and item direction
+                angle = dirRad
+                '''
                 print("aim stop.........")
                 prevTrackRad = ai.selfTrackingRad()
                 mode = "stop"
                 return
+                '''
 
             else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
                 angle = 2*absItemDir - selfTrackRad
