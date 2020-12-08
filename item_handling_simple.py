@@ -168,6 +168,8 @@ def tick():
             mode = "ready"
 
         elif mode == "mission":
+            if not tasks:
+                mode = "scan"
 
             print("tasks: ", tasks)
 
