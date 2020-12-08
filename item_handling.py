@@ -200,7 +200,8 @@ def tick():
                         # Targets position relativt self
                         x, y = relative_pos(coordinates[0], coordinates[1])
                     else:
-                        x, y = relative_pos(prevCoordinates[0], prevCoordinates[1])
+                        Id = nearest_target_Id("mine")
+                        x, y = relative_pos(ai.mineX(Id), ai.mineY(Id))
 
 
                     if ai.selfItem(desiredItemType) == 0 and ai.mineCountScreen() == 0:
@@ -222,6 +223,7 @@ def tick():
                         elif dist > 300:
                             print("detonate")
                             ai.detonateMines()
+                            prevCoordinates.clear()
                             mode = "completed_task"
                             print(mode)
                         
@@ -252,11 +254,11 @@ def tick():
             else: # om vi inte har några tasks
                 
                 print("all tasks done")
-                
+                ''' 
                 if selfSpeed > 5:
                     prevTrackRad = ai.selfTrackingRad()
                     mode = "stop"
-
+                '''
                 '''
                 ai.talk('use-item mine 612 17 [Teacherbot]:[Stub]')
                 return
@@ -405,14 +407,38 @@ def obj_funcs(objType):
         countScreen = ai.itemCountScreen()
         distFunc = ai.itemDist
         typeFunc = ai.itemType
+        
+        return countScreen, distFunc, typeFunc
 
     elif objType == "asteroid":
         countScreen = ai.asteroidCountScreen()
         distFunc = ai.asteroidDist
         typeFunc = ai.asteroidType
+        
+        return countScreen, distFunc, typeFunc
 
-    return countScreen, distFunc, typeFunc
+    elif objType == "mine":
+        return ai.mineX, ai.mineY
 
+    elif objType == "laser":
+        return ai.laserX, ai.laserY
+
+
+
+def nearest_target_Id(objType):
+
+    xFunc, yFunc = obj_funcs(objType)
+    prevDist = 10000
+
+    for index in range(countScreen):
+        dist = math.hypot(yFunc(index), xFunc(index))
+
+        if dist < prevDist:
+            prevDist = dist
+            Id = index
+
+    return Id
+    
 
 def nearest_desired_target_Id(objType):
     """Determine nearest desired objekt else nearest random objekt"""
