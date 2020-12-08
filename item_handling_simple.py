@@ -200,7 +200,7 @@ def tick():
                 # ------------ Tillfälligt ----------
                 if "mine" not in current_task:
                     print("cant handle other items")
-                    ai.quit()
+                    ai.quitAI()
                 # -----------------------------------
 
                 if not coordinates:  # Meanes that we fire item
