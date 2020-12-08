@@ -260,6 +260,7 @@ def tick():
                 completed = "Teacherbot:completed " + new_msg
                 send.append(completed)
             else:
+                completed = "Stub:completed"
                 send.append(completed)
 
             # If you have completed all the tasks send the messages from the send list,
