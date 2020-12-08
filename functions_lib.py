@@ -52,8 +52,8 @@ def nearest_desired_item_Id(desiredItemType):
     """Determine nearest desired item else nearest random item"""
 
     # Take the closest item
-    prevDist = 1000
-    prevDesiredDist = 1000
+    prevDist = 10000
+    prevDesiredDist = 10000
     desirededCount = 0
 
     for index in range(ai.itemCountScreen()):

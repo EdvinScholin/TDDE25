@@ -160,7 +160,7 @@ def tick():
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message)
 
-            # print("tasks: ", tasks)
+            print("tasks1: ", tasks)
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
