@@ -2,6 +2,7 @@
 # This file can be used as a starting point for the bots.
 #
 
+import functions_lib as lib
 import sys
 import traceback
 import math
@@ -105,8 +106,11 @@ def tick():
         middleDisY = ai.radarHeight()/2 - ai.selfRadarY()
         middleDir = math.atan2(middleDisY, middleDisX)
 
+        # ----------------------------------------------------------------------------
         # Wallfeeler
-        if brake(wallDistance - 50) and wallDistance != -1:
+        # ----------------------------------------------------------------------------
+
+        if lib.brake(wallDistance - 50) and wallDistance != -1:
             '''
             prevTrackRad = ai.selfTrackingRad()
             mode = "stop"
@@ -117,62 +121,52 @@ def tick():
             print("self heading", ai.selfHeadingRad())
             ai.setPower(55)
             ai.thrust()
+            mode = "ready"
             return
 
         # ---------------------------------------------------------------------------
-        # Cordinates
-        # ---------------------------------------------------------------------------
-        # Lägg till if-sats senare, i detta fall för items
-        countScreen = ai.itemCountScreen()
-        speed = selfSpeed
-        # ---------------------------------------------------------------------------
-        # Teacherbot
+        # Ready
         # ---------------------------------------------------------------------------
 
         if mode == "ready":
 
+            '''
             if countScreen == 0:  # Move towards map middle when no targets are detected
                 ai.turnToRad(middleDir)
                 ai.setPower(55)
                 ai.thrust()
                 return
-
             '''
-            # Scan in the most recent message
-            message = ai.scanTalkMsg(0)
 
-            # Second element in list will be our desired item
-            messageList = list(message.split(" "))
-            '''
+            if not tasks:
+                mode = "scan"
+
+            else:
+                mode = "mission"
+
+        # ---------------------------------------------------------------------------
+        # Missions
+        # ---------------------------------------------------------------------------
+
+        elif mode == "scan":
 
             ai.setMaxMsgs(15)
             maxMsgs = ai.getMaxMsgs()
 
-            #print("tasks: ", tasks)
-
             # Scans all the messages sent by teacherbot
             # and adds them to the list tasks
-            if not tasks:
-                for message in range(maxMsgs):
-                    if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
-                        tasks.append(ai.scanTalkMsg(message))
-                        ai.removeTalkMsg(message)
-                        # tasks = [ai.scanTalkMsg(message)].copy()
-                        # if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
-                        #    ai.removeTalkMsg(message)
+            for message in range(maxMsgs):
+                if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
+                    tasks.append(ai.scanTalkMsg(message))
+                    ai.removeTalkMsg(message)
 
-            print("tasks: ", tasks)
+            # print("tasks: ", tasks)
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
-            # print("coordinates: ", coordinates)
-
-            '''
-            # Read message
-            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
-            '''
-
+            # När vi inte har några kordinater ska vi ta ett nytt föremål.
+            # Så länge vi har kordinater håller vi på med ett föremål.
             if not coordinates and tasks:
                 for seq in tasks[-1].split():
                     if seq.isdigit():
@@ -180,99 +174,72 @@ def tick():
                     if seq in itemDict.keys():
                         desiredItemType = itemDict[seq]
 
-            #
-            # Nu är det dags att använda en missil och skjuta den
-            #
+            mode = "ready"
 
-            if tasks:
+        elif mode == "mission":
 
-                if "collect-item" in tasks[-1]:
+            print("tasks: ", tasks)
 
-                    Id = nearest_desired_target_Id("item")
+            # INPUT: desiredItemType, tasks
+            current_task = tasks[-1]
+            mode = "navigation"
 
-                    # Targets position relativt self
-                    x, y = target_pos(Id, selfSpeed)
+            if "collect-item" in current_task:
 
-                    if prevSelfItem < ai.selfItem(desiredItemType):
+                Id = lib.nearest_desired_item_Id(desiredItemType)
+
+                # Targets position relativt self
+                x, y = lib.target_future_pos(Id, selfSpeed)
+
+                # If we already have the item
+                if prevSelfItem < ai.selfItem(desiredItemType):
+                    mode = "completed_task"
+
+            elif "use-item" in current_task:
+
+                if not coordinates:  # Meanes that we fire item
+
+                    # Placed mine position and distance
+                    x, y = lib.relative_pos(
+                        prevCoordinates[0], prevCoordinates[1])
+                    dist = math.hypot(x, y)
+
+                    # Safe distance from explosion
+                    if dist > 300:
+                        ai.detonateMines()
+                        prevCoordinates.clear()
                         mode = "completed_task"
 
-                    else:
-                        mode = "navigation"
+                elif ai.selfItem(desiredItemType) == 0:
+                    ai.talk('collect-item mine [Teacherbot]:[Stub]')
+                    mode = "scan"
+                    return
 
-                elif "use-item" in tasks[-1]:
+                else:
+                    # Targets position relativt self
+                    x, y = lib.relative_pos(coordinates[0], coordinates[1])
+                    dist = math.hypot(x, y)
 
-                    mode = "navigation"
-
-                    if coordinates:
-                        # Targets position relativt self
-                        x, y = relative_pos(coordinates[0], coordinates[1])
-
-                    elif "mine" in tasks[-1]:
-                        Id = nearest_target_Id("mine")
-                        x, y = relative_pos(ai.mineX(Id), ai.mineY(Id))
-
-                    else:  # När vi inte kan hantera mer så quitar vi
-                        ai.quitAI()
-
-                    if ai.selfItem(desiredItemType) == 0 and ai.mineCountScreen() == 0:
-
-                        Id = nearest_desired_target_Id("item")
-
-                        # Targets position relativt self
-                        x, y = target_pos(Id, selfSpeed)
-
-                    elif not coordinates:  # Betyder att vi har droppat minan
-
-                        # Rör sig bort från mine
-                        dist = math.hypot(x, y)
-
-                        # Om det är en vägg i riktningen vi tänkte åka så åker vi i motsatt rikning
-
-                        if dist > 300:
-                            print("detonate")
-                            ai.detonateMines()
-                            prevCoordinates.clear()
-                            mode = "completed_task"
-                            print(mode)
-                        return
-
-                    elif dist < 20:
-                        print("dropmine")
-                        item_needed = 0
+                    # Place mine
+                    if dist < 20:
                         ai.dropMine()
                         mode = "completed_task"
 
-                        # Vill åka tillbaka där vi kom ifrån
-                        dirRad = ai.selfTrackingRad() - math.pi
-                        return
-
-                    '''
-                    # Ship stops when target is reached.
-                    if brake(dist):
-                        prevTrackRad = ai.selfTrackingRad()
-                        mode = "stop"
-                        return
-                    '''
-
-                # Distance and direktion to target
-                dist = math.hypot(x, y)
-                dirRad = math.atan2(y, x)
-
-                # Save how many items of the desired item we already have
-                prevSelfItem = ai.selfItem(desiredItemType)
-
-            else:  # om vi inte har några tasks
-
-                print("all tasks done")
-                ''' 
-                if selfSpeed > 5:
-                    prevTrackRad = ai.selfTrackingRad()
-                    mode = "stop"
-                '''
-                '''
-                ai.talk('use-item mine 612 17 [Teacherbot]:[Stub]')
+            else:  # We cannot handle item
+                print("cannot handle task")
+                mode = "ready"
                 return
-                '''
+
+            # Distance and direktion to target
+            dist = math.hypot(x, y)
+            dirRad = math.atan2(y, x)
+
+            # Save how many items of the desired item we already have
+            prevSelfItem = ai.selfItem(desiredItemType)
+
+        # ----------------------------------------------------------------
+        # Mission completed
+        # ----------------------------------------------------------------
 
         elif mode == "completed_task":
 
@@ -345,34 +312,23 @@ def tick():
             mode = "aim"
 
         elif mode == "stop":
-<<<<<<< HEAD
-            
-            # ai.turnToRad(prevTrackRad - math.pi)
-            
-=======
 
             ai.turnToRad(prevTrackRad - math.pi)
 
->>>>>>> ffadc6f9fb421692f3f910a883680707081fa864
             angle = angleDiff(prevTrackRad - math.pi, ai.selfTrackingRad())
-            
+            '''
             if angle < math.pi/10:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             else:
                 mode = "ready"
                 return
-            
             '''
             if angle < math.pi/2:
                 mode = "ready"
                 return
 
             print("prevTrackRad: ", prevTrackRad)
-<<<<<<< HEAD
-            ''' 
-=======
->>>>>>> ffadc6f9fb421692f3f910a883680707081fa864
 
             ai.setPower(55)
             ai.thrust()
@@ -419,171 +375,6 @@ def tick():
     except:
         print(traceback.print_exc())
 
-# --------------------------------------------------------------------------
-# Help functions
-# --------------------------------------------------------------------------
-
-
-def obj_funcs(objType):
-    """Return objekt specified functions"""
-
-    # Kan lägga till för varje objekt typ
-
-    if objType == "item":
-        countScreen = ai.itemCountScreen()
-        distFunc = ai.itemDist
-        typeFunc = ai.itemType
-
-        return countScreen, distFunc, typeFunc
-
-    elif objType == "asteroid":
-        countScreen = ai.asteroidCountScreen()
-        distFunc = ai.asteroidDist
-        typeFunc = ai.asteroidType
-
-        return countScreen, distFunc, typeFunc
-
-    elif objType == "mine":
-        return ai.mineX, ai.mineY, ai.mineCountScreen
-
-    elif objType == "laser":
-        return ai.laserX, ai.laserY
-
-
-def nearest_target_Id(objType):
-
-    xFunc, yFunc, countScreen = obj_funcs(objType)
-    prevDist = 10000
-
-    for index in range(countScreen()):
-        dist = math.hypot(yFunc(index), xFunc(index))
-
-        if dist < prevDist:
-            prevDist = dist
-            Id = index
-
-    return Id
-
-
-def desired_item_Id(objType):
-    """Determine nearest desired objekt else nearest random objekt"""
-
-    countScreen, distFunc, typeFunc = obj_funcs(objType)
-
-    # Take the closest item
-    prevDist = 1000
-    prevDesiredDist = 1000
-    desirededCount = 0
-
-    for index in range(countScreen):
-
-        dist = distFunc(index)
-
-        if typeFunc(index) == desiredItemType:
-            desirededCount += 1
-
-            if dist < prevDesiredDist:
-                prevDesiredDist = dist
-                Id = index
-
-        else:
-            if dist < prevDist:
-                prevDist = dist
-                restId = index
-
-    # If there are none of the desired type, we want to take the closest item
-    if desirededCount == 0:
-        Id = restId
-
-    return Id
-
-
-def target_pos(Id, speed):
-    """"Determine pos x and y of specific objekt"""
-
-    # item position and velocity
-    x = ai.itemX(Id)
-    y = ai.itemY(Id)
-    velX = ai.itemVelX(Id)
-    velY = ai.itemVelY(Id)
-
-    # items initial position relative to self
-    relX, relY = relative_pos(x, y)
-
-    # items initial velocity relative to self
-    relVelX = velX - ai.selfVelX()
-    relVelY = velY - ai.selfVelY()
-
-    # Time of impact, when ship is supposed to reach target
-    t = time_of_impact(relX, relY, relVelX, relVelY, speed)
-
-    # Point of impact, where shot is supposed to hit target
-    targetX = relX + relVelX*t
-    targetY = relY + relVelY*t
-
-    return targetX, targetY
-
-
-def relative_pos(xCord, yCord):
-    """calculate position"""
-    x = xCord - ai.selfX()
-    y = yCord - ai.selfY()
-
-    return x, y
-
-
-def angleDiff(one, two):
-    """Calculates the smallest angle between two angles"""
-
-    a1 = (one - two) % (2*math.pi)
-    a2 = (two - one) % (2*math.pi)
-    return min(a1, a2)
-
-
-def brake(dist, accForce=55, decForce=55):
-    """Determine when to brake"""
-
-    m = ai.selfMass() + 5
-    v = ai.selfSpeed()
-
-    futV = v + accForce / m
-    futDist = dist - v - accForce / (2 * m)
-
-    futDecForce = m * futV**2 / (2 * futDist)
-
-    if futDecForce >= decForce:
-        return True
-    return False
-
-
-def time_of_impact(px, py, vx, vy, s):
-    """
-    Determine the time of impact, when bullet hits moving target
-    Parameters:
-        px, py = initial target position in x,y relative to shooter
-        vx, vy = initial target velocity in x,y relative to shooter
-        s = initial bullet speed
-        t = time to impact, in our case ticks
-    """
-
-    a = s * s - (vx * vx + vy * vy)
-    b = px * vx + py * vy
-    c = px * px + py * py
-
-    d = b*b + a*c
-
-    t = 0
-
-    if d >= 0:
-        try:
-            t = (b + math.sqrt(d)) / a
-        except ZeroDivisionError:
-            t = (b + math.sqrt(d))
-        if t < 0:
-            t = 0
-
-    return t
-
 
 #
 # Parse the command line arguments
@@ -591,7 +382,7 @@ def time_of_impact(px, py, vx, vy, s):
 parser = OptionParser()
 
 parser.add_option("-p", "--port", action="store", type="int",
-                  dest="port", default=15348,
+                  dest="port", default=15347,
                   help="The port number. Used to avoid port collisions when"
                   " connecting to the server.")
 

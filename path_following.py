@@ -201,11 +201,8 @@ def tick():
             # If you are in the targetblock remove to first element from
             # the list and change mode to aim if the length of the list is 1 or 0
             if targetDistance == 0:
-                print("hej")
                 path.pop(0)
-                if len(path) == 1:
-                    mode = "stop"
-                if not path:
+                if len(path) == 1 or not path:
                     mode = "stop"
                 return
 
@@ -233,17 +230,16 @@ def tick():
             # Calculate angle difference
             angle = angleDiff(prevTrackRad, ai.selfTrackingRad())
 
-
-            if angle < math.pi/2:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
-
-
             if angle > math.pi/2:
                 if len(path) == 1 or not path:
+                    prevTrackRad = ai.selfTrackingRad()
                     mode = "completed_task"
                 else:
                     path.pop(0)
                     mode = "aim"
+
+            if angle < math.pi/2:
+                ai.turnToRad(ai.selfTrackingRad() - math.pi)
         
             # Aims at the target and thrusts
             ai.setPower(55)
@@ -292,22 +288,24 @@ def tick():
 
 def angleDiff(one, two):
     """Calculates the smallest angle between two angles"""
-
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
     return min(a1, a2)
 
 def block_to_pixel(x, y):
+    """ Transform a block coordinate to a pixel coordinate """
     pixelX = x*blockSize + blockSize/2
     pixely = y*blockSize + blockSize/2
     return (pixelX, pixely)
 
 def pixel_to_block(x, y):
+    """ Transform a pixel coordinate to a block coordinate """
     blockX = x//blockSize
     blockY = y//blockSize
     return (blockX, blockY)
 
 def neighbors(node):
+    """ Calculates the neighbors to a node """
     dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
     result = []
     for dir in dirs:
@@ -319,41 +317,22 @@ def neighbors(node):
 def heuristic_cost_estimate(n1, n2):
     """ If a node is next to wall increase the cost to 5 """
     if block_neighbors(n1):
-        return 20
+        return 30
     return 1
 
 def distance(n1, n2):
+    """ Calculates the distance between two nodes """
     (x1, y1) = n1
     (x2, y2) = n2
     return math.hypot(x2 - x1, y2 - y1)
 
 def block_neighbors(node):
+    """ Checks if a node has a neighbor that is a block """
     dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
     for dir in dirs:
         neighbor = (node[0] + dir[0], node[1] + dir[1])
         if ai.mapData(neighbor[0], neighbor[1]) == 1:
             return True
-    return False
-
-def stop_at_point(objDist):
-
-    v0 = ai.selfSpeed()
-    m = ai.selfMass() + 5
-    p = 55
-    a = p / m
-    a2 = 45 / m
-
-    oldb = (v0)**2 / (2 * a)
-    print("brake: ", oldb)
-
-    brakeDist = (v0 + a2)**2 / (2 * a)
-    print("futbrake: ", brakeDist)
-
-    # s = 2 * v0**2 * m / p
-
-    if objDist <= brakeDist:
-        return True
-    
     return False
 
 def time_of_impact(px, py, vx, vy, s):
@@ -398,7 +377,6 @@ def brake(dist, accForce=55, decForce=55):
     if futDecForce >= decForce:
         return True
     return False
-
 
 
 #
