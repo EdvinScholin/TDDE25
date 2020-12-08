@@ -156,7 +156,7 @@ def tick():
             # Scans all the messages sent by teacherbot
             # and adds them to the list tasks
             for message in range(maxMsgs):
-                if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
+                if ai.scanTalkMsg(message) and "[Teacherbot]" in ai.scanTalkMsg(message):
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message)
 
