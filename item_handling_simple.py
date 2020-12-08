@@ -211,7 +211,7 @@ def tick():
                         mode = "completed_task"
 
                 elif ai.selfItem(desiredItemType) == 0:
-                    ai.talk('collect-item mine [Teacherbot]')
+                    ai.talk('Teacherbot: collect-item mine')
                     mode = "scan"
                     return
 
