@@ -263,6 +263,7 @@ def tick():
 
             # for elem in tasks:
             if '[Teacherbot]:[Stub] [Stub]' not in current_task:
+                print("heyeheyejadfh")
                 if coordinates:
                     prevCoordinates = coordinates.copy()
                     coordinates.clear()
