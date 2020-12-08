@@ -259,6 +259,8 @@ def tick():
                         new_msg += seq + " "
                 completed = "Teacherbot:completed " + new_msg
                 send.append(completed)
+            else:
+                send.append(completed)
 
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
