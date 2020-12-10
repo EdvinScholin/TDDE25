@@ -80,8 +80,8 @@ def tick():
         print("tick count:", tickCount, "mode", mode)
 
         if tickCount == 1:
-            #ai.talk("teacherbot: start-mission 9")
-            ai.talk('use-item laser teacherbot teacherbot [Teacherbot]:[Stub]')
+            ai.talk("teacherbot: start-mission 9")
+            #ai.talk('use-item laser teacherbot teacherbot [Teacherbot]:[Stub]')
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
@@ -90,7 +90,7 @@ def tick():
 
         selfX = ai.selfX()
         selfY = ai.selfY()
-        print("selfCoordinates: ", selfX, selfY)
+        #print("selfCoordinates: ", selfX, selfY)
         selfVelX = ai.selfVelX()
         selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
@@ -113,7 +113,7 @@ def tick():
 
         if lib.brake(wallDistance - 100) and wallDistance != -1 and not mode == "stop":
             prevTrackRad = ai.selfTrackingRad()
-            print("wallfeeler")
+            #print("wallfeeler")
             mode = "stop"
 
             '''
@@ -151,7 +151,7 @@ def tick():
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message)
 
-            print("tasks1: ", tasks)
+            print("tasks: ", tasks)
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
@@ -171,7 +171,7 @@ def tick():
             if not tasks:
                 mode = "scan"
 
-            print("tasks: ", tasks)
+            #print("tasks: ", tasks)
 
             # INPUT: desiredItemType, tasks
             current_task = tasks[-1]
@@ -205,45 +205,47 @@ def tick():
                 """
                 # -----------------------------------
 
-                if not coordinates and "mine" in current_task:  # Meanes that we fire item
-
-                    # Placed mine position and distance
-                    x, y = lib.relative_pos(
-                        prevCoordinates[0], prevCoordinates[1])
-                    dist = math.hypot(x, y)
-
-                    # Safe distance from explosion
-                    if wallDistance < 350:
-                        dirRad = prevTrackRad - math.pi
-
-                    print(dist)
-                    if dist > 300:
-                        ai.detonateMines()
-                        prevCoordinates.clear()
-                        mode = "completed_task"
-
-                elif ai.selfItem(desiredItemType) == 0:
+                if ai.selfItem(desiredItemType) == 0 and coordinates:
+                    print("We have no mine")
                     itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(desiredItemType)]
                     ai.talk('collect-item ' + itemStrValue + ' [Teacherbot]:[Stub]')
                     mode = "scan"
                     return
 
-                elif "mine" in current_task:
-                    # Targets position relativt self
-                    x, y = lib.relative_pos(coordinates[0], coordinates[1])
+                elif "mine" in current_task:  # Meanes that we fire item
 
-                    # Place mine
-                    if dist < 20:
-                        ai.dropMine()
-                        mode = "completed_task"
-                        prevTrackRad = ai.selfTrackingRad()
+                    if not coordinates:
+                        # Placed mine position and distance
+                        x, y = lib.relative_pos(
+                            prevCoordinates[0], prevCoordinates[1])
+                        dist = math.hypot(x, y)
 
-                    # Ship stops when target is reached.
-                    elif lib.brake(dist):
-                        print("placera")
-                        prevTrackRad = ai.selfTrackingRad()
-                        mode = "stop"
-                        return
+                        # Safe distance from explosion
+                        if wallDistance < 350:
+                            dirRad = prevTrackRad - math.pi
+
+                        #print(dist)
+                        if dist > 300:
+                            ai.detonateMines()
+                            prevCoordinates.clear()
+                            mode = "completed_task"
+                    
+                    else:
+                        # Targets position relativt self
+                        x, y = lib.relative_pos(coordinates[0], coordinates[1])
+
+                        # Place mine
+                        if dist < 20:
+                            ai.dropMine()
+                            mode = "completed_task"
+                            prevTrackRad = ai.selfTrackingRad()
+
+                        # Ship stops when target is reached.
+                        elif lib.brake(dist):
+                            print("placera")
+                            prevTrackRad = ai.selfTrackingRad()
+                            mode = "stop"
+                            return
                 
                 elif "missile" in current_task:
                     x, y = lib.relative_pos(middleDisX, middleDisY)
@@ -257,7 +259,6 @@ def tick():
                     mode = "completed_task"
                 
                 elif "emergencyshield" in current_task:
-                    print("använd emergencyshield")
                     x, y = lib.relative_pos(middleDisX, middleDisY)
                     ai.emergencyShield()
                     mode = "completed_task"
@@ -280,7 +281,6 @@ def tick():
                     else:
                         ai.fireLaser()
                         mode = "completed_task"
-
                 
                 elif "armor" in current_task:
                     mode = "completed_task"
@@ -293,6 +293,8 @@ def tick():
             # Distance and direktion to target
             dist = math.hypot(x, y)
             dirRad = math.atan2(y, x)
+
+            print("tasks1: ", tasks)
 
             # Save how many items of the desired item we already have
             prevSelfItem = ai.selfItem(desiredItemType)
@@ -309,7 +311,6 @@ def tick():
 
             # for elem in tasks:
             if '[Teacherbot]:[Stub] [Stub]' not in current_task:
-                print("heyeheyejadfh")
                 if coordinates:
                     prevCoordinates = coordinates.copy()
                     coordinates.clear()
@@ -328,8 +329,8 @@ def tick():
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
 
-            print("len send: ", len(send))
-            print("len tasks: ", lenTasks)
+            #print("len send: ", len(send))
+            #print("len tasks: ", lenTasks)
 
             if len(send) == lenTasks:
                 for elem in send:
