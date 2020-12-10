@@ -156,7 +156,10 @@ def brake(dist, accForce=55, decForce=55):
 
     futDecForce = m * futV**2 / (2 * futDist)
 
-    if futDecForce >= decForce:
+    if dist = < 0:
+        return True
+
+    elif futDecForce >= decForce:
         return True
     return False
 
