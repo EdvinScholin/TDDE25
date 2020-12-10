@@ -81,7 +81,7 @@ def tick():
 
         if tickCount == 1:
             #ai.talk("teacherbot: start-mission 9")
-            ai.talk('use-item armor self teacherbot [Teacherbot]:[Stub]')
+            ai.talk('use-item laser teacherbot teacherbot [Teacherbot]:[Stub]')
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
@@ -269,12 +269,8 @@ def tick():
                         ai.thrust()
                         mode = "mission"
                         return
-                
-                elif "armor" in current_task:
-                    mode = "completed_task"
                     
                     Id = lib.nearest_ship_Id("ship")
-
                     # Targets position relative self
                     x, y = lib.relative_pos(ai.shipX(Id), ai.shipY(Id))
                     dirRad = math.atan2(y, x)
@@ -285,7 +281,9 @@ def tick():
                         ai.fireLaser()
                         mode = "completed_task"
 
-
+                
+                elif "armor" in current_task:
+                    mode = "completed_task"
 
             else:  # We cannot handle item
                 print("cannot handle task")
