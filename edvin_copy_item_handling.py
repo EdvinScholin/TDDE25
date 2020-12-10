@@ -40,6 +40,7 @@ itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak":
 prevSelfItem = 0
 desiredItemType = -1
 item_needed = 1
+mineNeeded = 1
 
 
 def tick():
@@ -65,6 +66,7 @@ def tick():
         global dist
         global dirRad
         global item_needed
+        global mineNeeded
 
         #
         # Reset the state machine if we die.
@@ -199,7 +201,7 @@ def tick():
                 """
                 # -----------------------------------
 
-                if ai.selfItem(desiredItemType) == 0 and coordinates:
+                if ai.selfItem(desiredItemType) == 0 and mineNeeded == 1:
                     print("We have no mine")
                     itemStrValue = list(itemDict.keys())[list(
                         itemDict.values()).index(desiredItemType)]
@@ -223,6 +225,7 @@ def tick():
                         # print(dist)
                         if dist > 300:
                             ai.detonateMines()
+                            mineNeeded = 1
                             prevCoordinates.clear()
                             mode = "completed_task"
 
@@ -233,6 +236,7 @@ def tick():
                         # Place mine
                         if dist < 20:
                             ai.dropMine()
+                            mineNeeded = 0
                             mode = "completed_task"
                             prevTrackRad = selfTrackingRad
 
