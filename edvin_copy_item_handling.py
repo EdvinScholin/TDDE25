@@ -112,7 +112,7 @@ def tick():
         # Wallfeeler
         # ----------------------------------------------------------------------------
 
-        if lib.brake(wallDistance - 100) and wallDistance != -1 and not mode == "stop":
+        if lib.brake(wallDistance - 100) and wallDistance != -1 and:
             prevTrackRad = selfTrackingRad
             print("wallfeeler")
             mode = "stop"
@@ -400,6 +400,7 @@ def tick():
                 print("aim stop.........")
                 prevTrackRad = selfTrackingRad
                 mode = "stop"
+                return
 
             else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
                 angle = 2*positiveItemDir - positiveSelfTrackingRad
