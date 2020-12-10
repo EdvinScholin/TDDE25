@@ -151,12 +151,12 @@ def brake(dist, accForce=55, decForce=55):
     m = ai.selfMass() + 5
     v = ai.selfSpeed()
 
-    futV = v + accForce / m
-    futDist = dist - v - accForce / (2 * m)
+    futV = v + accForce*2 / m
+    futDist = dist - v*2 - accForce*4 / (2 * m)
 
     futDecForce = m * futV**2 / (2 * futDist)
 
-    if dist <= 10:
+    if dist <= 20:
         return True
 
     elif futDecForce >= decForce:
