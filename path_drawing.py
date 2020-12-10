@@ -75,7 +75,7 @@ def tick():
         elif mode == "draw":
 
             # Creates the path using an a* algorithm
-            path = list(astar.find_path((2, 2), (29, 29), neighbors_fnct=neighbors,
+            path = list(astar.find_path((2, 2), (21, 42), neighbors_fnct=neighbors,
                         heuristic_cost_estimate_fnct=heuristic_cost_estimate, distance_between_fnct=distance))
 
             # Prints the map with the path in the terminal
@@ -127,7 +127,7 @@ def neighbors(node):
 def heuristic_cost_estimate(n1, n2):
     """ If a node is next to wall increase the cost to 5 """
     if block_neighbors(n1):
-        return 5
+        return 100
     return 1
 
 def distance(n1, n2):
