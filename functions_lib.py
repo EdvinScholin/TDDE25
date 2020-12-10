@@ -133,10 +133,10 @@ def target_future_pos(Id, speed):
 
 def relative_pos(x, y, targetX, targetY):
     """calculate position"""
-    x = targetX - x
-    y = targetY - y
+    relX = targetX - x
+    relY = targetY - y
 
-    return x, y
+    return relX, relY
 
 
 def angleDiff(one, two):
@@ -158,10 +158,7 @@ def brake(dist, accForce=55, decForce=55):
 
     futDecForce = m * futV**2 / (2 * futDist)
 
-    if dist <= 20:
-        return True
-
-    elif futDecForce >= decForce:
+    if futDecForce >= decForce:
         return True
     return False
 

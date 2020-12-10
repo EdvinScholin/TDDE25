@@ -116,7 +116,7 @@ def tick():
         # Wallfeeler
         # ----------------------------------------------------------------------------
 
-        if lib.brake(wallDistance - 100) and wallDistance != -1:
+        if lib.brake(wallDistance) and wallDistance != -1:
             prevTrackRad = selfTrackingRad
             print("wallfeeler")
             mode = "stop"
