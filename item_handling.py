@@ -40,6 +40,7 @@ itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak":
 prevSelfItem = 0
 desiredItemType = -1
 item_needed = 1
+mineNeeded = 1
 
 
 def tick():
@@ -65,6 +66,7 @@ def tick():
         global dist
         global dirRad
         global item_needed
+        global mineNeeded
 
         #
         # Reset the state machine if we die.
@@ -81,47 +83,42 @@ def tick():
 
         if tickCount == 1:
             ai.talk("teacherbot: start-mission 9")
+            #ai.talk('use-item laser teacherbot teacherbot [Teacherbot]:[Stub]')
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
         # and improve readability.
         #
 
-        selfX = ai.selfX()
-        selfY = ai.selfY()
-        print("selfCoordinates: ", selfX, selfY)
-        selfVelX = ai.selfVelX()
-        selfVelY = ai.selfVelY()
         selfSpeed = ai.selfSpeed()
+        selfTrackingRad = ai.selfTrackingRad()
 
-        # 0-2pi, 0 in x direction, positive toward y
+        selfRadarX = ai.selfRadarX()
+        selfRadarY = ai.selfRadarY()
+        radarWidth = ai.radarWidth()
+        radarHeight = ai.radarHeight()
+
+        selfHeading = ai.selfHeadingRad()
 
         # Allows the ship to turn 360 degrees.
         ai.setMaxTurnRad(2*math.pi)
 
-        wallDistance = ai.wallFeelerRad(1000, ai.selfTrackingRad())
+        wallDistance = ai.wallFeelerRad(1000, selfTrackingRad)
 
         # Calcualtes which direction the middle is
-        middleDisX = ai.radarWidth()/2 - ai.selfRadarX()
-        middleDisY = ai.radarHeight()/2 - ai.selfRadarY()
-        middleDir = math.atan2(middleDisY, middleDisX)
+        middleRelX = radarWidth/2 - selfRadarX
+        middleRelY = radarHeight/2 - selfRadarY
+        middleDir = lib.direction(middleRelX, middleRelY)
 
         # ----------------------------------------------------------------------------
         # Wallfeeler
         # ----------------------------------------------------------------------------
 
-        if lib.brake(wallDistance - 100) and wallDistance != -1 and not mode == "stop":
-            prevTrackRad = ai.selfTrackingRad()
+        if lib.brake(wallDistance - 100) and wallDistance != -1:
+            prevTrackRad = selfTrackingRad
             print("wallfeeler")
             mode = "stop"
 
-            '''
-            ai.turnToRad(ai.selfTrackingRad() - math.pi)
-            print("self heading", ai.selfHeadingRad())
-            ai.setPower(55)
-            ai.thrust()
-            return
-            '''
         # ---------------------------------------------------------------------------
         # Ready
         # ---------------------------------------------------------------------------
@@ -150,7 +147,7 @@ def tick():
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message)
 
-            print("tasks1: ", tasks)
+            print("tasks: ", tasks)
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
@@ -170,7 +167,7 @@ def tick():
             if not tasks:
                 mode = "scan"
 
-            print("tasks: ", tasks)
+            #print("tasks: ", tasks)
 
             # INPUT: desiredItemType, tasks
             current_task = tasks[-1]
@@ -178,7 +175,7 @@ def tick():
 
             if "collect-item" in current_task:
 
-                if not ai.itemCountScreen():
+                if ai.itemCountScreen() == 0:
                     ai.turnToRad(middleDir)
                     ai.setPower(55)
                     ai.thrust()
@@ -197,49 +194,96 @@ def tick():
             elif "use-item" in current_task:
 
                 # ------------ Tillfälligt ----------
+                """
                 if "mine" not in current_task:
                     print("cant handle other items")
                     ai.quitAI()
+                """
                 # -----------------------------------
 
-                if not coordinates:  # Meanes that we fire item
-
-                    # Placed mine position and distance
-                    x, y = lib.relative_pos(
-                        prevCoordinates[0], prevCoordinates[1])
-                    dist = math.hypot(x, y)
-
-                    # Safe distance from explosion
-                    if wallDistance < 350:
-                        dirRad = prevTrackRad - math.pi
-
-                    if dist > 300:
-                        ai.detonateMines()
-                        prevCoordinates.clear()
-                        mode = "completed_task"
-
-                elif ai.selfItem(desiredItemType) == 0:
-                    ai.talk('collect-item mine [Teacherbot]:[Stub]')
+                if ai.selfItem(desiredItemType) == 0 and mineNeeded == 1:
+                    print("We have no mine")
+                    itemStrValue = list(itemDict.keys())[list(
+                        itemDict.values()).index(desiredItemType)]
+                    ai.talk('collect-item ' + itemStrValue +
+                            ' [Teacherbot]:[Stub]')
                     mode = "scan"
                     return
 
-                else:
-                    # Targets position relativt self
-                    x, y = lib.relative_pos(coordinates[0], coordinates[1])
-                    dist = math.hypot(x, y)
+                elif "mine" in current_task:  # Meanes that we fire item
 
-                    # Place mine
-                    if dist < 20:
-                        ai.dropMine()
-                        mode = "completed_task"
-                        prevTrackRad = ai.selfTrackingRad()
+                    if not coordinates:
+                        # Placed mine position and distance
+                        x, y = lib.relative_pos(
+                            prevCoordinates[0], prevCoordinates[1])
+                        dist = lib.distance(x, y)
 
-                    # Ship stops when target is reached.
-                    elif lib.brake(dist):
-                        print("placera")
-                        prevTrackRad = ai.selfTrackingRad()
-                        mode = "stop"
+                        # Safe distance from explosion
+                        if wallDistance < 350:
+                            dirRad = prevTrackRad - math.pi
+
+                        # print(dist)
+                        if dist > 300:
+                            ai.detonateMines()
+                            mineNeeded = 1
+                            prevCoordinates.clear()
+                            mode = "completed_task"
+
+                    else:
+                        # Targets position relativt self
+                        x, y = lib.relative_pos(coordinates[0], coordinates[1])
+
+                        # Place mine
+                        if dist < 20:
+                            ai.dropMine()
+                            mineNeeded = 0
+                            mode = "completed_task"
+                            prevTrackRad = selfTrackingRad
+
+                        # Ship stops when target is reached.
+                        elif lib.brake(dist):
+                            print("placera")
+                            prevTrackRad = selfTrackingRad
+                            mode = "stop"
+                            return
+
+                elif "missile" in current_task:
+                    x, y = lib.relative_pos(middleRelX, middleRelY)
+                    ai.lockClose()
+                    ai.fireMissile()
+                    mode = "completed_task"
+
+                elif "fuel" in current_task:
+                    x, y = lib.relative_pos(middleRelX, middleRelY)
+                    ai.refuel()
+                    mode = "completed_task"
+
+                elif "emergencyshield" in current_task:
+                    x, y = lib.relative_pos(middleRelX, middleRelY)
+                    ai.emergencyShield()
+                    mode = "completed_task"
+
+                elif "laser" in current_task:
+                    if ai.shipCountScreen() == 1:
+                        ai.turnToRad(middleDir)
+                        ai.setPower(55)
+                        ai.thrust()
+                        mode = "mission"
                         return
+
+                    Id = lib.nearest_ship_Id("ship")
+                    # Targets position relative self
+                    x, y = lib.relative_pos(ai.shipX(Id), ai.shipY(Id))
+                    dirRad = lib.direction(x, y)
+
+                    if lib.angleDiff(selfHeading, dirRad) > 0.2:
+                        mode = "aim"
+                    else:
+                        ai.fireLaser()
+                        mode = "completed_task"
+
+                elif "armor" in current_task:
+                    mode = "completed_task"
 
             else:  # We cannot handle item
                 print("cannot handle task")
@@ -247,8 +291,10 @@ def tick():
                 return
 
             # Distance and direktion to target
-            dist = math.hypot(x, y)
-            dirRad = math.atan2(y, x)
+            dist = lib.distance(x, y)
+            dirRad = lib.direction(x, y)
+
+            print("tasks1: ", tasks)
 
             # Save how many items of the desired item we already have
             prevSelfItem = ai.selfItem(desiredItemType)
@@ -265,13 +311,11 @@ def tick():
 
             # for elem in tasks:
             if '[Teacherbot]:[Stub] [Stub]' not in current_task:
-                print("heyeheyejadfh")
                 if coordinates:
                     prevCoordinates = coordinates.copy()
                     coordinates.clear()
 
                 new_msg = ""
-                # if str(prevSelfItem) in elem:
                 for seq in current_task.split():
                     if not "[" in seq:
                         new_msg += seq + " "
@@ -284,8 +328,8 @@ def tick():
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
 
-            print("len send: ", len(send))
-            print("len tasks: ", lenTasks)
+            #print("len send: ", len(send))
+            #print("len tasks: ", lenTasks)
 
             if len(send) == lenTasks:
                 for elem in send:
@@ -308,19 +352,6 @@ def tick():
                 lenTasks = 0
                 mode = "ready"
 
-            '''
-            elif mode == "mission done": 
-            # Gets the key from the value in our dictionary of our desired 
-            # item in order to send a message to teacherbot
-            itemStrValue = list(itemDict.keys())[list(
-                itemDict.values()).index(desiredItemType)]
-            completed = "Teacherbot: completed collect-item " + itemStrValue
-            print(ai.scanTalkMsg(0))
-            ai.removeTalkMsg(0)
-            ai.talk(completed)
-            mode = "scan"
-            '''
-
         # ---------------------------------------------------------------------------
         # Navigational modes, input is dist(only if ship need to stop at destination)
         # and dirRad to target
@@ -337,39 +368,32 @@ def tick():
 
             # ai.turnToRad(prevTrackRad - math.pi)
 
-            angle = lib.angleDiff(prevTrackRad, ai.selfTrackingRad())
+            angle = lib.angleDiff(prevTrackRad, selfTrackingRad)
 
             if angle < math.pi/2:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
+                ai.turnToRad(selfTrackingRad - math.pi)
 
             if angle > math.pi/2:
                 mode = "mission"
                 return
-            '''
-            if angle < math.pi/2:
-                mode = "ready"
-                return
 
-            print("prevTrackRad: ", prevTrackRad)
-            '''
-            prevTrackRad = ai.selfTrackingRad()
+            prevTrackRad = selfTrackingRad
             ai.setPower(55)
             ai.thrust()
 
         elif mode == "aim":  # dela upp i aim och travel
 
             # Convert selfTrackingRad and ItemDir to positive radians
-            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
-            absItemDir = dirRad % (2*math.pi)
+            positiveSelfTrackingRad = selfTrackingRad % (2*math.pi)
+            positiveItemDir = dirRad % (2*math.pi)
 
             # Calculate angle difference
-            movItemDiff = lib.angleDiff(
-                ai.selfTrackingRad(), dirRad)
+            movItemDiff = lib.angleDiff(selfTrackingRad, dirRad)
 
             # Ship stops when target is reached. Not necessary.
             '''
             if brake(dist + 50):  
-                prevTrackRad = ai.selfTrackingRad()
+                prevTrackRad = selfTrackingRad
                 mode = "stop"
                 return
             '''
@@ -380,12 +404,12 @@ def tick():
 
             elif movItemDiff > math.pi/2:  # if angle between selfTrackingRad and item direction
                 print("aim stop.........")
-                prevTrackRad = ai.selfTrackingRad()
+                prevTrackRad = selfTrackingRad
                 mode = "stop"
                 return
 
             else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
-                angle = 2*absItemDir - selfTrackRad
+                angle = 2*positiveItemDir - positiveSelfTrackingRad
 
             mode = "mission"
 
@@ -402,7 +426,7 @@ def tick():
 parser = OptionParser()
 
 parser.add_option("-p", "--port", action="store", type="int",
-                  dest="port", default=15347,
+                  dest="port", default=15348,
                   help="The port number. Used to avoid port collisions when"
                   " connecting to the server.")
 
