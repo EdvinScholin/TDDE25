@@ -71,8 +71,10 @@ def tick():
             for shot in range(shotCount):
                 f2 = equation(ai.shotX(shot), ai.shotY(shot), ai.shotTrackingRad(shot))
                 intPoint = intersect(f1, f2)
-                time_of_intersect(intPoint, selfSpeed, selfX, selfY)
-                time_of_intersect(intPoint, ai.shotSpeed(shot), ai.shotX(shot), ai.shotY(shot))
+                print(intPoint)
+
+                #time_of_intersect(intPoint, selfSpeed, selfX, selfY) 
+                #time_of_intersect(intPoint, ai.shotSpeed(shot), ai.shotX(shot), ai.shotY(shot))
             
             
     
@@ -111,7 +113,13 @@ def intersect(f1, f2):
 
     y = x*k1 + m1
 
-    return (x, y)
+    relX = x - ai.selfX()
+    relY = y - ai.selfY()
+
+    pointDir = math.atan2(relY, relX)
+
+    if pointDir > 0:
+        return (x, y)
 
 def time_of_intersect(point, selfVel, selfX, selfY):
     pointX = point[0]

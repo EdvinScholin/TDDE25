@@ -75,6 +75,7 @@ def tick():
 
         selfTrackingRad = ai.selfTrackingRad()
         playerCount = ai.playerCountServer()
+        shipCount = ai.shipCountScreen()
         pi = math.pi
         
 
@@ -92,6 +93,7 @@ def tick():
         # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode:", mode)
+
 
         if tickCount == 1:
             ai.shield()
@@ -112,7 +114,7 @@ def tick():
 
             # Starts mission 7 and create the map
             if stopCount == 1:
-                ai.talk("Teacherbot:start-mission 10")
+                ai.talk("Ponmo676:start-mission 10")
 
                 for x in range(mapWidth):
                     for y in range(mapHeight):
@@ -120,8 +122,8 @@ def tick():
                             all_nodes.append((x, y))
 
 
-            # When you recieve a message from teacherbot change mode to scan
-            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+            # When you recieve a message from Ponmo676 change mode to scan
+            if "[Ponmo676]:[Stub]" in ai.scanTalkMsg(0):
                 mode = "scan"
 
 
@@ -130,10 +132,10 @@ def tick():
             # Clears the tasks list
             tasks.clear()
 
-            # Scans all the messages sent by teacherbot
+            # Scans all the messages sent by Ponmo676
             # and adds them to the list tasks
             for message in range(maxMsgs):
-                if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
+                if ai.scanTalkMsg(message) and "[Ponmo676]:[Stub]" in ai.scanTalkMsg(message):
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message) 
 
@@ -255,7 +257,7 @@ def tick():
                     for seq in elem.split():
                         if not "[" in seq:
                             new_msg += seq + " "
-                    completed = "Teacherbot:completed " + new_msg
+                    completed = "Ponmo676:completed " + new_msg
                     send.append(completed)
             
             # If you have completed all the tasks send the messages from the send list,
@@ -277,8 +279,8 @@ def tick():
         elif mode == "completed_all_tasks":
 
             # If you recieve a new message from 
-            # teacherbot change mode to scan
-            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
+            # Ponmo676 change mode to scan
+            if "[Ponmo676]:[Stub]" in ai.scanTalkMsg(0):
                 lenTasks = 0
                 mode = "scan"
             
@@ -317,7 +319,7 @@ def neighbors(node):
 def heuristic_cost_estimate(n1, n2):
     """ If a node is next to wall increase the cost to 5 """
     if block_neighbors(n1):
-        return 30
+        return 100
     return 1
 
 def distance(n1, n2):
@@ -378,7 +380,25 @@ def brake(dist, accForce=55, decForce=55):
         return True
     return False
 
+def ship_coordinates(ship):
+    x = ai.shipX(ship)
+    y = ai.shipY(ship)
+    return pixel_to_block(x, y)
 
+def ship_nearby(selfX, selfY, shipCount):
+    for ship in range(shipCount):
+        if not ai.selfId() == ai.ship2serverId(ship):
+            shipX = ai.shipX(ship)
+            shipY = ai.shipY(ship)
+
+            x = shipX - selfX
+            y = shipY - selfY
+
+            shipDistance = math.hypot(x, y)
+
+            if shipDistance < 100:
+                return ship
+    return False
 #
 # Parse the command line arguments
 #
