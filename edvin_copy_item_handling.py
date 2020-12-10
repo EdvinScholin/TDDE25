@@ -370,14 +370,8 @@ def tick():
             if angle > math.pi/2:
                 mode = "mission"
                 return
-            '''
-            if angle < math.pi/2:
-                mode = "ready"
-                return
 
-            print("prevTrackRad: ", prevTrackRad)
-            '''
-            # prevTrackRad = selfTrackingRad
+            prevTrackRad = selfTrackingRad
             ai.setPower(55)
             ai.thrust()
 
@@ -406,7 +400,6 @@ def tick():
                 print("aim stop.........")
                 prevTrackRad = selfTrackingRad
                 mode = "stop"
-                return
 
             else:  # Uses opposite velocity vektor to cancel out unwanted velocity vektors
                 angle = 2*positiveItemDir - positiveSelfTrackingRad
