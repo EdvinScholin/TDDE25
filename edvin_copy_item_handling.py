@@ -201,8 +201,10 @@ def tick():
 
                 if ai.selfItem(desiredItemType) == 0 and coordinates:
                     print("We have no mine")
-                    itemStrValue = list(itemDict.keys())[list(itemDict.values()).index(desiredItemType)]
-                    ai.talk('collect-item ' + itemStrValue + ' [Teacherbot]:[Stub]')
+                    itemStrValue = list(itemDict.keys())[list(
+                        itemDict.values()).index(desiredItemType)]
+                    ai.talk('collect-item ' + itemStrValue +
+                            ' [Teacherbot]:[Stub]')
                     mode = "scan"
                     return
 
@@ -212,18 +214,18 @@ def tick():
                         # Placed mine position and distance
                         x, y = lib.relative_pos(
                             prevCoordinates[0], prevCoordinates[1])
-                        dist = math.hypot(x, y)
+                        dist = lib.distance(x, y)
 
                         # Safe distance from explosion
                         if wallDistance < 350:
                             dirRad = prevTrackRad - math.pi
 
-                        #print(dist)
+                        # print(dist)
                         if dist > 300:
                             ai.detonateMines()
                             prevCoordinates.clear()
                             mode = "completed_task"
-                    
+
                     else:
                         # Targets position relativt self
                         x, y = lib.relative_pos(coordinates[0], coordinates[1])
@@ -268,14 +270,13 @@ def tick():
                     Id = lib.nearest_ship_Id("ship")
                     # Targets position relative self
                     x, y = lib.relative_pos(ai.shipX(Id), ai.shipY(Id))
-                    dirRad = lib.direction(y, x)
+                    dirRad = lib.direction(x, y)
 
                     if lib.angleDiff(selfHeading, dirRad) > 0.2:
                         mode = "aim"
                     else:
                         ai.fireLaser()
                         mode = "completed_task"
-                
 
                 elif "armor" in current_task:
                     mode = "completed_task"
@@ -287,7 +288,7 @@ def tick():
 
             # Distance and direktion to target
             dist = lib.distance(x, y)
-            dirRad = lib.direction(y, x)
+            dirRad = lib.direction(x, y)
 
             print("tasks1: ", tasks)
 
