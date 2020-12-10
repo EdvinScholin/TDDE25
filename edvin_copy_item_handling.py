@@ -203,10 +203,12 @@ def tick():
                 """
                 # -----------------------------------
 
-                if ai.selfItem(desiredItemType) == 0 and mineNeeded == 1:
+                itemStrValue = list(itemDict.keys())[list(
+                    itemDict.values()).index(desiredItemType)]
+
+                if (ai.selfItem(desiredItemType) == 0 and mineNeeded == 1
+                        and f'collect-item {itemStrValue} [Teacherbot]:[Stub]' not in current_task):
                     print("We have no mine")
-                    itemStrValue = list(itemDict.keys())[list(
-                        itemDict.values()).index(desiredItemType)]
                     ai.talk('collect-item ' + itemStrValue +
                             ' [Teacherbot]:[Stub]')
                     mode = "scan"
