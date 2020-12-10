@@ -90,6 +90,8 @@ def tick():
         # and improve readability.
         #
 
+        selfX = ai.selfX()
+        selfY = ai.selfY()
         selfSpeed = ai.selfSpeed()
         selfTrackingRad = ai.selfTrackingRad()
 
@@ -214,10 +216,35 @@ def tick():
 
                     if not coordinates:
                         # Placed mine position and distance
-                        x, y = lib.relative_pos(
-                            prevCoordinates[0], prevCoordinates[1])
-                        dist = lib.distance(x, y)
+                        x, y = lib.relative_pos(selfX, selfY,
+                                                prevCoordinates[0], prevCoordinates[1])
 
+                        shipId = lib.nearest_target_Id(
+                            "ship", prevCoordinates[0], prevCoordinates[0])
+
+                        playerRelMineX, playerRelMineY = lib.relative_pos(
+                            prevCoordinates[0], prevCoordinates[1], ai.shipX(shipId), ai.shipY(shipId))
+
+                        # -------- tillfällig ------
+                        playerRelMineX = prevCoordinates[0]
+                        playerRelMineY = prevCoordinates[1]
+                        # --------------------------
+
+                        randomPlayerDist = lib.distance(
+                            playerRelMineX, playerRelMineY)
+                        selfMineDist = lib.distance(x, y)
+
+                        # randomPlayerDist är spelarens distans till placerad mina
+
+                        if randomPlayerDist < 50:
+                            if selfMineDist < 100:
+                                # Ge self en sköld
+                                ai.shield()
+                            ai.detonateMines()
+                            mineNeeded = 1
+                            prevCoordinates.clear()
+                            mode = "completed_task"
+                        '''
                         # Safe distance from explosion
                         if wallDistance < 350:
                             dirRad = prevTrackRad - math.pi
@@ -228,10 +255,12 @@ def tick():
                             mineNeeded = 1
                             prevCoordinates.clear()
                             mode = "completed_task"
+                        '''
 
                     else:
                         # Targets position relativt self
-                        x, y = lib.relative_pos(coordinates[0], coordinates[1])
+                        x, y = lib.relative_pos(
+                            selfX, selfY, coordinates[0], coordinates[1])
 
                         # Place mine
                         if dist < 20:
@@ -248,18 +277,21 @@ def tick():
                             return
 
                 elif "missile" in current_task:
-                    x, y = lib.relative_pos(middleRelX, middleRelY)
+                    x, y = lib.relative_pos(
+                        selfX, selfY, middleRelX, middleRelY)
                     ai.lockClose()
                     ai.fireMissile()
                     mode = "completed_task"
 
                 elif "fuel" in current_task:
-                    x, y = lib.relative_pos(middleRelX, middleRelY)
+                    x, y = lib.relative_pos(
+                        selfX, selfY, middleRelX, middleRelY)
                     ai.refuel()
                     mode = "completed_task"
 
                 elif "emergencyshield" in current_task:
-                    x, y = lib.relative_pos(middleRelX, middleRelY)
+                    x, y = lib.relative_pos(
+                        selfX, selfY, middleRelX, middleRelY)
                     ai.emergencyShield()
                     mode = "completed_task"
 
@@ -273,7 +305,8 @@ def tick():
 
                     Id = lib.nearest_ship_Id("ship")
                     # Targets position relative self
-                    x, y = lib.relative_pos(ai.shipX(Id), ai.shipY(Id))
+                    x, y = lib.relative_pos(
+                        selfX, selfY, ai.shipX(Id), ai.shipY(Id))
                     dirRad = lib.direction(x, y)
 
                     if lib.angleDiff(selfHeading, dirRad) > 0.2:
