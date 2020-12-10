@@ -338,8 +338,15 @@ def tick():
         # Mission completed
         # ----------------------------------------------------------------
 
-        elif mode == "completed_task":
+        # ----------------------------------------------------------------
+        # Senaste meddelandet tas inte bort av någon anledning. Complete meddelandena syns inte
+        # I terminalen står det att teacherbot skickar meddelandet use-item mine. Tasklistan töms.
+        # ----------------------------------------------------------------
 
+        elif mode == "completed_task":
+            
+            for message in range(ai.getMaxMsgs()):
+                print("message: ", ai.scanTalkMsg(message))
             # Tar inte bort gamla tasket
             current_task = tasks[-1]
             # Adds the completed task to a list send
@@ -380,6 +387,10 @@ def tick():
                 mode = "ready"
 
         elif mode == "completed_all_tasks":
+            for message in range(ai.getMaxMsgs()):
+                print("message: ", ai.scanTalkMsg(message))
+
+            print("tasks: ", tasks)
 
             # If you recieve a new message from
             # teacherbot change mode to scan
