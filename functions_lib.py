@@ -9,6 +9,14 @@ import libpyAI as ai
 from optparse import OptionParser
 
 
+def direction(x, y):
+    return math.atan2(y, x)
+
+
+def distance(x, y):
+    return math.hypot(x, y)
+
+
 def obj_funcs(objType):
     """Return objekt specified functions"""
 
@@ -17,12 +25,17 @@ def obj_funcs(objType):
     if objType == "asteroid":
         posX = ai.asteroidX
         posY = ai.asteroidY
-        countScreen = ai.asteroidCountScreen()
+        countScreen = ai.asteroidCountScreen
 
     elif objType == "mine":
         posX = ai.mineX
         posY = ai.mineY
         countScreen = ai.mineCountScreen
+
+    elif objType == "ship":
+        posX = ai.shipX
+        posY = ai.shipY
+        countScreen = ai.shipCountScreen
 
     '''
     elif objType == "laser":
@@ -43,6 +56,17 @@ def nearest_target_Id(objType):
 
         if dist < prevDist:
             prevDist = dist
+            Id = index
+
+    return Id
+
+
+def nearest_ship_Id(objType):
+
+    posX, posY, countScreen = obj_funcs(objType)
+
+    for index in range(countScreen()):
+        if ai.ship2serverId(index) != ai.selfId():
             Id = index
 
     return Id
