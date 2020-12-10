@@ -46,13 +46,15 @@ def obj_funcs(objType):
     return posX, posY, countScreen
 
 
-def nearest_target_Id(objType):
+def nearest_target_Id(objType, x, y):
 
-    posX, posY, countScreen = obj_funcs(objType)
+    targetX, targetY, countScreen = obj_funcs(objType)
+    relX, relY = relative_pos(x, y, targetX, targetY)
+
     prevDist = 10000
 
     for index in range(countScreen()):
-        dist = math.hypot(posX(index), posY(index))
+        dist = distance(relX(index), relY(index))
 
         if dist < prevDist:
             prevDist = dist
@@ -113,7 +115,7 @@ def target_future_pos(Id, speed):
     velY = ai.itemVelY(Id)
 
     # items initial position relative to self
-    relX, relY = relative_pos(x, y)
+    relX, relY = relative_pos(ai.selfX(), ai.selfY(), x, y)
 
     # items initial velocity relative to self
     relVelX = velX - ai.selfVelX()
@@ -129,10 +131,10 @@ def target_future_pos(Id, speed):
     return targetX, targetY
 
 
-def relative_pos(xCord, yCord):
+def relative_pos(x, y, targetX, targetY):
     """calculate position"""
-    x = xCord - ai.selfX()
-    y = yCord - ai.selfY()
+    x = targetX - x
+    y = targetY - y
 
     return x, y
 
