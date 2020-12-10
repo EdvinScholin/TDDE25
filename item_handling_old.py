@@ -117,6 +117,7 @@ def tick():
             print("self heading", ai.selfHeadingRad())
             ai.setPower(55)
             ai.thrust()
+            mode = "ready"
             return
 
         # ---------------------------------------------------------------------------
@@ -345,34 +346,23 @@ def tick():
             mode = "aim"
 
         elif mode == "stop":
-<<<<<<< HEAD
-            
-            # ai.turnToRad(prevTrackRad - math.pi)
-            
-=======
 
             ai.turnToRad(prevTrackRad - math.pi)
 
->>>>>>> ffadc6f9fb421692f3f910a883680707081fa864
             angle = angleDiff(prevTrackRad - math.pi, ai.selfTrackingRad())
-            
+            '''
             if angle < math.pi/10:
                 ai.turnToRad(ai.selfTrackingRad() - math.pi)
 
             else:
                 mode = "ready"
                 return
-            
             '''
             if angle < math.pi/2:
                 mode = "ready"
                 return
 
             print("prevTrackRad: ", prevTrackRad)
-<<<<<<< HEAD
-            ''' 
-=======
->>>>>>> ffadc6f9fb421692f3f910a883680707081fa864
 
             ai.setPower(55)
             ai.thrust()
@@ -465,7 +455,7 @@ def nearest_target_Id(objType):
     return Id
 
 
-def desired_item_Id(objType):
+def nearest_desired_target_Id(objType):
     """Determine nearest desired objekt else nearest random objekt"""
 
     countScreen, distFunc, typeFunc = obj_funcs(objType)
