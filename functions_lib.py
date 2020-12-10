@@ -49,11 +49,14 @@ def obj_funcs(objType):
 def nearest_target_Id(objType, x, y):
 
     targetX, targetY, countScreen = obj_funcs(objType)
-    relX, relY = relative_pos(x, y, targetX, targetY)
+    if objType != "ship":
+        relX, relY = relative_pos(x, y, targetX, targetY)
 
     prevDist = 10000
 
     for index in range(countScreen()):
+        if objType == "ship":
+            relX, relY = relative_pos(x, y, targetX(index), targetY(index))
         dist = distance(relX(index), relY(index))
 
         if dist < prevDist:
