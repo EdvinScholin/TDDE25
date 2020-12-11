@@ -92,9 +92,9 @@ def tick():
         print("tick count:", tickCount, "mode", mode)
 
         if missionCount == 1:
-            ai.talk("teacherbot: start-mission 9")
+            #ai.talk("teacherbot: start-mission 9")
             ai.shield()
-            #ai.talk('use-item laser teacherbot teacherbot [Teacherbot]:[Stub]')
+            ai.talk('use-item mine teacherbot [Teacherbot]:[Stub]')
 
         #
         # Read some "sensors" into local variables, to avoid excessive calls to the API
@@ -235,17 +235,47 @@ def tick():
 
                 elif "mine" in current_task:  # Meanes that we fire item
 
-                    if stateOfMine == "disarmed" and coordinates:
+                    if coordinates:  # Placera minan på den givna koordinaten
+
+                        # Targets position relativt self
+                        x, y = lib.relative_pos(selfX, selfY,
+                                                coordinates[0], coordinates[1])
+
+                        # Distance to dropzone
+                        dist = lib.distance(x, y)
+
+                        # Place mine
+                        if dist < 20:
+                            ai.dropMine()
+                            stateOfMine = "armed"
+                            prevTrackRad = selfTrackingRad
+
+                        # Ship stops when target is reached.
+                        if lib.brake(dist):
+                            print("placera")
+                            prevTrackRad = selfTrackingRad
+                            mode = "stop"
+                            return
+
+                    if stateOfMine == "armed" or not coordinates:
+                        if ai.shipCountScreen() == 1:
+                            ai.turnToRad(middleDir)
+                            ai.setPower(55)
+                            ai.thrust()
+                            mode = "mission"
+                            return
+
                         shipId = lib.nearest_ship_Id(selfX, selfY)
                         shipX = ai.shipX(shipId)
                         shipY = ai.shipY(shipId)
 
                         selfRelShipX, selfRelShipY = lib.relative_pos(
-                            selfX, selfX, shipX, shipY)
+                            selfX, selfY, shipX, shipY)
 
+                        # Kan göra shipfeeler
                         selfShipDist = lib.distance(selfRelShipX, selfRelShipY)
 
-                    if ai.mineScreenCount > 0:
+                    if ai.mineCountScreen() > 0:
 
                         mineId = lib.nearest_mine_Id(shipX, shipY)
                         mineX = ai.mineX(mineId)
@@ -268,7 +298,7 @@ def tick():
                             # ---------------------------
 
                         if shipMineDist < 20:
-                            if selfMineDist < 100:  # Give ourself a shield
+                            if selfMineDist < 300:  # Give ourself a shield
                                 ai.shield()
                                 shieldOnCount = 0
 
@@ -276,40 +306,19 @@ def tick():
                             stateOfMine = "disarmed"
                             mode = "completed_task"
 
-                    if coordinates:  # Placera minan på den givna koordinaten
-
-                        # Targets position relativt self
-                        x, y = lib.relative_pos(selfX, selfY,
-                                                coordinates[0], coordinates[1])
-
-                        # Distance to dropzone
-                        dist = lib.distance(x, y)
-
-                        # Place mine
-                        if dist < 20:
-                            ai.dropMine()
-                            stateOfMine = "armed"
-                            prevTrackRad = selfTrackingRad
-
-                        # Ship stops when target is reached.
-                        elif lib.brake(dist):
-                            print("placera")
-                            prevTrackRad = selfTrackingRad
-                            mode = "stop"
-                            return
-
-                    else:
+                    elif not coordinates:
 
                         dirRad = lib.direction(selfRelShipX, selfRelShipY)
 
-                        if selfSpeed < 5 and selfShipDist < 20:
-                            ai.dropMine()
-
-                        elif lib.angleDiff(selfHeading, dirRad) < 0.1:
+                        if (selfSpeed > 5 and lib.angleDiff(selfTrackingRad, dirRad) < 0.1) or selfShipDist < 50:
                             ai.detachMine()
+                            prevTrackRad = selfTrackingRad
+                            mode = "stop"
 
                         else:
                             mode = "navigation"
+                        
+                        return
 
                     '''
                     else:
@@ -567,7 +576,7 @@ def tick():
 parser = OptionParser()
 
 parser.add_option("-p", "--port", action="store", type="int",
-                  dest="port", default=15348,
+                  dest="port", default=15347,
                   help="The port number. Used to avoid port collisions when"
                   " connecting to the server.")
 

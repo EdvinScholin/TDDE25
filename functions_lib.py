@@ -174,21 +174,23 @@ def angleDiff(one, two):
 
 def brake(dist, accForce=55, decForce=55):
     """Determine when to brake"""
+    try:
+        m = ai.selfMass() + 5
+        v = ai.selfSpeed()
 
-    m = ai.selfMass() + 5
-    v = ai.selfSpeed()
+        futV = v + accForce*2 / m
+        futDist = dist - v*2 - accForce*4 / (2 * m)
 
-    futV = v + accForce*2 / m
-    futDist = dist - v*2 - accForce*4 / (2 * m)
+        futDecForce = m * futV**2 / (2 * futDist)
 
-    futDecForce = m * futV**2 / (2 * futDist)
+        if futDist < 20:
+            return True
 
-    if futDist < 20:
-        return True
-
-    elif futDecForce >= decForce:
-        return True
-    return False
+        elif futDecForce >= decForce:
+            return True
+        return False
+    
+    except: RuntimeError
 
 
 def time_of_impact(px, py, vx, vy, s):
