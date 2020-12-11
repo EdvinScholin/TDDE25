@@ -48,9 +48,10 @@ def obj_funcs(objType):
 
 def nearest_target_Id(objType, x, y):
 
+    if objType == "ship":
+        return nearest_ship_Id(x, y)
+
     targetX, targetY, countScreen = obj_funcs(objType)
-    if objType != "ship":
-        relX, relY = relative_pos(x, y, targetX, targetY)
 
     prevDist = 10000
 
@@ -66,15 +67,36 @@ def nearest_target_Id(objType, x, y):
     return Id
 
 
-def nearest_ship_Id(objType):
+def nearest_ship_Id(x, y):
 
-    posX, posY, countScreen = obj_funcs(objType)
+    prevDist = 10000
 
-    for index in range(countScreen()):
+    for index in range(ai.shipCountScreen()):
         if ai.ship2serverId(index) != ai.selfId():
-            Id = index
+            relX, relY = relative_pos(x, y, ai.shipX(index), ai.shipY(index))
+            dist = distance(relX, relY)
 
-    return Id
+            if dist < prevDist:
+                prevDist = dist
+                shipId = index
+
+    return shipId
+
+
+def nearest_mine_Id(x, y):
+
+    prevDist = 10000
+
+    for index in range(ai.mineCountScreen()):
+        if ai.mineFriendly(index):
+            relX, relY = relative_pos(x, y, ai.mineX(index), ai.mineY(index))
+            dist = distance(relX, relY)
+
+            if dist < prevDist:
+                prevDist = dist
+                shipId = index
+
+    return shipId
 
 
 def nearest_desired_item_Id(desiredItemType):
