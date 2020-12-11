@@ -235,6 +235,29 @@ def tick():
 
                 elif "mine" in current_task:  # Meanes that we fire item
 
+                    if coordinates:  # Placera minan på den givna koordinaten
+
+                        # Targets position relativt self
+                        x, y = lib.relative_pos(selfX, selfY,
+                                                coordinates[0], coordinates[1])
+
+                        # Distance to dropzone
+                        dist = lib.distance(x, y)
+
+                        # Place mine
+                        if dist < 20:
+                            ai.dropMine()
+                            stateOfMine = "armed"
+                            prevTrackRad = selfTrackingRad
+                            return
+
+                        # Ship stops when target is reached.
+                        elif lib.brake(dist):
+                            print("placera")
+                            prevTrackRad = selfTrackingRad
+                            mode = "stop"
+                            return
+
                     shipId = lib.nearest_ship_Id(selfX, selfY)
                     shipX = ai.shipX(shipId)
                     shipY = ai.shipY(shipId)
@@ -274,28 +297,6 @@ def tick():
                             ai.detonateMines()
                             stateOfMine = "disarmed"
                             mode = "completed_task"
-
-                    if coordinates:  # Placera minan på den givna koordinaten
-
-                        # Targets position relativt self
-                        x, y = lib.relative_pos(selfX, selfY,
-                                                coordinates[0], coordinates[1])
-
-                        # Distance to dropzone
-                        dist = lib.distance(x, y)
-
-                        # Place mine
-                        if dist < 20:
-                            ai.dropMine()
-                            stateOfMine = "armed"
-                            prevTrackRad = selfTrackingRad
-
-                        # Ship stops when target is reached.
-                        elif lib.brake(dist):
-                            print("placera")
-                            prevTrackRad = selfTrackingRad
-                            mode = "stop"
-                            return
 
                     else:
 
