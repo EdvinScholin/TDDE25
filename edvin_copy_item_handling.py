@@ -41,6 +41,7 @@ prevSelfItem = 0
 desiredItemType = -1
 item_needed = 1
 mineNeeded = 1
+shieldOnCount = -1
 
 
 def tick():
@@ -67,6 +68,7 @@ def tick():
         global dirRad
         global item_needed
         global mineNeeded
+        global shieldOnCount
 
         #
         # Reset the state machine if we die.
@@ -120,6 +122,14 @@ def tick():
             prevTrackRad = selfTrackingRad
             print("wallfeeler")
             mode = "stop"
+
+        # ----------------------------------------------------------------------------
+        # Shield
+        # ----------------------------------------------------------------------------
+
+        if -1 < sheildOnCount < 10:
+            sheildOnCount += 1
+            ai.shield()
 
         # ---------------------------------------------------------------------------
         # Ready
@@ -242,6 +252,7 @@ def tick():
                             if selfMineDist < 100:
                                 # Ge self en sköld
                                 ai.shield()
+                                sheildOnCount = 0
                             ai.detonateMines()
                             mineNeeded = 1
                             prevCoordinates.clear()
@@ -344,7 +355,7 @@ def tick():
         # ----------------------------------------------------------------
 
         elif mode == "completed_task":
-            
+
             for message in range(ai.getMaxMsgs()):
                 print("message: ", ai.scanTalkMsg(message))
             # Tar inte bort gamla tasket
@@ -379,6 +390,9 @@ def tick():
                 send.clear()
                 tasks.clear()
                 mode = "completed_all_tasks"
+
+                for message in range(ai.getMaxMsgs()):
+                    ai.removeTalkMsg(message)
 
             # If you havent completed all the tasks remove the
             # last task in the list and change mode to cords
