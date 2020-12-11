@@ -239,25 +239,41 @@ def tick():
                     shipX = ai.shipX(shipId)
                     shipY = ai.shipY(shipId)
 
-                    mineId = lib.nearest_mine_Id(shipX, shipY)
-                    mineX = ai.mineX(mineId)
-                    mineY = ai.mineY(mineId)
-
-                    shipRelMineX, shipRelMineY = lib.relative_pos(
-                        shipX, shipY, mineX, mineY)
-
-                    selfRelMineX, selfRelMineY = lib.relative_pos(
-                        selfX, selfY, mineX, mineY)
-
                     selfRelShipX, selfRelShipY = lib.relative_pos(
                         selfX, selfX, shipX, shipY)
 
-                    shipMineDist = lib.distance(
-                        shipRelMineX, shipRelMineY)
-
-                    selfMineDist = lib.distance(selfRelMineX, selfRelMineY)
-
                     selfShipDist = lib.distance(selfRelShipX, selfRelShipY)
+
+                    if ai.mineScreenCount > 0:
+
+                        mineId = lib.nearest_mine_Id(shipX, shipY)
+                        mineX = ai.mineX(mineId)
+                        mineY = ai.mineY(mineId)
+
+                        shipRelMineX, shipRelMineY = lib.relative_pos(
+                            shipX, shipY, mineX, mineY)
+
+                        selfRelMineX, selfRelMineY = lib.relative_pos(
+                            selfX, selfY, mineX, mineY)
+
+                        shipMineDist = lib.distance(
+                            shipRelMineX, shipRelMineY)
+
+                        selfMineDist = lib.distance(selfRelMineX, selfRelMineY)
+
+                        if coordinates:
+                            # -------- tillfällig -------
+                            shipMineDist = 0
+                            # ---------------------------
+
+                        if shipMineDist < 20:
+                            if selfMineDist < 100:  # Give ourself a shield
+                                ai.shield()
+                                shieldOnCount = 0
+
+                            ai.detonateMines()
+                            stateOfMine = "disarmed"
+                            mode = "completed_task"
 
                     if coordinates:  # Placera minan på den givna koordinaten
 
@@ -271,9 +287,6 @@ def tick():
                         # Place mine
                         if dist < 20:
                             ai.dropMine()
-                            # -------- tillfällig -------
-                            shipMineDist = 0
-                            # ---------------------------
                             stateOfMine = "armed"
                             prevTrackRad = selfTrackingRad
 
@@ -296,16 +309,6 @@ def tick():
 
                         else:
                             mode = "navigation"
-
-                    if shipMineDist < 20:
-                        if selfMineDist < 100:  # Give ourself a shield
-                            ai.shield()
-                            shieldOnCount = 0
-
-                        ai.detonateMines()
-                        stateOfMine = "disarmed"
-                        prevCoordinates.clear()
-                        mode = "completed_task"
 
                     '''
                     else:
