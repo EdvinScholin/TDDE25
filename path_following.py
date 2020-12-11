@@ -8,25 +8,35 @@ import math
 import libpyAI as ai
 import astar
 from optparse import OptionParser
+from functions_lib import *
 
 #
 # Global variables that persist between ticks
 #
 tickCount = 0
-stopCount = 0
-stopCount2 = 0
 mode = "wait"
-xCord = 0
-yCord = 0
+
+
+
+# Message handling
 tasks = []
 send = []
 lenTasks = 0
+
+# Path finding
 all_nodes = []
 path = []
+xCord = 0
+yCord = 0
+
+# Movement
 prevTrackRad = 0
 dirRad = 0
-# add more if needed
-blockSize = ai.blockSize()
+
+
+# Counters
+stopCount = 0
+stopCount2 = 0
 
 def tick():
     #
@@ -72,12 +82,10 @@ def tick():
         selfX = ai.selfX()
         selfY = ai.selfY()
         selfSpeed = ai.selfSpeed()
-
         selfTrackingRad = ai.selfTrackingRad()
+
         playerCount = ai.playerCountServer()
-        shipCount = ai.shipCountScreen()
         pi = math.pi
-        
 
         mapWidth = ai.mapWidthBlocks()
         mapHeight = ai.mapHeightBlocks()
@@ -88,21 +96,34 @@ def tick():
         wallDistance = ai.wallFeelerRad(1000, selfTrackingRad)
 
         ai.setMaxTurnRad(2*pi)
-        # 0-2pi, 0 in x direction, positive toward y
-
-        # Add more sensors readings here
 
         print ("tick count:", tickCount, "mode:", mode)
 
-
+        # Turns off the shield when we spawn
         if tickCount == 1:
             ai.shield()
 
+        # ----------------------------------------------------------------------------
+        # Wallfeeler
+        # ----------------------------------------------------------------------------
+
+        if brake(wallDistance) and wallDistance != -1:
+            prevTrackRad = selfTrackingRad
+            mode = "stop"
+
+
+        # ----------------------------------------------------------------------------
+        # Wait
+        # ----------------------------------------------------------------------------
 
         if mode == "wait" :
             if playerCount > 1:
                 mode = "ready"
 
+
+        # ----------------------------------------------------------------------------
+        # Ready
+        # ----------------------------------------------------------------------------
 
         elif mode == "ready":
             stopCount += 1
@@ -114,7 +135,7 @@ def tick():
 
             # Starts mission 7 and create the map
             if stopCount == 1:
-                ai.talk("Ponmo676:start-mission 10")
+                ai.talk("Teacherbot:start-mission 10")
 
                 for x in range(mapWidth):
                     for y in range(mapHeight):
@@ -122,20 +143,24 @@ def tick():
                             all_nodes.append((x, y))
 
 
-            # When you recieve a message from Ponmo676 change mode to scan
-            if "[Ponmo676]:[Stub]" in ai.scanTalkMsg(0):
+            # When you recieve a message from Teacherbot change mode to scan
+            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 mode = "scan"
 
+
+        # ----------------------------------------------------------------------------
+        # Path finding
+        # ----------------------------------------------------------------------------
 
         elif mode == "scan":
 
             # Clears the tasks list
             tasks.clear()
 
-            # Scans all the messages sent by Ponmo676
+            # Scans all the messages sent by Teacherbot
             # and adds them to the list tasks
             for message in range(maxMsgs):
-                if ai.scanTalkMsg(message) and "[Ponmo676]:[Stub]" in ai.scanTalkMsg(message):
+                if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message) 
 
@@ -169,7 +194,9 @@ def tick():
 
             # Create the path using an a* algorithm
             path = list(astar.find_path(selfBlock, goal, neighbors_fnct=neighbors,
-                        heuristic_cost_estimate_fnct=heuristic_cost_estimate, distance_between_fnct=distance))
+                        heuristic_cost_estimate_fnct=heuristic_cost_estimate,
+                        distance_between_fnct=block_distance)
+            )
 
             # Remove the first block of the path
             path.remove(selfBlock)
@@ -177,76 +204,9 @@ def tick():
             # Change mode to aim
             mode = "aim"
 
-
-        elif mode == "aim":  # dela upp i aim och travel 
-
-            # Calculate the targetDircetion and targetDistance
-            selfBlock = pixel_to_block(selfX, selfY)
-            x = path[0][0] - selfBlock[0]
-            y = path[0][1] - selfBlock[1]
-            dirRad = math.atan2(y, x)
-            targetDistance = math.hypot(x, y)
-
-            # Convert selfTrackingRad and ItemDir to positive radians
-            selfTrackRad = ai.selfTrackingRad() % (2*math.pi)
-            absItemDir = dirRad % (2*math.pi)
-
-            # Calculate angle difference
-            movItemDiff = angleDiff(
-                ai.selfTrackingRad(), dirRad)
-            
-            # Wallfeeler
-            if brake(wallDistance - 50) and wallDistance != -1:
-                prevTrackRad = ai.selfTrackingRad()
-                mode = "stop"
-
-            # If you are in the targetblock remove to first element from
-            # the list and change mode to aim if the length of the list is 1 or 0
-            if targetDistance == 0:
-                path.pop(0)
-                if len(path) == 1 or not path:
-                    mode = "stop"
-                return
-
-            # Move towards target
-            if selfSpeed < 5 or movItemDiff == math.pi/2:
-                angle = dirRad
-
-            # If angle between selfTrackingRad and item direction is to big change mode to stop
-            elif movItemDiff > math.pi/2:
-                prevTrackRad = ai.selfTrackingRad()
-                mode = "stop"
-                return
-
-            # Uses opposite velocity vektor to cancel out unwanted velocity vektors
-            else:  
-                angle = 2*absItemDir - selfTrackRad
-
-            # Aims at the target and thrusts
-            ai.turnToRad(angle)
-            ai.thrust()                 
-            
-
-        elif mode == "stop":
-            
-            # Calculate angle difference
-            angle = angleDiff(prevTrackRad, ai.selfTrackingRad())
-
-            if angle > math.pi/2:
-                if len(path) == 1 or not path:
-                    prevTrackRad = ai.selfTrackingRad()
-                    mode = "completed_task"
-                else:
-                    path.pop(0)
-                    mode = "aim"
-
-            if angle < math.pi/2:
-                ai.turnToRad(ai.selfTrackingRad() - math.pi)
-        
-            # Aims at the target and thrusts
-            ai.setPower(55)
-            ai.thrust()
-
+        # ----------------------------------------------------------------------------
+        # Mission handling
+        # ----------------------------------------------------------------------------
 
         elif mode == "completed_task":
 
@@ -257,7 +217,7 @@ def tick():
                     for seq in elem.split():
                         if not "[" in seq:
                             new_msg += seq + " "
-                    completed = "Ponmo676:completed " + new_msg
+                    completed = "Teacherbot:completed " + new_msg
                     send.append(completed)
             
             # If you have completed all the tasks send the messages from the send list,
@@ -274,37 +234,89 @@ def tick():
             else:
                 tasks.pop()
                 mode = "cords"
-                 
+
 
         elif mode == "completed_all_tasks":
 
             # If you recieve a new message from 
-            # Ponmo676 change mode to scan
-            if "[Ponmo676]:[Stub]" in ai.scanTalkMsg(0):
+            # Teacherbot change mode to scan
+            if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 lenTasks = 0
                 mode = "scan"
+
+
+        # ----------------------------------------------------------------------------
+        # Navigation
+        # ----------------------------------------------------------------------------
+
+        elif mode == "aim":  # dela upp i aim och travel 
+
+            # Calculate the targetDircetion and targetDistance
+            selfBlock = pixel_to_block(selfX, selfY)
+            x = path[0][0] - selfBlock[0]
+            y = path[0][1] - selfBlock[1]
+            dirRad = math.atan2(y, x)
+            targetDistance = math.hypot(x, y)
+
+            # Convert selfTrackingRad and ItemDir to positive radians
+            selfTrackRad = selfTrackingRad % (2*math.pi)
+            absItemDir = dirRad % (2*math.pi)
+
+            # Calculate angle difference
+            movItemDiff = angleDiff(
+                selfTrackingRad, dirRad)
+
+            # If you are in the targetblock remove to first element from
+            # the list and change mode to aim if the length of the list is 1 or 0
+            if targetDistance == 0:
+                path.pop(0)
+                if len(path) == 1 or not path:
+                    mode = "stop"
+                return
+
+            # Move towards target
+            if selfSpeed < 5 or movItemDiff == math.pi/2:
+                angle = dirRad
+
+            # If angle between selfTrackingRad and item direction is to big change mode to stop
+            elif movItemDiff > math.pi/2:
+                prevTrackRad = selfTrackingRad
+                mode = "stop"
+                return
+
+            # Uses opposite velocity vektor to cancel out unwanted velocity vektors
+            else:  
+                angle = 2*absItemDir - selfTrackRad
+
+            # Aims at the target and thrusts
+            ai.turnToRad(angle)
+            ai.thrust()                 
+            
+
+        elif mode == "stop":
+            
+            # Calculate angle difference
+            angle = angleDiff(prevTrackRad, selfTrackingRad)
+
+            if angle > math.pi/2:
+                if len(path) == 1 or not path:
+                    prevTrackRad = selfTrackingRad
+                    mode = "completed_task"
+                else:
+                    path.pop(0)
+                    mode = "aim"
+
+            if angle < math.pi/2:
+                ai.turnToRad(selfTrackingRad - math.pi)
+        
+            # Aims at the target and thrusts
+            ai.setPower(55)
+            ai.thrust()
             
 
     except:
         print(traceback.print_exc())
 
-def angleDiff(one, two):
-    """Calculates the smallest angle between two angles"""
-    a1 = (one - two) % (2*math.pi)
-    a2 = (two - one) % (2*math.pi)
-    return min(a1, a2)
-
-def block_to_pixel(x, y):
-    """ Transform a block coordinate to a pixel coordinate """
-    pixelX = x*blockSize + blockSize/2
-    pixely = y*blockSize + blockSize/2
-    return (pixelX, pixely)
-
-def pixel_to_block(x, y):
-    """ Transform a pixel coordinate to a block coordinate """
-    blockX = x//blockSize
-    blockY = y//blockSize
-    return (blockX, blockY)
 
 def neighbors(node):
     """ Calculates the neighbors to a node """
@@ -316,17 +328,20 @@ def neighbors(node):
             result.append(neighbor)
     return result
 
+
 def heuristic_cost_estimate(n1, n2):
     """ If a node is next to wall increase the cost to 5 """
     if block_neighbors(n1):
         return 100
     return 1
 
-def distance(n1, n2):
-    """ Calculates the distance between two nodes """
+
+def block_distance(n1, n2):
+    """ Calculates the block_distance between two nodes """
     (x1, y1) = n1
     (x2, y2) = n2
     return math.hypot(x2 - x1, y2 - y1)
+
 
 def block_neighbors(node):
     """ Checks if a node has a neighbor that is a block """
@@ -337,68 +352,7 @@ def block_neighbors(node):
             return True
     return False
 
-def time_of_impact(px, py, vx, vy, s):
-    """
-    Determine the time of impact, when bullet hits moving target
-    Parameters:
-        px, py = initial target position in x,y relative to shooter
-        vx, vy = initial target velocity in x,y relative to shooter
-        s = initial bullet speed
-        t = time to impact, in our case ticks
-    """
 
-    a = s * s - (vx * vx + vy * vy)
-    b = px * vx + py * vy
-    c = px * px + py * py
-
-    d = b*b + a*c
-
-    t = 0
-
-    if d >= 0:
-        try:
-            t = (b + math.sqrt(d)) / a
-        except ZeroDivisionError:
-            t = (b + math.sqrt(d))
-        if t < 0:
-            t = 0
-
-    return t
-
-def brake(dist, accForce=55, decForce=55):
-    """Determine when to brake"""
-
-    m = ai.selfMass() + 5
-    v = ai.selfSpeed()
-
-    futV = v + accForce / m
-    futDist = dist - v - accForce / (2 * m)
-
-    futDecForce = m * futV**2 / (2 * futDist)
-
-    if futDecForce >= decForce:
-        return True
-    return False
-
-def ship_coordinates(ship):
-    x = ai.shipX(ship)
-    y = ai.shipY(ship)
-    return pixel_to_block(x, y)
-
-def ship_nearby(selfX, selfY, shipCount):
-    for ship in range(shipCount):
-        if not ai.selfId() == ai.ship2serverId(ship):
-            shipX = ai.shipX(ship)
-            shipY = ai.shipY(ship)
-
-            x = shipX - selfX
-            y = shipY - selfY
-
-            shipDistance = math.hypot(x, y)
-
-            if shipDistance < 100:
-                return ship
-    return False
 #
 # Parse the command line arguments
 #
