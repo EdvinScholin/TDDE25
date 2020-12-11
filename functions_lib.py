@@ -57,7 +57,7 @@ def nearest_target_Id(objType, x, y):
     for index in range(countScreen()):
         if objType == "ship":
             relX, relY = relative_pos(x, y, targetX(index), targetY(index))
-        dist = distance(relX(index), relY(index))
+        dist = distance(relX, relY)
 
         if dist < prevDist:
             prevDist = dist
@@ -161,7 +161,10 @@ def brake(dist, accForce=55, decForce=55):
 
     futDecForce = m * futV**2 / (2 * futDist)
 
-    if futDecForce >= decForce:
+    if futDist < 20:
+        return True
+
+    elif futDecForce >= decForce:
         return True
     return False
 

@@ -41,7 +41,11 @@ prevSelfItem = 0
 desiredItemType = -1
 item_needed = 1
 mineNeeded = 1
+
+# Counters
 shieldOnCount = -1
+compCounter = 0
+missionCount = 0
 
 
 def tick():
@@ -68,7 +72,10 @@ def tick():
         global dirRad
         global item_needed
         global mineNeeded
+        
         global shieldOnCount
+        global compCounter
+        global missionCount
 
         #
         # Reset the state machine if we die.
@@ -80,11 +87,13 @@ def tick():
             return
 
         tickCount += 1
+        missionCount += 1
 
         print("tick count:", tickCount, "mode", mode)
 
-        if tickCount == 1:
+        if missionCount == 1:
             ai.talk("teacherbot: start-mission 9")
+            ai.shield()
             #ai.talk('use-item laser teacherbot teacherbot [Teacherbot]:[Stub]')
 
         #
@@ -127,8 +136,8 @@ def tick():
         # Shield
         # ----------------------------------------------------------------------------
 
-        if -1 < sheildOnCount < 10:
-            sheildOnCount += 1
+        if -1 < shieldOnCount < 10:
+            shieldOnCount += 1
             ai.shield()
 
         # ---------------------------------------------------------------------------
@@ -238,8 +247,8 @@ def tick():
                             prevCoordinates[0], prevCoordinates[1], ai.shipX(shipId), ai.shipY(shipId))
 
                         # -------- tillfällig ------
-                        playerRelMineX = prevCoordinates[0]
-                        playerRelMineY = prevCoordinates[1]
+                        playerRelMineX = 0
+                        playerRelMineY = 0
                         # --------------------------
 
                         randomPlayerDist = lib.distance(
@@ -250,9 +259,11 @@ def tick():
 
                         if randomPlayerDist < 50:
                             if selfMineDist < 100:
-                                # Ge self en sköld
+                                
+                                # Give ourself a shield
                                 ai.shield()
-                                sheildOnCount = 0
+                                shieldOnCount = 0
+                            
                             ai.detonateMines()
                             mineNeeded = 1
                             prevCoordinates.clear()
@@ -305,7 +316,11 @@ def tick():
                 elif "emergencyshield" in current_task:
                     x, y = lib.relative_pos(
                         selfX, selfY, middleRelX, middleRelY)
+                    
                     ai.emergencyShield()
+                    ai.shield()
+                    shieldOnCount = 0
+                    
                     mode = "completed_task"
 
                 elif "laser" in current_task:
@@ -322,7 +337,7 @@ def tick():
                         selfX, selfY, ai.shipX(Id), ai.shipY(Id))
                     dirRad = lib.direction(x, y)
 
-                    if lib.angleDiff(selfHeading, dirRad) > 0.2:
+                    if lib.angleDiff(selfHeading, dirRad) > 0.1:
                         mode = "aim"
                     else:
                         ai.fireLaser()
@@ -389,6 +404,7 @@ def tick():
                     ai.talk(elem)
                 send.clear()
                 tasks.clear()
+                
                 mode = "completed_all_tasks"
 
                 for message in range(ai.getMaxMsgs()):
@@ -406,11 +422,18 @@ def tick():
 
             print("tasks: ", tasks)
 
+            compCounter += 1
+
             # If you recieve a new message from
             # teacherbot change mode to scan
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 lenTasks = 0
+                compCounter = 0
                 mode = "ready"
+            
+            elif compCounter > 5:
+                ai.pauseAI()
+            
 
         # ---------------------------------------------------------------------------
         # Navigational modes, input is dist(only if ship need to stop at destination)
