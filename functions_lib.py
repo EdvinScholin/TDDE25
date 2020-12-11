@@ -218,3 +218,18 @@ def time_of_impact(px, py, vx, vy, s):
             t = 0
 
     return t
+
+def block_to_pixel(x, y):
+    """ Transform a block coordinate to a pixel coordinate """
+    blockSize = ai.blockSize()
+    pixelX = x*blockSize + blockSize/2
+    pixely = y*blockSize + blockSize/2
+    return (pixelX, pixely)
+
+
+def pixel_to_block(x, y):
+    """ Transform a pixel coordinate to a block coordinate """
+    blockSize = ai.blockSize()
+    blockX = x//blockSize
+    blockY = y//blockSize
+    return (blockX, blockY)
