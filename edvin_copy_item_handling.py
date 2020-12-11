@@ -40,7 +40,7 @@ itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak":
 prevSelfItem = 0
 desiredItemType = -1
 item_needed = 1
-mineNeeded = 1
+stateOfMine = "disarmed"
 
 # Counters
 shieldOnCount = -1
@@ -71,8 +71,8 @@ def tick():
         global dist
         global dirRad
         global item_needed
-        global mineNeeded
-        
+        global stateOfMine
+
         global shieldOnCount
         global compCounter
         global missionCount
@@ -225,7 +225,7 @@ def tick():
                 itemStrValue = list(itemDict.keys())[list(
                     itemDict.values()).index(desiredItemType)]
 
-                if (ai.selfItem(desiredItemType) == 0 and mineNeeded == 1
+                if (ai.selfItem(desiredItemType) == 0 and stateOfMine == "disarmed"
                         and f'collect-item {itemStrValue} [Teacherbot]:[Stub]' not in current_task):
                     print("We have no mine")
                     ai.talk('collect-item ' + itemStrValue +
@@ -235,62 +235,46 @@ def tick():
 
                 elif "mine" in current_task:  # Meanes that we fire item
 
-                    if not coordinates:
-                        # Placed mine position and distance
-                        x, y = lib.relative_pos(selfX, selfY,
-                                                prevCoordinates[0], prevCoordinates[1])
+                    shipId = lib.nearest_ship_Id(selfX, selfY)
+                    shipX = ai.shipX(shipId)
+                    shipY = ai.shipY(shipId)
 
-                        shipId = lib.nearest_target_Id(
-                            "ship", prevCoordinates[0], prevCoordinates[0])
+                    mineId = lib.nearest_mine_Id(shipX, shipY)
+                    mineX = ai.mineX(mineId)
+                    mineY = ai.mineY(mineId)
 
-                        playerRelMineX, playerRelMineY = lib.relative_pos(
-                            prevCoordinates[0], prevCoordinates[1], ai.shipX(shipId), ai.shipY(shipId))
+                    shipRelMineX, shipRelMineY = lib.relative_pos(
+                        shipX, shipY, mineX, mineY)
 
-                        # -------- tillfällig ------
-                        playerRelMineX = 0
-                        playerRelMineY = 0
-                        # --------------------------
+                    selfRelMineX, selfRelMineY = lib.relative_pos(
+                        selfX, selfY, mineX, mineY)
 
-                        randomPlayerDist = lib.distance(
-                            playerRelMineX, playerRelMineY)
-                        selfMineDist = lib.distance(x, y)
+                    selfRelShipX, selfRelShipY = lib.relative_pos(
+                        selfX, selfX, shipX, shipY)
 
-                        # randomPlayerDist är spelarens distans till placerad mina
+                    shipMineDist = lib.distance(
+                        shipRelMineX, shipRelMineY)
 
-                        if randomPlayerDist < 50:
-                            if selfMineDist < 100:
-                                
-                                # Give ourself a shield
-                                ai.shield()
-                                shieldOnCount = 0
-                            
-                            ai.detonateMines()
-                            mineNeeded = 1
-                            prevCoordinates.clear()
-                            mode = "completed_task"
-                        '''
-                        # Safe distance from explosion
-                        if wallDistance < 350:
-                            dirRad = prevTrackRad - math.pi
+                    selfMineDist = lib.distance(selfRelMineX, selfRelMineY)
 
-                        # print(dist)
-                        if dist > 300:
-                            ai.detonateMines()
-                            mineNeeded = 1
-                            prevCoordinates.clear()
-                            mode = "completed_task"
-                        '''
+                    selfShipDist = lib.distance(selfRelShipX, selfRelShipY)
 
-                    else:
+                    if coordinates:  # Placera minan på den givna koordinaten
+
                         # Targets position relativt self
-                        x, y = lib.relative_pos(
-                            selfX, selfY, coordinates[0], coordinates[1])
+                        x, y = lib.relative_pos(selfX, selfY,
+                                                coordinates[0], coordinates[1])
+
+                        # Distance to dropzone
+                        dist = lib.distance(x, y)
 
                         # Place mine
                         if dist < 20:
                             ai.dropMine()
-                            mineNeeded = 0
-                            mode = "completed_task"
+                            # -------- tillfällig -------
+                            shipMineDist = 0
+                            # ---------------------------
+                            stateOfMine = "armed"
                             prevTrackRad = selfTrackingRad
 
                         # Ship stops when target is reached.
@@ -299,6 +283,77 @@ def tick():
                             prevTrackRad = selfTrackingRad
                             mode = "stop"
                             return
+
+                    else:
+
+                        dirRad = lib.direction(selfRelShipX, selfRelShipY)
+
+                        if selfSpeed < 5 and selfShipDist < 20:
+                            ai.dropMine()
+
+                        elif lib.angleDiff(selfHeading, dirRad) < 0.1:
+                            ai.detachMine()
+
+                        else:
+                            mode = "navigation"
+
+                    if shipMineDist < 20:
+                        if selfMineDist < 100:  # Give ourself a shield
+                            ai.shield()
+                            shieldOnCount = 0
+
+                        ai.detonateMines()
+                        stateOfMine = "disarmed"
+                        prevCoordinates.clear()
+                        mode = "completed_task"
+
+                    '''
+                    else:
+                        # Targets position relativt self
+                        x, y = lib.relative_pos(selfX, selfY,
+                                                coordinates[0], coordinates[1])
+
+                        shipId = lib.nearest_target_Id(
+                            "ship", coordinates[0], coordinates[0])
+
+                        playerRelMineX, playerRelMineY = lib.relative_pos(
+                            coordinates[0], coordinates[1], ai.shipX(shipId), ai.shipY(shipId))
+
+                        # -------- tillfällig ------
+                        playerRelMineX = 0
+                        playerRelMineY = 0
+                        # --------------------------
+
+                        # randomPlayerDist är spelarens distans till placerad mina
+                        randomPlayerDist = lib.distance(
+                            playerRelMineX, playerRelMineY)
+                        selfMineDist = lib.distance(x, y)
+
+                        # Place mine
+                        if dist < 20:
+                            ai.dropMine()
+                            stateOfMine = "armed"
+                            prevTrackRad = selfTrackingRad
+
+                        # Ship stops when target is reached.
+                        if lib.brake(dist):
+                            print("placera")
+                            prevTrackRad = selfTrackingRad
+                            mode = "stop"
+                            return
+
+                    # Detonate mine
+                    if randomPlayerDist < 50:
+
+                        if selfMineDist < 100:  # Give ourself a shield
+                            ai.shield()
+                            shieldOnCount = 0
+
+                        ai.detonateMines()
+                        stateOfMine = "disarmed"
+                        prevCoordinates.clear()
+                        mode = "completed_task"
+                    '''
 
                 elif "missile" in current_task:
                     x, y = lib.relative_pos(
@@ -316,11 +371,11 @@ def tick():
                 elif "emergencyshield" in current_task:
                     x, y = lib.relative_pos(
                         selfX, selfY, middleRelX, middleRelY)
-                    
+
                     ai.emergencyShield()
                     ai.shield()
                     shieldOnCount = 0
-                    
+
                     mode = "completed_task"
 
                 elif "laser" in current_task:
@@ -404,7 +459,7 @@ def tick():
                     ai.talk(elem)
                 send.clear()
                 tasks.clear()
-                
+
                 mode = "completed_all_tasks"
 
                 for message in range(ai.getMaxMsgs()):
@@ -430,10 +485,9 @@ def tick():
                 lenTasks = 0
                 compCounter = 0
                 mode = "ready"
-            
+
             elif compCounter > 5:
                 ai.pauseAI()
-            
 
         # ---------------------------------------------------------------------------
         # Navigational modes, input is dist(only if ship need to stop at destination)
