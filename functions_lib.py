@@ -190,7 +190,8 @@ def brake(dist, accForce=55, decForce=55):
             return True
         return False
     
-    except: RuntimeError
+    except RuntimeError:
+        pass
 
 
 def time_of_impact(px, py, vx, vy, s):
