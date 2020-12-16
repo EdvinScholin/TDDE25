@@ -359,7 +359,7 @@ def block_neighbors(node):
 parser = OptionParser()
 
 parser.add_option ("-p", "--port", action="store", type="int", 
-                   dest="port", default=15348, 
+                   dest="port", default=15342, 
                    help="The port number. Used to avoid port collisions when" 
                    " connecting to the server.")
 
