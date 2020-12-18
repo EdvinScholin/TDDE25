@@ -15,9 +15,7 @@ from optparse import OptionParser
 tickCount = 0
 mode = "ready"
 
-# add more if needed
-
-# Coordinates - Vill helst ha en tuple
+# Coordinates
 coordinates = []
 prevCoordinates = []
 
@@ -57,18 +55,22 @@ def tick():
         # Declare global variables so we have access to them in the function
         #
         global tickCount
-        global prevTrackRad
         global mode
-        global itemDict
-        global prevSelfItem
-        global desiredItemType
+        
         global tasks
         global lenTasks
         global send
+        
         global coordinates
         global prevCoordinates
+
+        global prevTrackRad
         global dist
         global dirRad
+
+        global itemDict
+        global prevSelfItem
+        global desiredItemType
         global item_needed
 
         global shieldOnCount
@@ -90,42 +92,43 @@ def tick():
         tickCount += 1
         missionCount += 1
 
-        print("tick count:", tickCount, "mode", mode)
-
+        # In case we die, we do not want to restart the mission 
         if missionCount == 1:
             ai.talk("teacherbot: start-mission 9")
         
+        # Ship starts with a shield and we want to deactivate it in the beginnning
         if tickCount == 1:
             ai.shield()
 
-        #
+        print("tick count:", tickCount, "mode", mode)
+
+        # ----------------------------------------------------------------------------
         # Read some "sensors" into local variables, to avoid excessive calls to the API
         # and improve readability.
-        #
+        # ----------------------------------------------------------------------------
+
+        # Allows the ship to turn 360 degrees.
+        ai.setMaxTurnRad(2*math.pi)
 
         selfX = ai.selfX()
         selfY = ai.selfY()
         selfSpeed = ai.selfSpeed()
         selfTrackingRad = ai.selfTrackingRad()
-
+        selfHeading = ai.selfHeadingRad()
+        
         selfRadarX = ai.selfRadarX()
         selfRadarY = ai.selfRadarY()
         radarWidth = ai.radarWidth()
         radarHeight = ai.radarHeight()
 
-        selfHeading = ai.selfHeadingRad()
-
-        # Allows the ship to turn 360 degrees.
-        ai.setMaxTurnRad(2*math.pi)
-
-        wallDistance = ai.wallFeelerRad(1000, selfTrackingRad)
-
-        shipCountScreen = ai.shipCountScreen()
-
         # Calcualtes which direction the middle is
         middleRelX = radarWidth/2 - selfRadarX
         middleRelY = radarHeight/2 - selfRadarY
         middleDir = lib.direction(middleRelX, middleRelY)
+
+        wallDistance = ai.wallFeelerRad(1000, selfTrackingRad)
+
+        shipCountScreen = ai.shipCountScreen()
 
         # ----------------------------------------------------------------------------
         # Wallfeeler
@@ -136,7 +139,7 @@ def tick():
             mode = "stop"
 
         # ----------------------------------------------------------------------------
-        # Ship detector
+        # Ship detector and ship avoider
         # ----------------------------------------------------------------------------
 
         if shipCountScreen > 1:
@@ -147,9 +150,9 @@ def tick():
             selfRelShipX, selfRelShipY = lib.relative_pos(
                 selfX, selfY, shipX, shipY)
 
-            # Kan göra shipfeeler
             selfShipDist = lib.distance(selfRelShipX, selfRelShipY)
 
+            # Avoids crashing into another ship
             if lib.brake(selfShipDist):
                 prevTrackRad = selfTrackingRad
                 mode = "stop"
@@ -188,15 +191,15 @@ def tick():
             # and adds them to the list tasks
             for message in range(maxMsgs):
                 if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
-                    print("message: ", message)
                     tasks.append(ai.scanTalkMsg(message))
                     ai.removeTalkMsg(message)
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
-            # När vi inte har några kordinater ska vi ta ett nytt föremål.
-            # Så länge vi har kordinater håller vi på med ett föremål.
+            # When coordinates is empty, we want to check what the next desired item is.
+            # As long as coordinates is not empty, we are still handling the current
+            # desired item.
             if not coordinates and tasks:
                 for seq in tasks[-1].split():
                     if seq.isdigit():
@@ -210,7 +213,7 @@ def tick():
             if not tasks:
                 mode = "scan"
 
-            # INPUT: desiredItemType, tasks
+            # Starting with the most recent task
             current_task = tasks[-1]
             mode = "navigation"
 
@@ -228,17 +231,17 @@ def tick():
 
                 Id = lib.nearest_desired_item_Id(desiredItemType)
 
-                # Targets position relativt self
+                # Targets position relative to self
                 x, y = lib.target_future_pos(Id, selfSpeed)
 
-                # If we already have the item
+                # If we acquired the item we can start handling it
                 if prevSelfItem < ai.selfItem(desiredItemType):
-                    print("We have the mine")
                     mode = "completed_task"
                     return
 
             elif "use-item" in current_task:
 
+                # In order to handle an item, we have to acquire it
                 itemStrValue = list(itemDict.keys())[list(
                     itemDict.values()).index(desiredItemType)]
 
@@ -251,11 +254,11 @@ def tick():
                     mode = "scan"
                     return
 
-                elif "mine" in current_task:  # Meanes that we fire item
+                elif "mine" in current_task:
                     
-                    if coordinates:  # Placera minan på den givna koordinaten
+                    if coordinates:
 
-                        # Targets position relativt self
+                        # Targets position relative to self
                         x, y = lib.relative_pos(selfX, selfY,
                                                 coordinates[0], coordinates[1])
 
@@ -289,9 +292,12 @@ def tick():
 
                         dirRad = lib.direction(selfRelShipX, selfRelShipY)
 
+                        # Under the right circumstances we want to detach mine and "shoot"
+                        # the mine on the enemy ship
                         if (selfSpeed > 10 and lib.angleDiff(selfTrackingRad, dirRad) < 0.1) or selfShipDist < 100:
                             ai.detachMine()
                             
+                            # If we are too close to the detonation, we need a shield
                             if selfShipDist < 300:
                                 ai.shield()
                                 shieldOnCount = 0
@@ -305,8 +311,6 @@ def tick():
                         return
 
                 elif "missile" in current_task:
-                    x, y = lib.relative_pos(
-                        selfX, selfY, middleRelX, middleRelY)
                     ai.lockClose()
                     ai.fireMissile()
                     mode = "completed_task"
@@ -325,6 +329,8 @@ def tick():
                     return
 
                 elif "laser" in current_task:
+
+                    # We need to see the enemy ship in order to shoot it
                     if ai.shipCountScreen() == 1:
                         ai.turnToRad(middleDir)
                         ai.setPower(55)
@@ -333,13 +339,17 @@ def tick():
                         return
 
                     Id = lib.nearest_ship_Id(selfX, selfY)
-                    # Targets position relative self
+                    
+                    # Targets position relative to self
                     x, y = lib.relative_pos(
                         selfX, selfY, ai.shipX(Id), ai.shipY(Id))
                     dirRad = lib.direction(x, y)
 
+                    # We need the to look in the right direction so the 
+                    # laser do not miss
                     if lib.angleDiff(selfHeading, dirRad) > 0.1:
                         mode = "navigation"
+                    
                     else:
                         ai.fireLaser()
                         mode = "completed_task"
@@ -409,15 +419,17 @@ def tick():
                 compCounter = 0
                 mode = "ready"
 
+            # Since there is a delay with the messages sometimes,
+            # we use a counter to make sure we can pause without 
+            # having a message to handle
             elif compCounter > 50:
                 mode = "pause"
 
         # ---------------------------------------------------------------------------
-        # Navigational modes, input is dist(only if ship need to stop at destination)
-        # and dirRad to target
+        # Navigational modes
         # ---------------------------------------------------------------------------
 
-        elif mode == "navigation":  # dela upp i aim och travel
+        elif mode == "navigation":
 
             # Convert selfTrackingRad and ItemDir to positive radians
             positiveSelfTrackingRad = selfTrackingRad % (2*math.pi)
@@ -425,14 +437,6 @@ def tick():
 
             # Calculate angle difference
             movItemDiff = lib.angleDiff(selfTrackingRad, dirRad)
-
-            # Ship stops when target is reached. Not necessary.
-            '''
-            if brake(dist + 50):  
-                prevTrackRad = selfTrackingRad
-                mode = "stop"
-                return
-            '''
 
             # Move towards target
             if selfSpeed < 5 or movItemDiff == math.pi/2:
@@ -457,6 +461,8 @@ def tick():
 
         elif mode == "stop":
 
+            # The angle difference between our resulting velocity vector
+            # in the last tick and our current resulting velocity vector
             angle = lib.angleDiff(prevTrackRad, selfTrackingRad)
 
             if angle < math.pi/2:
@@ -472,7 +478,6 @@ def tick():
 
     except:
         print(traceback.print_exc())
-
 
 #
 # Parse the command line arguments
