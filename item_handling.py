@@ -37,7 +37,6 @@ itemDict = {"fuel": 0, "wideangle": 1, "rearshot": 2, "afterburner": 3, "cloak":
             "mirror": 19, "armor": 20}
 prevSelfItem = 0
 desiredItemType = -1
-item_needed = 1
 
 # Counters
 shieldOnCount = -1
@@ -56,11 +55,11 @@ def tick():
         #
         global tickCount
         global mode
-        
+
         global tasks
         global lenTasks
         global send
-        
+
         global coordinates
         global prevCoordinates
 
@@ -71,7 +70,6 @@ def tick():
         global itemDict
         global prevSelfItem
         global desiredItemType
-        global item_needed
 
         global shieldOnCount
         global compCounter
@@ -92,10 +90,10 @@ def tick():
         tickCount += 1
         missionCount += 1
 
-        # In case we die, we do not want to restart the mission 
+        # In case we die, we do not want to restart the mission
         if missionCount == 1:
             ai.talk("teacherbot: start-mission 9")
-        
+
         # Ship starts with a shield and we want to deactivate it in the beginnning
         if tickCount == 1:
             ai.shield()
@@ -115,7 +113,7 @@ def tick():
         selfSpeed = ai.selfSpeed()
         selfTrackingRad = ai.selfTrackingRad()
         selfHeading = ai.selfHeadingRad()
-        
+
         selfRadarX = ai.selfRadarX()
         selfRadarY = ai.selfRadarY()
         radarWidth = ai.radarWidth()
@@ -156,7 +154,6 @@ def tick():
             if lib.brake(selfShipDist):
                 prevTrackRad = selfTrackingRad
                 mode = "stop"
-
 
         # ----------------------------------------------------------------------------
         # Shield
@@ -221,10 +218,10 @@ def tick():
 
                 if ai.itemCountScreen() == 0:
                     ai.turnToRad(middleDir)
-                    
+
                     if selfSpeed < 20:
                         ai.setPower(55)
-                    
+
                     ai.thrust()
                     mode = "mission"
                     return
@@ -247,15 +244,15 @@ def tick():
 
                 if (ai.selfItem(desiredItemType) == 0
                         and f'collect-item {itemStrValue} [Teacherbot]:[Stub]' not in current_task):
-                    
+
                     ai.talk('collect-item ' + itemStrValue +
                             ' [Teacherbot]:[Stub]')
-                    
+
                     mode = "scan"
                     return
 
                 elif "mine" in current_task:
-                    
+
                     if coordinates:
 
                         # Targets position relative to self
@@ -279,13 +276,13 @@ def tick():
                             return
 
                     else:
-            
+
                         if shipCountScreen == 1:
                             ai.turnToRad(middleDir)
-                            
+
                             if selfSpeed < 20:
                                 ai.setPower(55)
-                            
+
                             ai.thrust()
                             mode = "mission"
                             return
@@ -296,18 +293,18 @@ def tick():
                         # the mine on the enemy ship
                         if (selfSpeed > 10 and lib.angleDiff(selfTrackingRad, dirRad) < 0.1) or selfShipDist < 100:
                             ai.detachMine()
-                            
+
                             # If we are too close to the detonation, we need a shield
                             if selfShipDist < 300:
                                 ai.shield()
                                 shieldOnCount = 0
-                            
+
                             prevTrackRad = selfTrackingRad
                             mode = "completed_task"
 
                         else:
                             mode = "navigation"
-                        
+
                         return
 
                 elif "missile" in current_task:
@@ -339,17 +336,17 @@ def tick():
                         return
 
                     Id = lib.nearest_ship_Id(selfX, selfY)
-                    
+
                     # Targets position relative to self
                     x, y = lib.relative_pos(
                         selfX, selfY, ai.shipX(Id), ai.shipY(Id))
                     dirRad = lib.direction(x, y)
 
-                    # We need the to look in the right direction so the 
+                    # We need the to look in the right direction so the
                     # laser do not miss
                     if lib.angleDiff(selfHeading, dirRad) > 0.1:
                         mode = "navigation"
-                    
+
                     else:
                         ai.fireLaser()
                         mode = "completed_task"
@@ -370,9 +367,9 @@ def tick():
         # ----------------------------------------------------------------
 
         elif mode == "completed_task":
-            
+
             current_task = tasks[-1]
-            
+
             # Adds the completed task to a list send
             if '[Teacherbot]:[Stub] [Stub]' not in current_task:
                 if coordinates:
@@ -411,7 +408,7 @@ def tick():
         elif mode == "completed_all_tasks":
 
             compCounter += 1
-            
+
             # If you recieve a new message from
             # teacherbot change mode to scan
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
@@ -420,7 +417,7 @@ def tick():
                 mode = "ready"
 
             # Since there is a delay with the messages sometimes,
-            # we use a counter to make sure we can pause without 
+            # we use a counter to make sure we can pause without
             # having a message to handle
             elif compCounter > 50:
                 mode = "pause"
@@ -449,7 +446,7 @@ def tick():
                 return
 
             # Uses opposite velocity vector to cancel out unwanted velocity vectors
-            else:  
+            else:
                 angle = 2*positiveItemDir - positiveSelfTrackingRad
 
             mode = "mission"
@@ -478,6 +475,7 @@ def tick():
 
     except:
         print(traceback.print_exc())
+
 
 #
 # Parse the command line arguments
