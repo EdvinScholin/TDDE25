@@ -1,3 +1,15 @@
+# ==============================================================================
+# Filename: item_handling.py
+#
+# Author:   Pontus Molin (@edvsc779),
+#           Edvin Schölin (@ponmo676) &
+#           Markus Handstedt (@marha066)
+#
+# Project:  Xpilot
+#
+# Group:    sg4-spai-03
+# ==============================================================================
+
 #
 # This file can be used as a starting point for the bots.
 #

@@ -1,3 +1,14 @@
+# ==============================================================================
+# Filename: path_following.py
+#
+# Author:   Pontus Molin (@edvsc779),
+#           Edvin Schölin (@ponmo676) &
+#           Markus Handstedt (@marha066)
+#
+# Project:  Xpilot
+#
+# Group:    sg4-spai-03
+# ==============================================================================
 #
 # This file can be used as a starting point for the bots.
 #
@@ -15,7 +26,6 @@ from functions_lib import *
 #
 tickCount = 0
 mode = "wait"
-
 
 
 # Message handling
@@ -37,6 +47,7 @@ dirRad = 0
 # Counters
 stopCount = 0
 stopCount2 = 0
+
 
 def tick():
     #
@@ -97,7 +108,7 @@ def tick():
 
         ai.setMaxTurnRad(2*pi)
 
-        print ("tick count:", tickCount, "mode:", mode)
+        print("tick count:", tickCount, "mode:", mode)
 
         # Turns off the shield when we spawn
         if tickCount == 1:
@@ -111,15 +122,13 @@ def tick():
             prevTrackRad = selfTrackingRad
             mode = "stop"
 
-
         # ----------------------------------------------------------------------------
         # Wait
         # ----------------------------------------------------------------------------
 
-        if mode == "wait" :
+        if mode == "wait":
             if playerCount > 1:
                 mode = "ready"
-
 
         # ----------------------------------------------------------------------------
         # Ready
@@ -142,11 +151,9 @@ def tick():
                         if (ai.mapData(x, y) == 0 or 30 <= ai.mapData(x, y) <= 39):
                             all_nodes.append((x, y))
 
-
             # When you recieve a message from Teacherbot change mode to scan
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 mode = "scan"
-
 
         # ----------------------------------------------------------------------------
         # Path finding
@@ -162,14 +169,13 @@ def tick():
             for message in range(maxMsgs):
                 if ai.scanTalkMsg(message) and "[Teacherbot]:[Stub]" in ai.scanTalkMsg(message):
                     tasks.append(ai.scanTalkMsg(message))
-                    ai.removeTalkMsg(message) 
+                    ai.removeTalkMsg(message)
 
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
             # Change mode to aim
             mode = "cords"
-
 
         elif mode == "cords":
 
@@ -182,25 +188,24 @@ def tick():
             xCord = coordinates[0]
             yCord = coordinates[1]
 
-            #Change mode to path
+            # Change mode to path
             mode = "path"
 
-
         elif mode == "path":
-         
+
             # Calculate the start and goal position of the path
             selfBlock = pixel_to_block(selfX, selfY)
             goal = pixel_to_block(xCord, yCord)
 
             # Create the path using an a* algorithm
             path = list(astar.find_path(selfBlock, goal, neighbors_fnct=neighbors,
-                        heuristic_cost_estimate_fnct=heuristic_cost_estimate,
-                        distance_between_fnct=block_distance)
-            )
+                                        heuristic_cost_estimate_fnct=heuristic_cost_estimate,
+                                        distance_between_fnct=block_distance)
+                        )
 
             # Remove the first block of the path
             path.remove(selfBlock)
-                       
+
             # Change mode to aim
             mode = "aim"
 
@@ -219,7 +224,7 @@ def tick():
                             new_msg += seq + " "
                     completed = "Teacherbot:completed " + new_msg
                     send.append(completed)
-            
+
             # If you have completed all the tasks send the messages from the send list,
             # clear the send and tasks list and change mode to completed_all_tasks
             if len(send) == lenTasks:
@@ -235,21 +240,19 @@ def tick():
                 tasks.pop()
                 mode = "cords"
 
-
         elif mode == "completed_all_tasks":
 
-            # If you recieve a new message from 
+            # If you recieve a new message from
             # Teacherbot change mode to scan
             if "[Teacherbot]:[Stub]" in ai.scanTalkMsg(0):
                 lenTasks = 0
                 mode = "scan"
 
-
         # ----------------------------------------------------------------------------
         # Navigation
         # ----------------------------------------------------------------------------
 
-        elif mode == "aim":  # dela upp i aim och travel 
+        elif mode == "aim":  # dela upp i aim och travel
 
             # Calculate the targetDircetion and targetDistance
             selfBlock = pixel_to_block(selfX, selfY)
@@ -285,16 +288,15 @@ def tick():
                 return
 
             # Uses opposite velocity vektor to cancel out unwanted velocity vektors
-            else:  
+            else:
                 angle = 2*absItemDir - selfTrackRad
 
             # Aims at the target and thrusts
             ai.turnToRad(angle)
-            ai.thrust()                 
-            
+            ai.thrust()
 
         elif mode == "stop":
-            
+
             # Calculate angle difference
             angle = angleDiff(prevTrackRad, selfTrackingRad)
 
@@ -308,11 +310,10 @@ def tick():
 
             if angle < math.pi/2:
                 ai.turnToRad(selfTrackingRad - math.pi)
-        
+
             # Aims at the target and thrusts
             ai.setPower(55)
             ai.thrust()
-            
 
     except:
         print(traceback.print_exc())
@@ -320,7 +321,8 @@ def tick():
 
 def neighbors(node):
     """ Calculates the neighbors to a node """
-    dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
+    dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),
+            (-1, 0), (-1, -1), (0, -1), (1, -1)]
     result = []
     for dir in dirs:
         neighbor = (node[0] + dir[0], node[1] + dir[1])
@@ -345,7 +347,8 @@ def block_distance(n1, n2):
 
 def block_neighbors(node):
     """ Checks if a node has a neighbor that is a block """
-    dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),(-1, 0), (-1, -1), (0, -1), (1, -1)]
+    dirs = [(1, 0), (1, 1), (0, 1), (-1, 1),
+            (-1, 0), (-1, -1), (0, -1), (1, -1)]
     for dir in dirs:
         neighbor = (node[0] + dir[0], node[1] + dir[1])
         if ai.mapData(neighbor[0], neighbor[1]) == 1:
@@ -358,10 +361,10 @@ def block_neighbors(node):
 #
 parser = OptionParser()
 
-parser.add_option ("-p", "--port", action="store", type="int", 
-                   dest="port", default=15342, 
-                   help="The port number. Used to avoid port collisions when" 
-                   " connecting to the server.")
+parser.add_option("-p", "--port", action="store", type="int",
+                  dest="port", default=15342,
+                  help="The port number. Used to avoid port collisions when"
+                  " connecting to the server.")
 
 (options, args) = parser.parse_args()
 
@@ -371,8 +374,8 @@ name = "Stub"
 # Start the AI
 #
 
-ai.start(tick,["-name", name, 
-               "-join",
-               "-turnSpeed", "64",
-               "-turnResistance", "0",
-               "-port", str(options.port)])
+ai.start(tick, ["-name", name,
+                "-join",
+                "-turnSpeed", "64",
+                "-turnResistance", "0",
+                "-port", str(options.port)])
