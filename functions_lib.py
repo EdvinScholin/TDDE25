@@ -10,17 +10,17 @@ from optparse import OptionParser
 
 
 def direction(x, y):
+    """ Returns direction of coordinates. """
     return math.atan2(y, x)
 
 
 def distance(x, y):
+    """ Returns distance to coordinates. """
     return math.hypot(x, y)
 
 
 def obj_funcs(objType):
-    """Return objekt specified functions"""
-
-    # Kan lägga till för varje objekt typ
+    """ Return objekt specified functions. """
 
     if objType == "asteroid":
         posX = ai.asteroidX
@@ -37,16 +37,11 @@ def obj_funcs(objType):
         posY = ai.shipY
         countScreen = ai.shipCountScreen
 
-    '''
-    elif objType == "laser":
-        posX = ai.laserX
-        posY = ai.laserY
-    '''
-
     return posX, posY, countScreen
 
 
 def nearest_target_Id(objType, x, y):
+    """ Returns id of nearest desired target """
 
     if objType == "ship":
         return nearest_ship_Id(x, y)
@@ -68,6 +63,7 @@ def nearest_target_Id(objType, x, y):
 
 
 def nearest_ship_Id(x, y):
+    """ Returns id of nearest ship on the screen. """
 
     prevDist = 10000
 
@@ -84,6 +80,7 @@ def nearest_ship_Id(x, y):
 
 
 def nearest_mine_Id(x, y):
+    """ Returns id of nearest mine on the screen. """
 
     prevDist = 10000
 
@@ -94,13 +91,13 @@ def nearest_mine_Id(x, y):
 
             if dist < prevDist:
                 prevDist = dist
-                shipId = index
+                mineId = index
 
-    return shipId
+    return mineId
 
 
 def nearest_desired_item_Id(desiredItemType):
-    """Determine nearest desired item else nearest random item"""
+    """ Determine nearest desired item, else nearest random item. """
 
     # Take the closest item
     prevDist = 10000
@@ -131,7 +128,7 @@ def nearest_desired_item_Id(desiredItemType):
 
 
 def target_future_pos(Id, speed):
-    """"Determine pos x and y of specific objekt"""
+    """" Determine pos x and y of specific object. """
 
     # item position and velocity
     x = ai.itemX(Id)
@@ -157,7 +154,8 @@ def target_future_pos(Id, speed):
 
 
 def relative_pos(x, y, targetX, targetY):
-    """calculate position"""
+    """ Returns relative position to target. """
+
     relX = targetX - x
     relY = targetY - y
 
@@ -165,7 +163,7 @@ def relative_pos(x, y, targetX, targetY):
 
 
 def angleDiff(one, two):
-    """Calculates the smallest angle between two angles"""
+    """ Calculates the smallest angle between two angles. """
 
     a1 = (one - two) % (2*math.pi)
     a2 = (two - one) % (2*math.pi)
@@ -173,7 +171,7 @@ def angleDiff(one, two):
 
 
 def brake(dist, accForce=55, decForce=55):
-    """Determine when to brake"""
+    """ Determine when to brake. """
     try:
         m = ai.selfMass() + 5
         v = ai.selfSpeed()
@@ -223,7 +221,7 @@ def time_of_impact(px, py, vx, vy, s):
     return t
 
 def block_to_pixel(x, y):
-    """ Transform a block coordinate to a pixel coordinate """
+    """ Transform a block coordinate to a pixel coordinate., """
     blockSize = ai.blockSize()
     pixelX = x*blockSize + blockSize/2
     pixely = y*blockSize + blockSize/2
@@ -231,7 +229,7 @@ def block_to_pixel(x, y):
 
 
 def pixel_to_block(x, y):
-    """ Transform a pixel coordinate to a block coordinate """
+    """ Transform a pixel coordinate to a block coordinate. """
     blockSize = ai.blockSize()
     blockX = x//blockSize
     blockY = y//blockSize
