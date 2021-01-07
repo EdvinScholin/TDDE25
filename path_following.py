@@ -13,20 +13,19 @@
 # This file can be used as a starting point for the bots.
 #
 
+import functions_lib as lib
 import sys
 import traceback
 import math
 import libpyAI as ai
 import astar
 from optparse import OptionParser
-from functions_lib import *
 
 #
 # Global variables that persist between ticks
 #
 tickCount = 0
 mode = "wait"
-
 
 # Message handling
 tasks = []
@@ -42,7 +41,6 @@ yCord = 0
 # Movement
 prevTrackRad = 0
 dirRad = 0
-
 
 # Counters
 stopCount = 0
@@ -60,17 +58,22 @@ def tick():
         #
         global tickCount
         global mode
-        global xCord
-        global yCord
-        global stopCount
+
         global tasks
         global send
         global lenTasks
+
         global all_nodes
         global path
-        global stopCount2
+        global xCord
+        global yCord
+
         global prevTrackRad
         global dirRad
+
+        global stopCount      
+        global stopCount2
+        
         #
         # Reset the state machine if we die.
         #
@@ -118,12 +121,12 @@ def tick():
         # Wallfeeler
         # ----------------------------------------------------------------------------
 
-        if brake(wallDistance) and wallDistance != -1:
+        if lib.brake(wallDistance) and wallDistance != -1:
             prevTrackRad = selfTrackingRad
             mode = "stop"
 
         # ----------------------------------------------------------------------------
-        # Wait
+        # Wait for players
         # ----------------------------------------------------------------------------
 
         if mode == "wait":
@@ -174,7 +177,7 @@ def tick():
             # Save the length of the task in the variable lenTasks
             lenTasks = len(tasks)
 
-            # Change mode to aim
+            # Change mode to navigation
             mode = "cords"
 
         elif mode == "cords":
@@ -194,8 +197,8 @@ def tick():
         elif mode == "path":
 
             # Calculate the start and goal position of the path
-            selfBlock = pixel_to_block(selfX, selfY)
-            goal = pixel_to_block(xCord, yCord)
+            selfBlock = lib.pixel_to_block(selfX, selfY)
+            goal = lib.pixel_to_block(xCord, yCord)
 
             # Create the path using an a* algorithm
             path = list(astar.find_path(selfBlock, goal, neighbors_fnct=neighbors,
@@ -206,8 +209,8 @@ def tick():
             # Remove the first block of the path
             path.remove(selfBlock)
 
-            # Change mode to aim
-            mode = "aim"
+            # Change mode to navigation
+            mode = "navigation"
 
         # ----------------------------------------------------------------------------
         # Mission handling
@@ -235,7 +238,7 @@ def tick():
                 mode = "completed_all_tasks"
 
             # If you havent completed all the tasks remove the
-            # last task in the list and change mode to aim
+            # last task in the list and change mode to navigation
             else:
                 tasks.pop()
                 mode = "cords"
@@ -252,10 +255,10 @@ def tick():
         # Navigation
         # ----------------------------------------------------------------------------
 
-        elif mode == "aim":  # dela upp i aim och travel
+        elif mode == "navigation":
 
             # Calculate the targetDircetion and targetDistance
-            selfBlock = pixel_to_block(selfX, selfY)
+            selfBlock = lib.pixel_to_block(selfX, selfY)
             x = path[0][0] - selfBlock[0]
             y = path[0][1] - selfBlock[1]
             dirRad = math.atan2(y, x)
@@ -266,11 +269,11 @@ def tick():
             absItemDir = dirRad % (2*math.pi)
 
             # Calculate angle difference
-            movItemDiff = angleDiff(
+            movItemDiff = lib.angleDiff(
                 selfTrackingRad, dirRad)
 
             # If you are in the targetblock remove to first element from
-            # the list and change mode to aim if the length of the list is 1 or 0
+            # the list and change mode to navigation if the length of the list is 1 or 0
             if targetDistance == 0:
                 path.pop(0)
                 if len(path) == 1 or not path:
@@ -298,7 +301,7 @@ def tick():
         elif mode == "stop":
 
             # Calculate angle difference
-            angle = angleDiff(prevTrackRad, selfTrackingRad)
+            angle = lib.angleDiff(prevTrackRad, selfTrackingRad)
 
             if angle > math.pi/2:
                 if len(path) == 1 or not path:
@@ -306,7 +309,7 @@ def tick():
                     mode = "completed_task"
                 else:
                     path.pop(0)
-                    mode = "aim"
+                    mode = "navigation"
 
             if angle < math.pi/2:
                 ai.turnToRad(selfTrackingRad - math.pi)
@@ -362,7 +365,7 @@ def block_neighbors(node):
 parser = OptionParser()
 
 parser.add_option("-p", "--port", action="store", type="int",
-                  dest="port", default=15342,
+                  dest="port", default=15348,
                   help="The port number. Used to avoid port collisions when"
                   " connecting to the server.")
 
