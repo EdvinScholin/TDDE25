@@ -11,6 +11,8 @@ Här är en lista på alla uppgifter som utförts:
 7. Path following, fast kod för att undvika kulor och skepp är inte 
    implementerad
 
+Tillsammans uppnår det här 100 poäng plus eventuella delpoäng på uppgiften path following.
+
 # ==================================================================
 # Exexution of activities
 # ==================================================================
